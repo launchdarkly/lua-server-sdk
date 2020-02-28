@@ -235,6 +235,31 @@ function fromLaunchDarklyJSON(x)
     return cjson.decode(native)
 end
 
+function convertDetails(cDetails, value)
+    local details = {}
+    local cReasonJSON = ld.so.LDReasonToJSON(cDetails)
+    details.reason = fromLaunchDarklyJSON(cReasonJSON)
+
+    if cDetails.hasVariation then
+        details.variationIndex = cDetails.variationIndex
+    end
+
+    details.value = value
+    return details
+end
+
+function genericVariationDetail(client, user, key, fallback, variation, valueConverter)
+    local cDetails = ffi.new("struct LDDetails")
+    ld.so.LDDetailsInit(cDetails)
+    local value = variation(client, user, key, fallback, cDetails)
+    if valueConverter ~= nil then
+        value = valueConverter(value)
+    end
+    local details = convertDetails(cDetails, value)
+    ld.so.LDDetailsClear(cDetails)
+    return details
+end
+
 local makeConfig = function(fields)
     local config = ld.so.LDConfigNew(fields["key"])
 
@@ -341,12 +366,24 @@ ld.clientInit = function(config, timoutMilliseconds)
         return ld.so.LDBoolVariation(client, user, key, fallback, nil)
     end
 
+    interface.boolVariationDetail = function(user, key, fallback)
+        return genericVariationDetail(client, user, key, fallback, ld.so.LDBoolVariation, nil)
+    end
+
     interface.intVariation = function(user, key, fallback)
         return ld.so.LDIntVariation(client, user, key, fallback, nil)
     end
 
+    interface.intVariationDetail = function(user, key, fallback)
+        return genericVariationDetail(client, user, key, fallback, ld.so.LDIntVariation, nil)
+    end
+
     interface.doubleVariation = function(user, key, fallback)
         return ld.so.LDDoubleVariation(client, user, key, fallback, nil)
+    end
+
+    interface.doubleVariationDetail = function(user, key, fallback)
+        return genericVariationDetail(client, user, key, fallback, ld.so.LDDoubleVariation, nil)
     end
 
     interface.stringVariation = function(user, key, fallback)
@@ -356,10 +393,31 @@ ld.clientInit = function(config, timoutMilliseconds)
         return native
     end
 
+    interface.stringVariationDetail = function(user, key, fallback)
+        local valueConverter = function(raw)
+            local native = ffi.string(raw)
+            ld.so.LDFree(raw)
+            return native
+        end
+
+        return genericVariationDetail(client, user, key, fallback, ld.so.LDStringVariation, valueConverter)
+    end
+
     interface.jsonVariation = function(user, key, fallback)
-        return fromLaunchDarklyJSON(
-            ld.so.LDJSONVariation(client, user, key, toLaunchDarklyJSON(fallback), nil)
-        )
+        local raw = ld.so.LDJSONVariation(client, user, key, toLaunchDarklyJSON(fallback), nil)
+        local native = fromLaunchDarklyJSON(raw)
+        ld.so.LDJSONFree(raw)
+        return native
+    end
+
+    interface.jsonVariationDetail = function(user, key, fallback)
+        local valueConverter = function(raw)
+            local native = fromLaunchDarklyJSON(raw)
+            ld.so.LDJSONFree(raw)
+            return native
+        end
+
+        return genericVariationDetail(client, user, key, toLaunchDarklyJSON(fallback), ld.so.LDJSONVariation, valueConverter)
     end
 
     return interface
