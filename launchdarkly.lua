@@ -214,28 +214,28 @@ ffi.cdef[[
 
 ld.so = ffi.load("ldserverapi")
 
-function applyWhenNotNil(subject, operation, value)
+local function applyWhenNotNil(subject, operation, value)
     if value ~= nil and value ~= cjson.null then
         operation(subject, value)
     end
 end
 
-function toLaunchDarklyJSON(x)
+local function toLaunchDarklyJSON(x)
     return ffi.gc(ld.so.LDJSONDeserialize(cjson.encode(x)), ld.so.LDJSONFree)
 end
 
-function toLaunchDarklyJSONTransfer(x)
+local function toLaunchDarklyJSONTransfer(x)
     return ld.so.LDJSONDeserialize(cjson.encode(x))
 end
 
-function fromLaunchDarklyJSON(x)
+local function fromLaunchDarklyJSON(x)
     local raw = ld.so.LDJSONSerialize(x)
     local native = ffi.string(raw)
     ld.so.LDFree(raw)
     return cjson.decode(native)
 end
 
-function convertDetails(cDetails, value)
+local function convertDetails(cDetails, value)
     local details = {}
     local cReasonJSON = ld.so.LDReasonToJSON(cDetails)
     details.reason = fromLaunchDarklyJSON(cReasonJSON)
@@ -248,7 +248,7 @@ function convertDetails(cDetails, value)
     return details
 end
 
-function genericVariationDetail(client, user, key, fallback, variation, valueConverter)
+local function genericVariationDetail(client, user, key, fallback, variation, valueConverter)
     local cDetails = ffi.new("struct LDDetails")
     ld.so.LDDetailsInit(cDetails)
     local value = variation(client, user, key, fallback, cDetails)
@@ -260,7 +260,7 @@ function genericVariationDetail(client, user, key, fallback, variation, valueCon
     return details
 end
 
-local makeConfig = function(fields)
+local function makeConfig(fields)
     local config = ld.so.LDConfigNew(fields["key"])
 
     applyWhenNotNil(config, ld.so.LDConfigSetBaseURI,               fields["baseURI"])
