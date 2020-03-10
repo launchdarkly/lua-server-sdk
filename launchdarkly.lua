@@ -1,7 +1,8 @@
+--- Server-side SDK for LaunchDarkly.
+-- @module launchdarkly-server-sdk
+
 local ffi   = require("ffi")
 local cjson = require("cjson")
-
-local ld = {}
 
 ffi.cdef[[
     struct LDJSON;
@@ -212,7 +213,7 @@ ffi.cdef[[
         struct LDUser *const user);
 ]]
 
-ld.so = ffi.load("ldserverapi")
+local so = ffi.load("ldserverapi")
 
 local function applyWhenNotNil(subject, operation, value)
     if value ~= nil and value ~= cjson.null then
@@ -221,23 +222,40 @@ local function applyWhenNotNil(subject, operation, value)
 end
 
 local function toLaunchDarklyJSON(x)
-    return ffi.gc(ld.so.LDJSONDeserialize(cjson.encode(x)), ld.so.LDJSONFree)
+    return ffi.gc(so.LDJSONDeserialize(cjson.encode(x)), so.LDJSONFree)
 end
 
 local function toLaunchDarklyJSONTransfer(x)
-    return ld.so.LDJSONDeserialize(cjson.encode(x))
+    return so.LDJSONDeserialize(cjson.encode(x))
 end
 
 local function fromLaunchDarklyJSON(x)
-    local raw = ld.so.LDJSONSerialize(x)
+    local raw = so.LDJSONSerialize(x)
     local native = ffi.string(raw)
-    ld.so.LDFree(raw)
+    so.LDFree(raw)
     return cjson.decode(native)
 end
 
+--- Details associated with an evaluation
+-- @name Details
+-- @class table
+-- @tfield[opt] int variationIndex The index of the returned value within the
+-- flag's list of variations.
+-- @field value The resulting value of an evaluation
+-- @tfield table reason The reason a specific value was returned
+-- @tfield string reason.kind The kind of reason
+-- @tfield[opt] string reason.errorKind If the kind is LD_ERROR, this contains
+-- the error string.
+-- @tfield[opt] string reason.ruleId If the kind is LD_RULE_MATCH this contains
+-- the id of the rule.
+-- @tfield[opt] int reason.ruleIndex If the kind is LD_RULE_MATCH this contains
+-- the index of the rule.
+-- @tfield[opt] string reason.prerequisiteKey If the kind is
+-- LD_PREREQUISITE_FAILED this contains the key of the failed prerequisite.
+
 local function convertDetails(cDetails, value)
     local details = {}
-    local cReasonJSON = ld.so.LDReasonToJSON(cDetails)
+    local cReasonJSON = so.LDReasonToJSON(cDetails)
     details.reason = fromLaunchDarklyJSON(cReasonJSON)
 
     if cDetails.hasVariation then
@@ -250,95 +268,191 @@ end
 
 local function genericVariationDetail(client, user, key, fallback, variation, valueConverter)
     local cDetails = ffi.new("struct LDDetails")
-    ld.so.LDDetailsInit(cDetails)
+    so.LDDetailsInit(cDetails)
     local value = variation(client, user, key, fallback, cDetails)
     if valueConverter ~= nil then
         value = valueConverter(value)
     end
     local details = convertDetails(cDetails, value)
-    ld.so.LDDetailsClear(cDetails)
+    so.LDDetailsClear(cDetails)
     return details
 end
 
+--- make a config
 local function makeConfig(fields)
-    local config = ld.so.LDConfigNew(fields["key"])
+    local config = so.LDConfigNew(fields["key"])
 
-    applyWhenNotNil(config, ld.so.LDConfigSetBaseURI,               fields["baseURI"])
-    applyWhenNotNil(config, ld.so.LDConfigSetStreamURI,             fields["streamURI"])
-    applyWhenNotNil(config, ld.so.LDConfigSetEventsURI,             fields["eventsURI"])
-    applyWhenNotNil(config, ld.so.LDConfigSetStream,                fields["stream"])
-    applyWhenNotNil(config, ld.so.LDConfigSetSendEvents,            fields["sendEvents"])
-    applyWhenNotNil(config, ld.so.LDConfigSetEventsCapacity,        fields["eventsCapacity"])
-    applyWhenNotNil(config, ld.so.LDConfigSetTimeout,               fields["timeout"])
-    applyWhenNotNil(config, ld.so.LDConfigSetFlushInterval,         fields["flushInterval"])
-    applyWhenNotNil(config, ld.so.LDConfigSetPollInterval,          fields["pollInterval"])
-    applyWhenNotNil(config, ld.so.LDConfigSetOffline,               fields["offline"])
-    applyWhenNotNil(config, ld.so.LDConfigSetAllAttributesPrivate,  fields["allAttributesPrivate"])
-    applyWhenNotNil(config, ld.so.LDConfigInlineUsersInEvents,      fields["inlineUsersInEvents"])
-    applyWhenNotNil(config, ld.so.LDConfigSetUserKeysCapacity,      fields["userKeysCapacity"])
-    applyWhenNotNil(config, ld.so.LDConfigSetUserKeysFlushInterval, fields["userKeysFlushInterval"])
+    applyWhenNotNil(config, so.LDConfigSetBaseURI,               fields["baseURI"])
+    applyWhenNotNil(config, so.LDConfigSetStreamURI,             fields["streamURI"])
+    applyWhenNotNil(config, so.LDConfigSetEventsURI,             fields["eventsURI"])
+    applyWhenNotNil(config, so.LDConfigSetStream,                fields["stream"])
+    applyWhenNotNil(config, so.LDConfigSetSendEvents,            fields["sendEvents"])
+    applyWhenNotNil(config, so.LDConfigSetEventsCapacity,        fields["eventsCapacity"])
+    applyWhenNotNil(config, so.LDConfigSetTimeout,               fields["timeout"])
+    applyWhenNotNil(config, so.LDConfigSetFlushInterval,         fields["flushInterval"])
+    applyWhenNotNil(config, so.LDConfigSetPollInterval,          fields["pollInterval"])
+    applyWhenNotNil(config, so.LDConfigSetOffline,               fields["offline"])
+    applyWhenNotNil(config, so.LDConfigSetAllAttributesPrivate,  fields["allAttributesPrivate"])
+    applyWhenNotNil(config, so.LDConfigInlineUsersInEvents,      fields["inlineUsersInEvents"])
+    applyWhenNotNil(config, so.LDConfigSetUserKeysCapacity,      fields["userKeysCapacity"])
+    applyWhenNotNil(config, so.LDConfigSetUserKeysFlushInterval, fields["userKeysFlushInterval"])
 
     local names = fields["privateAttributeNames"]
 
     if names ~= nil and names ~= cjson.null then
         for _, v in ipairs(names) do
-            ld.so.LDConfigAddPrivateAttribute(config, v)
+            so.LDConfigAddPrivateAttribute(config, v)
         end
     end
 
     return config
 end
 
-ld.makeUser = function(fields)
-    local user = ffi.gc(ld.so.LDUserNew(fields["key"]), ld.so.LDUserFree)
+--- Create a new opaque user object.
+-- @tparam table fields list of user fields.
+-- @tparam string fields.key The user's key
+-- @tparam[opt] boolean fields.anonymous Mark the user as anonymous
+-- @tparam[opt] string fields.ip Set the user's IP
+-- @tparam[opt] string fields.firstName Set the user's first name
+-- @tparam[opt] string fields.lastName Set the user's last name
+-- @tparam[opt] string fields.email Set the user's email
+-- @tparam[opt] string fields.name Set the user's name
+-- @tparam[opt] string fields.avatar Set the user's avatar
+-- @tparam[opt] string fields.country Set the user's country
+-- @tparam[opt] string fields.secondary Set the user's secondary key
+-- @tparam[opt] table fields.privateAttributeNames A list of attributes to
+-- redact
+-- @tparam[opt] table fields.custom Set the user's custom JSON
+-- @return an opaque user object
+local function makeUser(fields)
+    local user = ffi.gc(so.LDUserNew(fields["key"]), so.LDUserFree)
 
-    applyWhenNotNil(user, ld.so.LDUserSetAnonymous, fields["anonymous"])
-    applyWhenNotNil(user, ld.so.LDUserSetIP,        fields["ip"])
-    applyWhenNotNil(user, ld.so.LDUserSetFirstName, fields["firstName"])
-    applyWhenNotNil(user, ld.so.LDUserSetLastName,  fields["lastName"])
-    applyWhenNotNil(user, ld.so.LDUserSetEmail,     fields["email"])
-    applyWhenNotNil(user, ld.so.LDUserSetName,      fields["name"])
-    applyWhenNotNil(user, ld.so.LDUserSetAvatar,    fields["avatar"])
-    applyWhenNotNil(user, ld.so.LDUserSetCountry,   fields["country"])
-    applyWhenNotNil(user, ld.so.LDUserSetSecondary, fields["secondary"])
+    applyWhenNotNil(user, so.LDUserSetAnonymous, fields["anonymous"])
+    applyWhenNotNil(user, so.LDUserSetIP,        fields["ip"])
+    applyWhenNotNil(user, so.LDUserSetFirstName, fields["firstName"])
+    applyWhenNotNil(user, so.LDUserSetLastName,  fields["lastName"])
+    applyWhenNotNil(user, so.LDUserSetEmail,     fields["email"])
+    applyWhenNotNil(user, so.LDUserSetName,      fields["name"])
+    applyWhenNotNil(user, so.LDUserSetAvatar,    fields["avatar"])
+    applyWhenNotNil(user, so.LDUserSetCountry,   fields["country"])
+    applyWhenNotNil(user, so.LDUserSetSecondary, fields["secondary"])
 
     if fields["custom"] ~= nil then
-        ld.so.LDUserSetCustom(user, toLaunchDarklyJSONTransfer(fields["custom"]))
+        so.LDUserSetCustom(user, toLaunchDarklyJSONTransfer(fields["custom"]))
     end
 
     local names = fields["privateAttributeNames"]
 
     if names ~= nil and names ~= cjson.null then
         for _, v in ipairs(names) do
-            ngx.log(ngx.ERR, "value: " .. v)
-            ld.so.LDUserAddPrivateAttribute(user, v)
+            so.LDUserAddPrivateAttribute(user, v)
         end
     end
 
     return user
 end
 
-ld.clientInit = function(config, timoutMilliseconds)
+--- Initialize a new client, and connect to LaunchDarkly.
+-- @tparam table config list of configuration options
+-- @tparam string config.key Environment SDK key
+-- @tparam[opt] string config.baseURI Set the base URI for connecting to
+-- LaunchDarkly. You probably don't need to set this unless instructed by
+-- LaunchDarkly.
+-- @tparam[opt] string config.streamURI Set the streaming URI for connecting to
+-- LaunchDarkly. You probably don't need to set this unless instructed by
+-- LaunchDarkly.
+-- @tparam[opt] string config.eventsURI Set the events URI for connecting to
+-- LaunchDarkly. You probably don't need to set this unless instructed by
+-- LaunchDarkly.
+-- @tparam[opt] boolean config.stream Enables or disables real-time streaming
+-- flag updates. When set to false, an efficient caching polling mechanism is
+-- used. We do not recommend disabling streaming unless you have been instructed
+-- to do so by LaunchDarkly support. Defaults to true.
+-- @tparam[opt] string config.sendEvents Sets whether to send analytics events
+-- back to LaunchDarkly. By default, the client will send events. This differs
+-- from Offline in that it only affects sending events, not streaming or
+-- polling.
+-- @tparam[opt] int config.eventsCapacity The capacity of the events buffer.
+-- The client buffers up to this many events in memory before flushing. If the
+-- capacity is exceeded before the buffer is flushed, events will be discarded.
+-- @tparam[opt] int config.timeout The connection timeout to use when making
+-- requests to LaunchDarkly.
+-- @tparam[opt] int config.flushInterval he time between flushes of the event
+-- buffer. Decreasing the flush interval means that the event buffer is less
+-- likely to reach capacity.
+-- @tparam[opt] int config.pollInterval The polling interval
+-- (when streaming is disabled) in milliseconds.
+-- @tparam[opt] boolean config.offline Sets whether this client is offline.
+-- An offline client will not make any network connections to LaunchDarkly,
+-- and will return default values for all feature flags.
+-- @tparam[opt] boolean config.allAttributesPrivate Sets whether or not all user
+-- attributes (other than the key) should be hidden from LaunchDarkly. If this
+-- is true, all user attribute values will be private, not just the attributes
+-- specified in PrivateAttributeNames.
+-- @tparam[opt] boolean config.inlineUsersInEvents Set to true if you need to
+-- see the full user details in every analytics event.
+-- @tparam[opt] int config.userKeysCapacity The number of user keys that the
+-- event processor can remember at an one time, so that duplicate user details
+-- will not be sent in analytics.
+-- @tparam[opt] int config.userKeysFlushInterval The interval at which the event
+-- processor will reset its set of known user keys, in milliseconds.
+-- @tparam[opt] table config.privateAttributeNames Marks a set of user attribute
+-- names private. Any users sent to LaunchDarkly with this configuration active
+-- will have attributes with these names removed.
+-- @tparam int timeoutMilliseconds How long to wait for flags to download.
+-- If the timeout is reached a non fully initialized client will be returned.
+-- @return A fresh client.
+local function clientInit(config, timeoutMilliseconds)
     local interface = {}
 
-    local client = ffi.gc(ld.so.LDClientInit(makeConfig(config), 1000), ld.so.LDClientClose)
+    --- An opaque client object
+    -- @type Client
 
+    local client = ffi.gc(so.LDClientInit(makeConfig(config), 1000), so.LDClientClose)
+
+    --- Check if a client has been fully initialized. This may be useful if the
+    -- initialization timeout was reached.
+    -- @class function
+    -- @name isInitialized
+    -- @treturn boolean true if fully initialized
     interface.isInitialized = function()
-        return ld.so.LDClientIsInitialized(client)
+        return so.LDClientIsInitialized(client)
     end
 
+    --- Generates an identify event for a user.
+    -- @class function
+    -- @name identify
+    -- @tparam user user An opaque user object from @{makeUser}
+    -- @treturn nil
     interface.identify = function(user)
-        ld.so.LDClientIdentify(client, user)
+        so.LDClientIdentify(client, user)
     end
 
+    --- Whether the LaunchDarkly client is in offline mode.
+    -- @class function
+    -- @name isOffline
+    -- @treturn boolean true if offline
     interface.isOffline = function()
-        ld.so.LDClientIsOffline(client)
+        so.LDClientIsOffline(client)
     end
 
+    --- Immediately flushes queued events.
+    -- @class function
+    -- @name flush
+    -- @treturn nil
     interface.flush = function()
-        ld.so.LDClientFlush(client)
+        so.LDClientFlush(client)
     end
 
+    --- Reports that a user has performed an event. Custom data, and a metric
+    -- can be attached to the event as JSON.
+    -- @class function
+    -- @name track
+    -- @tparam string key The name of the event
+    -- @tparam user user An opaque user object from @{makeUser}
+    -- @tparam[opt] table data A value to be associated with an event
+    -- @tparam[optchain] number metric A value to be associated with an event
+    -- @treturn nil
     interface.track = function(key, user, data, metric)
         local json = nil
 
@@ -347,14 +461,20 @@ ld.clientInit = function(config, timoutMilliseconds)
         end
 
         if metric ~= nil then
-            ld.so.LDClientTrackMetric(client, key, user, json, metric)
+            so.LDClientTrackMetric(client, key, user, json, metric)
         else
-            ld.so.LDClientTrack(client, key, user, json)
+            so.LDClientTrack(client, key, user, json)
         end
     end
 
+    --- Returns a map from feature flag keys to values for a given user.
+    -- This does not send analytics events back to LaunchDarkly.
+    -- @class function
+    -- @name allFlags
+    -- @tparam user user An opaque user object from @{makeUser}
+    -- @treturn table
     interface.allFlags = function(user)
-        local x = ld.so.LDAllFlags(client, user)
+        local x = so.LDAllFlags(client, user)
         if x ~= nil then
             return fromLaunchDarklyJSON(x)
         else
@@ -362,65 +482,141 @@ ld.clientInit = function(config, timoutMilliseconds)
         end
     end
 
+    --- Evaluate a boolean flag
+    -- @class function
+    -- @name boolVariation
+    -- @tparam user user An opaque user object from @{makeUser}
+    -- @tparam string key The key of the flag to evaluate.
+    -- @tparam boolean fallback The value to return on error
+    -- @treturn boolean The evaluation result, or the fallback value
     interface.boolVariation = function(user, key, fallback)
-        return ld.so.LDBoolVariation(client, user, key, fallback, nil)
+        return so.LDBoolVariation(client, user, key, fallback, nil)
     end
 
+    --- Evaluate a boolean flag and return an explanation
+    -- @class function
+    -- @name boolVariationDetail
+    -- @tparam user user An opaque user object from @{makeUser}
+    -- @tparam string key The key of the flag to evaluate.
+    -- @tparam boolean fallback The value to return on error
+    -- @treturn table The evaluation explanation
     interface.boolVariationDetail = function(user, key, fallback)
-        return genericVariationDetail(client, user, key, fallback, ld.so.LDBoolVariation, nil)
+        return genericVariationDetail(client, user, key, fallback, so.LDBoolVariation, nil)
     end
 
+    --- Evaluate an integer flag
+    -- @class function
+    -- @name intVariation
+    -- @tparam user user An opaque user object from @{makeUser}
+    -- @tparam string key The key of the flag to evaluate.
+    -- @tparam int fallback The value to return on error
+    -- @treturn int The evaluation result, or the fallback value
     interface.intVariation = function(user, key, fallback)
-        return ld.so.LDIntVariation(client, user, key, fallback, nil)
+        return so.LDIntVariation(client, user, key, fallback, nil)
     end
 
+    --- Evaluate an integer flag and return an explanation
+    -- @class function
+    -- @name intVariationDetail
+    -- @tparam user user An opaque user object from @{makeUser}
+    -- @tparam string key The key of the flag to evaluate.
+    -- @tparam int fallback The value to return on error
+    -- @treturn table The evaluation explanation
     interface.intVariationDetail = function(user, key, fallback)
-        return genericVariationDetail(client, user, key, fallback, ld.so.LDIntVariation, nil)
+        return genericVariationDetail(client, user, key, fallback, so.LDIntVariation, nil)
     end
 
+    --- Evaluate a double flag
+    -- @class function
+    -- @name doubleVariation
+    -- @tparam user user An opaque user object from @{makeUser}
+    -- @tparam string key The key of the flag to evaluate.
+    -- @tparam number fallback The value to return on error
+    -- @treturn double The evaluation result, or the fallback value
     interface.doubleVariation = function(user, key, fallback)
-        return ld.so.LDDoubleVariation(client, user, key, fallback, nil)
+        return so.LDDoubleVariation(client, user, key, fallback, nil)
     end
 
+    --- Evaluate a double flag and return an explanation
+    -- @class function
+    -- @name doubleVariationDetail
+    -- @tparam user user An opaque user object from @{makeUser}
+    -- @tparam string key The key of the flag to evaluate.
+    -- @tparam number fallback The value to return on error
+    -- @treturn table The evaluation explanation
     interface.doubleVariationDetail = function(user, key, fallback)
-        return genericVariationDetail(client, user, key, fallback, ld.so.LDDoubleVariation, nil)
+        return genericVariationDetail(client, user, key, fallback, so.LDDoubleVariation, nil)
     end
 
+    --- Evaluate a string flag
+    -- @class function
+    -- @name stringVariation
+    -- @tparam user user An opaque user object from @{makeUser}
+    -- @tparam string key The key of the flag to evaluate.
+    -- @tparam string fallback The value to return on error
+    -- @treturn string The evaluation result, or the fallback value
     interface.stringVariation = function(user, key, fallback)
-        local raw = ld.so.LDStringVariation(client, user, key, fallback, nil)
+        local raw = so.LDStringVariation(client, user, key, fallback, nil)
         local native = ffi.string(raw)
-        ld.so.LDFree(raw)
+        so.LDFree(raw)
         return native
     end
 
+    --- Evaluate a string flag and return an explanation
+    -- @class function
+    -- @name stringVariationDetail
+    -- @tparam user user An opaque user object from @{makeUser}
+    -- @tparam string key The key of the flag to evaluate.
+    -- @tparam string fallback The value to return on error
+    -- @treturn table The evaluation explanation
     interface.stringVariationDetail = function(user, key, fallback)
         local valueConverter = function(raw)
             local native = ffi.string(raw)
-            ld.so.LDFree(raw)
+            so.LDFree(raw)
             return native
         end
 
-        return genericVariationDetail(client, user, key, fallback, ld.so.LDStringVariation, valueConverter)
+        return genericVariationDetail(client, user, key, fallback, so.LDStringVariation, valueConverter)
     end
 
+    --- Evaluate a json flag
+    -- @class function
+    -- @name jsonVariation
+    -- @tparam user user An opaque user object from @{makeUser}
+    -- @tparam string key The key of the flag to evaluate.
+    -- @tparam table fallback The value to return on error
+    -- @treturn table The evaluation result, or the fallback value
     interface.jsonVariation = function(user, key, fallback)
-        local raw = ld.so.LDJSONVariation(client, user, key, toLaunchDarklyJSON(fallback), nil)
+        local raw = so.LDJSONVariation(client, user, key, toLaunchDarklyJSON(fallback), nil)
         local native = fromLaunchDarklyJSON(raw)
-        ld.so.LDJSONFree(raw)
+        so.LDJSONFree(raw)
         return native
     end
 
+    --- Evaluate a json flag and return an explanation
+    -- @class function
+    -- @name jsonVariationDetail
+    -- @tparam user user An opaque user object from @{makeUser}
+    -- @tparam string key The key of the flag to evaluate.
+    -- @tparam table fallback The value to return on error
+    -- @treturn table The evaluation explanation
     interface.jsonVariationDetail = function(user, key, fallback)
         local valueConverter = function(raw)
             local native = fromLaunchDarklyJSON(raw)
-            ld.so.LDJSONFree(raw)
+            so.LDJSONFree(raw)
             return native
         end
 
-        return genericVariationDetail(client, user, key, toLaunchDarklyJSON(fallback), ld.so.LDJSONVariation, valueConverter)
+        return genericVariationDetail(client, user, key, toLaunchDarklyJSON(fallback), so.LDJSONVariation, valueConverter)
     end
+
+    --- @type end
 
     return interface
 end
 
-return ld
+--- @export
+return {
+    makeUser   = makeUser,
+    clientInit = clientInit
+}
