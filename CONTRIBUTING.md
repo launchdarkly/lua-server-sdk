@@ -1,4 +1,4 @@
-Contributing to the LaunchDarkly Server SDK for Lua
+Contributing to the LaunchDarkly Server-Side SDK for Lua
 ================================================
 
 LaunchDarkly has published an [SDK contributor's guide](https://docs.launchdarkly.com/docs/sdk-contributors-guide) that provides a detailed explanation of how our SDKs work. See below for additional information on how to contribute to this SDK.
