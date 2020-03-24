@@ -1,4 +1,4 @@
-LaunchDarkly server SDK for Lua
+LaunchDarkly Server-Side SDK for Lua
 ===========================
 
 [![Circle CI](https://circleci.com/gh/launchdarkly/lua-server-sdk.svg?style=shield)](https://circleci.com/gh/launchdarkly/lua-server-sdk)
