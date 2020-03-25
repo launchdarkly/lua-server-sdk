@@ -1,8 +1,6 @@
 LaunchDarkly Server-Side SDK for Lua
 ===========================
 
-[![Circle CI](https://circleci.com/gh/launchdarkly/lua-server-sdk.svg?style=shield)](https://circleci.com/gh/launchdarkly/lua-server-sdk)
-
 *This version of the SDK is a **beta** version and should not be considered ready for production use while this message is visible.*
 
 LaunchDarkly overview
@@ -14,12 +12,12 @@ LaunchDarkly overview
 Getting started
 -----------
 
-Refer to the [SDK documentation](https://docs.launchdarkly.com/docs/lua-server-reference#section-getting-started) for instructions on getting started with using the SDK.
+Refer to the [SDK documentation](https://docs.launchdarkly.com/sdk/server-side/lua#getting-started) for instructions on getting started with using the SDK.
 
 Learn more
 -----------
 
-Check out our [documentation](https://docs.launchdarkly.com) for in-depth instructions on configuring and using LaunchDarkly. You can also head straight to the [complete reference guide for this SDK](https://docs.launchdarkly.com/docs/lua-server-reference).
+Check out our [documentation](https://docs.launchdarkly.com) for in-depth instructions on configuring and using LaunchDarkly. You can also head straight to the [complete reference guide for this SDK](https://docs.launchdarkly.com/sdk/server-side/lua).
 
 Testing
 -------
