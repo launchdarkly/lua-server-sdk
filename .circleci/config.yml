@@ -1,0 +1,20 @@
+version: 2.1
+
+workflows:
+  version: 2
+  all:
+    jobs:
+      - build-doc-linux
+
+jobs:
+  build-doc-linux:
+    docker:
+      - image: ubuntu:18.04
+    steps:
+      - checkout
+      - run:
+          name: Prepare
+          command: ./.ldrelease/linux-prepare.sh
+      - run:
+          name: Build Doc
+          command: ./.ldrelease/linux-build-docs.sh
