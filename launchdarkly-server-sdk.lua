@@ -91,6 +91,8 @@ ffi.cdef[[
         const char *const attribute);
     void LDConfigSetFeatureStoreBackend(struct LDConfig *const config,
         struct LDStoreInterface *const backend);
+    bool LDConfigSetWrapperInfo(struct LDConfig *const config,
+        const char *const wrapperName, const char *const wrapperVersion);
     struct LDUser * LDUserNew(const char *const userkey);
     void LDUserFree(struct LDUser *const user);
     void LDUserSetAnonymous(struct LDUser *const user, const bool anon);
@@ -213,6 +215,8 @@ ffi.cdef[[
         struct LDUser *const user);
 ]]
 
+local SDKVersion = "1.0.0-beta.1"
+
 local so = ffi.load("ldserverapi")
 
 local function applyWhenNotNil(subject, operation, value)
@@ -296,6 +300,8 @@ local function makeConfig(fields)
     applyWhenNotNil(config, so.LDConfigInlineUsersInEvents,      fields["inlineUsersInEvents"])
     applyWhenNotNil(config, so.LDConfigSetUserKeysCapacity,      fields["userKeysCapacity"])
     applyWhenNotNil(config, so.LDConfigSetUserKeysFlushInterval, fields["userKeysFlushInterval"])
+
+    so.LDConfigSetWrapperInfo(config, "lua-server-sdk", SDKVersion)
 
     local names = fields["privateAttributeNames"]
 
