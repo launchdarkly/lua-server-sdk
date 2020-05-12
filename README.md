@@ -9,6 +9,12 @@ LaunchDarkly overview
 
 [![Twitter Follow](https://img.shields.io/twitter/follow/launchdarkly.svg?style=social&label=Follow&maxAge=2592000)](https://twitter.com/intent/follow?screen_name=launchdarkly)
 
+
+Supported Lua versions
+-----------
+
+This version of the LaunchDarkly SDK is compatible with the Lua 5.1 interpreter, and LuaJIT. Lua 5.3 is not supported due to FFI constraints.
+
 Getting started
 -----------
 
