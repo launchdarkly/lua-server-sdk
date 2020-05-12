@@ -215,7 +215,7 @@ ffi.cdef[[
         struct LDUser *const user);
 ]]
 
-local SDKVersion = "1.0.0-beta.1"
+local SDKVersion = "1.0.0-beta.2"
 
 local so = ffi.load("ldserverapi")
 
