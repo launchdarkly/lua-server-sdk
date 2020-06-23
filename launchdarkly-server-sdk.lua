@@ -282,6 +282,41 @@ local function genericVariationDetail(client, user, key, fallback, variation, va
     return details
 end
 
+local function stringToLogLevel(level)
+    local translation = {
+        ["FATAL"]    = so.LD_LOG_FATAL,
+        ["CRITICAL"] = so.LD_LOG_CRITICAL,
+        ["ERROR"]    = so.LD_LOG_ERROR,
+        ["WARNING"]  = so.LD_LOG_WARNING,
+        ["INFO"]     = so.LD_LOG_INFO,
+        ["DEBUG"]    = so.LD_LOG_DEBUG,
+        ["TRACE"]    = so.LD_LOG_TRACE
+    }
+
+    local lookup = translation[level]
+
+    if lookup == nil then
+        return so.LD_LOG_INFO
+    else
+        return lookup
+    end
+end
+
+--- Set the global logger for all SDK operations. This function is not thread
+-- safe, and if used should be done so before other operations. The default
+-- log level is "INFO".
+-- @tparam string logLevel The level to at. Available options are:
+-- "FATAL", "CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG", "TRACE".
+-- @tparam function cb The logging handler. Callback must be of the form
+-- "function (logLevel, logLine) ... end".
+local function registerLogger(logLevel, cb)
+    so.LDConfigureGlobalLogger(stringToLogLevel(logLevel),
+        function(logLevel, line)
+            cb(ffi.string(so.LDLogLevelToString(logLevel)), ffi.string(line))
+        end
+    )
+end
+
 --- make a config
 local function makeConfig(fields)
     local config = so.LDConfigNew(fields["key"])
@@ -623,6 +658,7 @@ end
 
 --- @export
 return {
-    makeUser   = makeUser,
-    clientInit = clientInit
+    registerLogger = registerLogger,
+    makeUser       = makeUser,
+    clientInit     = clientInit
 }
