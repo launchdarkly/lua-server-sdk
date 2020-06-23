@@ -4,10 +4,10 @@ workflows:
   version: 2
   all:
     jobs:
-      - build-doc-linux
+      - build-test-linux
 
 jobs:
-  build-doc-linux:
+  build-test-linux:
     docker:
       - image: ubuntu:18.04
     steps:
@@ -18,3 +18,9 @@ jobs:
       - run:
           name: Build Doc
           command: ./.ldrelease/linux-build-docs.sh
+      - run:
+          name: Fetch c-server-sdk
+          command: ./scripts/fetch-linux.sh
+      - run:
+          name: Run tests
+          command: LD_LIBRARY_PATH=./lib luajit test.lua
