@@ -1,11 +1,18 @@
 local u = require('luaunit')
 local l = require("launchdarkly-server-sdk")
 
+function logger(level, line)
+    print(level .. ": " .. line)
+end
+
+l.registerLogger("TRACE", logger)
+
 function makeTestClient()
-    return l.clientInit({
-        key     = "sdk-test",
-        offline = true
+    local c = l.clientInit({
+        key = "sdk-test"
     }, 0)
+
+    return c
 end
 
 local user = l.makeUser({ key = "alice" })

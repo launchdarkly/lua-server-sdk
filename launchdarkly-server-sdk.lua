@@ -446,10 +446,13 @@ end
 local function clientInit(config, timeoutMilliseconds)
     local interface = {}
 
+    if timeoutMilliseconds <= 0 then
+        timeoutMilliseconds = 1
+    end
+
     --- An opaque client object
     -- @type Client
-
-    local client = ffi.gc(so.LDClientInit(makeConfig(config), 1000), so.LDClientClose)
+    local client = ffi.gc(so.LDClientInit(makeConfig(config), timeoutMilliseconds), so.LDClientClose)
 
     --- Check if a client has been fully initialized. This may be useful if the
     -- initialization timeout was reached.
