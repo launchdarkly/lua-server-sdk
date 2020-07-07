@@ -10,6 +10,7 @@ jobs:
   build-test-linux:
     docker:
       - image: ubuntu:18.04
+      - image: redis
     steps:
       - checkout
       - run:
@@ -19,8 +20,17 @@ jobs:
           name: Build Doc
           command: ./.ldrelease/linux-build-docs.sh
       - run:
-          name: Fetch c-server-sdk
-          command: ./scripts/fetch-linux.sh
+          name: Build c-server-sdk
+          command: |
+            git clone https://github.com/launchdarkly/c-server-sdk.git
+            cd c-server-sdk
+            mkdir build
+            cd build
+            cmake -D REDIS_STORE=ON -D BUILD_SHARED_LIBS=ON -D BUILD_TESTING=OFF ..
+            make
       - run:
           name: Run tests
-          command: LD_LIBRARY_PATH=./lib luajit test.lua
+          command: |
+            cp c-server-sdk/build/libldserverapi.so .
+            cp c-server-sdk/build/stores/redis/libldserverapi-redis.so .
+            LD_LIBRARY_PATH=. luajit test.lua

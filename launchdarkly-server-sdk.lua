@@ -335,6 +335,7 @@ local function makeConfig(fields)
     applyWhenNotNil(config, so.LDConfigInlineUsersInEvents,      fields["inlineUsersInEvents"])
     applyWhenNotNil(config, so.LDConfigSetUserKeysCapacity,      fields["userKeysCapacity"])
     applyWhenNotNil(config, so.LDConfigSetUserKeysFlushInterval, fields["userKeysFlushInterval"])
+    applyWhenNotNil(config, so.LDConfigSetFeatureStoreBackend,   fields["featureStoreBackend"])
 
     so.LDConfigSetWrapperInfo(config, "lua-server-sdk", SDKVersion)
 
@@ -440,8 +441,11 @@ end
 -- @tparam[opt] table config.privateAttributeNames Marks a set of user attribute
 -- names private. Any users sent to LaunchDarkly with this configuration active
 -- will have attributes with these names removed.
--- @tparam int timeoutMilliseconds How long to wait for flags to download.
--- If the timeout is reached a non fully initialized client will be returned.
+-- @tparam[opt] backend config.featureStoreBackend Persistent feature store
+-- backend.
+-- @tparam int timeoutMilliseconds How long to wait for flags to
+-- download. If the timeout is reached a non fully initialized client will be
+-- returned.
 -- @return A fresh client.
 local function clientInit(config, timeoutMilliseconds)
     local interface = {}

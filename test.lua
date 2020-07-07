@@ -1,5 +1,6 @@
 local u = require('luaunit')
 local l = require("launchdarkly-server-sdk")
+local r = require("launchdarkly-server-sdk-redis")
 
 function logger(level, line)
     print(level .. ": " .. line)
@@ -40,6 +41,17 @@ end
 function testJSONVariation()
     local e = { ["a"] = "b" }
     u.assertEquals(e, makeTestClient().jsonVariation(user, "test", e))
+end
+
+function testRedisBasic()
+    local c = l.clientInit({
+        key                 = "sdk-test",
+        featureStoreBackend = r.makeStore({})
+    }, 0)
+
+    local e = false
+
+    u.assertEquals(e, makeTestClient().boolVariation(user, "test", e))
 end
 
 local runner = u.LuaUnit.new()
