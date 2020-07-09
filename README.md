@@ -13,6 +13,11 @@ Supported Lua versions
 
 This version of the LaunchDarkly SDK is compatible with the Lua 5.1 interpreter, and LuaJIT. Lua 5.3 is not supported due to FFI constraints.
 
+Supported C server-side SDK versions
+-----------
+
+This version of the Lua server-side SDK depends on the C server-side SDK. The minimum required version is `2.1.0`, and under `3.0.0`.
+
 Getting started
 -----------
 
