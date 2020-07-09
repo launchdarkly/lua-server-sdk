@@ -57,7 +57,7 @@ local function makeStore(fields)
     return so.LDStoreInterfaceRedisNew(config)
 end
 
--- @export
+--- @export
 return {
     makeStore = makeStore
 }
