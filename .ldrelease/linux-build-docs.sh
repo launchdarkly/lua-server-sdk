@@ -7,8 +7,8 @@ set -e
 PROJECT_DIR=$(pwd)
 
 mkdir tmp
-cp launchdarkly-server-sdk.lua tmp/
-cp launchdarkly-server-sdk-redis.lua tmp/
+cp launchdarkly-server-sdk.c tmp/
+cp launchdarkly-server-sdk-redis.c tmp/
 
 ldoc tmp
 
