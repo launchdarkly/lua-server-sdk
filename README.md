@@ -1,6 +1,8 @@
 LaunchDarkly Server-Side SDK for Lua
 ===========================
 
+*This version of the SDK is a **beta** version and should not be considered ready for production use while this message is visible.*
+
 LaunchDarkly overview
 -------------------------
 [LaunchDarkly](https://www.launchdarkly.com) is a feature management platform that serves over 100 billion feature flags daily to help teams build better software, faster. [Get started](https://docs.launchdarkly.com/docs/getting-started) using LaunchDarkly today!
@@ -11,7 +13,7 @@ LaunchDarkly overview
 Supported Lua versions
 -----------
 
-This version of the LaunchDarkly SDK is compatible with the Lua 5.1 interpreter, and LuaJIT. Lua 5.3 is not supported due to FFI constraints.
+This version of the LaunchDarkly SDK is compatible with the Lua 5.1-5.3 interpreter, and LuaJIT.
 
 Supported C server-side SDK versions
 -----------
