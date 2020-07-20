@@ -2,6 +2,20 @@
 
 All notable changes to the LaunchDarkly Lua Server-side SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.0.0-beta.3] - 2020-07-20
+
+### Added:
+- Added support for Lua `5.2` and Lua `5.3`.
+- Added `featureStoreBackend` option to configuration object.
+- Added `launchdarkly_server_sdk_redis` module to support Redis as an external feature store.
+- Added `registerLogger` which allows configuration of SDK logging capabilities.
+
+### Changed:
+- The SDK is now implemented as a compiled C module instead of directly in Lua.
+- The SDK is now imported as `launchdarkly_server_sdk`, instead of `launchdarkly-server-sdk.lua`.
+- The SDK no longer depends on the Lua `cjson`, or Lua `ffi` libraries.
+- All methods are no longer closures. Use `client:aFunction`, instead of `client.aFunction`.
+
 ## [1.0.0-beta.2] - 2020-05-12
 
 ### Changed:
