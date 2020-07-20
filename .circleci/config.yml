@@ -4,17 +4,94 @@ workflows:
   version: 2
   all:
     jobs:
-      - build-doc-linux
+      - build-test-linux-luajit
+      - build-test-linux-lua53
+      - build-test-linux-lua52
 
 jobs:
-  build-doc-linux:
+  build-test-linux-luajit:
     docker:
       - image: ubuntu:18.04
+      - image: redis
     steps:
       - checkout
       - run:
           name: Prepare
-          command: ./.ldrelease/linux-prepare.sh
+          command: |
+            apt-get update -y
+            apt-get install -y luajit libluajit-5.1-dev lua-ldoc zip \
+              ca-certificates curl zip lua-cjson libpcre3 libcurl4-openssl-dev \
+              cmake libhiredis-dev git build-essential libpcre3-dev luarocks
+
       - run:
-          name: Build Doc
-          command: ./.ldrelease/linux-build-docs.sh
+          name: Build c-server-sdk
+          command: ./.ldrelease/build-c-server.sh
+
+      - run:
+          name: Build lua-server-sdk
+          command: |
+            luarocks make launchdarkly-server-sdk-1.0-0.rockspec
+            luarocks make launchdarkly-server-sdk-redis-1.0-0.rockspec
+
+      - run:
+          name: Run tests
+          command: |
+            luajit test.lua
+
+  build-test-linux-lua53:
+    docker:
+      - image: ubuntu:18.04
+      - image: redis
+    steps:
+      - checkout
+      - run:
+          name: Prepare
+          command: |
+            apt-get update -y
+            apt-get install -y lua5.3 liblua5.3-dev lua-ldoc zip \
+              ca-certificates curl zip lua-cjson libpcre3 libcurl4-openssl-dev \
+              cmake libhiredis-dev git build-essential libpcre3-dev luarocks
+
+      - run:
+          name: Build c-server-sdk
+          command: ./.ldrelease/build-c-server.sh
+
+      - run:
+          name: Build lua-server-sdk
+          command: |
+            luarocks make launchdarkly-server-sdk-1.0-0.rockspec
+            luarocks make launchdarkly-server-sdk-redis-1.0-0.rockspec
+
+      - run:
+          name: Run tests
+          command: |
+            lua5.3 test.lua
+
+  build-test-linux-lua52:
+    docker:
+      - image: ubuntu:18.04
+      - image: redis
+    steps:
+      - checkout
+      - run:
+          name: Prepare
+          command: |
+            apt-get update -y
+            apt-get install -y lua5.2 liblua5.2-dev lua-ldoc zip \
+              ca-certificates curl zip lua-cjson libpcre3 libcurl4-openssl-dev \
+              cmake libhiredis-dev git build-essential libpcre3-dev luarocks
+
+      - run:
+          name: Build c-server-sdk
+          command: ./.ldrelease/build-c-server.sh
+
+      - run:
+          name: Build lua-server-sdk
+          command: |
+            luarocks make launchdarkly-server-sdk-1.0-0.rockspec
+            luarocks make launchdarkly-server-sdk-redis-1.0-0.rockspec
+
+      - run:
+          name: Run tests
+          command: |
+            lua5.2 test.lua

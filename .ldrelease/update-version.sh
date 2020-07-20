@@ -2,4 +2,4 @@
 
 set -e
 
-sed -i "s/local SDKVersion =.*/local SDKVersion = \"${LD_RELEASE_VERSION}\"/" 'launchdarkly-server-sdk.lua'
+sed -i "s/#define SDKVersion .*/#define SDKVersion \"${LD_RELEASE_VERSION}\"/" 'launchdarkly-server-sdk.c'

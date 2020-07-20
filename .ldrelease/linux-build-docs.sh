@@ -6,7 +6,11 @@ set -e
 
 PROJECT_DIR=$(pwd)
 
-ldoc launchdarkly-server-sdk.lua
+mkdir tmp
+cp launchdarkly-server-sdk.c tmp/
+cp launchdarkly-server-sdk-redis.c tmp/
+
+ldoc tmp
 
 mkdir -p $PROJECT_DIR/artifacts
 cd $PROJECT_DIR/doc
