@@ -2,6 +2,12 @@
 
 All notable changes to the LaunchDarkly Lua Server-side SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.0.0] - 2020-07-27
+First supported GA release.
+
+### Fixed:
+- Set `source.url` field to repository in rockspecs
+
 ## [1.0.0-beta.3] - 2020-07-20
 
 ### Added:
