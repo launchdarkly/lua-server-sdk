@@ -2,6 +2,11 @@
 
 All notable changes to the LaunchDarkly Lua Server-side SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.0.1] - 2020-08-28
+### Fixed:
+- Conflicting definition of `luaL_setfuncs` in certain versions of the Lua C API.
+
+
 ## [1.0.0] - 2020-07-27
 First supported GA release.
 
