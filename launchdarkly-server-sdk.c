@@ -1172,23 +1172,25 @@ static const struct luaL_Reg launchdarkly_store_methods[] = {
     { NULL, NULL }
 };
 
-#if !defined LUA_VERSION_NUM || LUA_VERSION_NUM==501
 /*
 ** Adapted from Lua 5.2.0
 */
-static void luaL_setfuncs (lua_State *L, const luaL_Reg *l, int nup) {
-  luaL_checkstack(L, nup+1, "too many upvalues");
-  for (; l->name != NULL; l++) {  /* fill the table with given functions */
-    int i;
-    lua_pushstring(L, l->name);
-    for (i = 0; i < nup; i++)  /* copy upvalues to the top */
-      lua_pushvalue(L, -(nup+1));
-    lua_pushcclosure(L, l->func, nup);  /* closure with those upvalues */
-    lua_settable(L, -(nup + 3));
-  }
-  lua_pop(L, nup);  /* remove upvalues */
+static void
+ld_luaL_setfuncs(lua_State *L, const luaL_Reg *l, int nup)
+{
+    luaL_checkstack(L, nup+1, "too many upvalues");
+    for (; l->name != NULL; l++) {  /* fill the table with given functions */
+        int i;
+        lua_pushstring(L, l->name);
+         /* copy upvalues to the top */
+        for (i = 0; i < nup; i++) {
+            lua_pushvalue(L, -(nup+1));
+        }
+        lua_pushcclosure(L, l->func, nup);  /* closure with those upvalues */
+        lua_settable(L, -(nup + 3));
+    }
+    lua_pop(L, nup);  /* remove upvalues */
 }
-#endif
 
 int
 luaopen_launchdarkly_server_sdk(lua_State *const l)
@@ -1196,17 +1198,17 @@ luaopen_launchdarkly_server_sdk(lua_State *const l)
     luaL_newmetatable(l, "LaunchDarklyClient");
     lua_pushvalue(l, -1);
     lua_setfield(l, -2, "__index");
-    luaL_setfuncs(l, launchdarkly_client_methods, 0);
+    ld_luaL_setfuncs(l, launchdarkly_client_methods, 0);
 
     luaL_newmetatable(l, "LaunchDarklyUser");
     lua_pushvalue(l, -1);
     lua_setfield(l, -2, "__index");
-    luaL_setfuncs(l, launchdarkly_user_methods, 0);
+    ld_luaL_setfuncs(l, launchdarkly_user_methods, 0);
 
     luaL_newmetatable(l, "LaunchDarklyStoreInterface");
     lua_pushvalue(l, -1);
     lua_setfield(l, -2, "__index");
-    luaL_setfuncs(l, launchdarkly_store_methods, 0);
+    ld_luaL_setfuncs(l, launchdarkly_store_methods, 0);
 
     #if LUA_VERSION_NUM == 503 || LUA_VERSION_NUM == 502
         luaL_newlib(l, launchdarkly_functions);
