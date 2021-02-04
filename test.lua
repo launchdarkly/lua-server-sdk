@@ -109,6 +109,10 @@ function TestAll:testIdentify()
     makeTestClient():identify(user)
 end
 
+function TestAll:testAlias()
+    makeTestClient():alias(user, l.makeUser({ key = "bob" }))
+end
+
 function TestAll:testRedisBasic()
     local c = l.clientInit({
         key                 = "sdk-test",

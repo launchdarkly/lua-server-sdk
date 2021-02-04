@@ -1062,6 +1062,35 @@ LuaLDClientTrack(lua_State *const l)
 }
 
 /***
+Associates two users for analytics purposes by generating an alias event.
+@function alias
+@tparam user currentUser An opaque user object from @{makeUser}
+@tparam user previousUser An opaque user object from @{makeUser}
+@treturn nil
+*/
+static int
+LuaLDClientAlias(lua_State *const l)
+{
+    struct LDClient **client;
+    struct LDUser **currentUser, **previousUser;
+    struct LDJSON *value;
+
+    if (lua_gettop(l) != 3) {
+        return luaL_error(l, "expected exactly three arguments");
+    }
+
+    client = (struct LDClient **)luaL_checkudata(l, 1, "LaunchDarklyClient");
+    currentUser = (struct LDUser **)luaL_checkudata(l, 2, "LaunchDarklyUser");
+    previousUser = (struct LDUser **)luaL_checkudata(l, 3, "LaunchDarklyUser");
+
+    if (!LDClientAlias(*client, *currentUser, *previousUser)) {
+        return luaL_error(l, "LDClientAlias failed");
+    }
+
+    return 0;
+}
+
+/***
 Check if a client has been fully initialized. This may be useful if the
 initialization timeout was reached.
 @function isInitialized
@@ -1156,6 +1185,7 @@ static const struct luaL_Reg launchdarkly_client_methods[] = {
     { "jsonVariationDetail",   LuaLDClientJSONVariationDetail   },
     { "flush",                 LuaLDClientFlush                 },
     { "track",                 LuaLDClientTrack                 },
+    { "alias",                 LuaLDClientAlias                 },
     { "allFlags",              LuaLDClientAllFlags              },
     { "isInitialized",         LuaLDClientIsInitialized         },
     { "identify",              LuaLDClientIdentify              },
