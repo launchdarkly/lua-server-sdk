@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly Lua Server-side SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.1.0] - 2021-02-04
+### Added:
+- Added the `alias` method. This can be used to associate two user objects for analytics purposes by generating an alias event.
+
 ## [1.0.1] - 2020-08-28
 ### Fixed:
 - Conflicting definition of `luaL_setfuncs` in certain versions of the Lua C API.
