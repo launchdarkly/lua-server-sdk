@@ -3,7 +3,8 @@ package = "launchdarkly-server-sdk"
 version = "1.0-0"
 
 source = {
-   url = "git+https://github.com/launchdarkly/lua-server-sdk.git"
+   url = "git+https://github.com/launchdarkly/lua-server-sdk.git",
+   tag = "1.0.0"
 }
 
 dependencies = {
