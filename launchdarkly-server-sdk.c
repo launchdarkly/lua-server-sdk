@@ -358,6 +358,19 @@ LuaLDUserNew(lua_State *const l)
     return 1;
 }
 
+
+/***
+Return SDK version.
+@function version
+@return SDK version string.
+*/
+static int
+LuaLDVersion(lua_State *const l)
+{
+    lua_pushstring(l, SDKVersion);
+    return 1;
+}
+
 static int
 LuaLDUserFree(lua_State *const l)
 {
@@ -1169,6 +1182,7 @@ static const struct luaL_Reg launchdarkly_functions[] = {
     { "clientInit",     LuaLDClientInit     },
     { "makeUser",       LuaLDUserNew        },
     { "registerLogger", LuaLDRegisterLogger },
+    { "version",        LuaLDVersion        },
     { NULL,             NULL                }
 };
 
