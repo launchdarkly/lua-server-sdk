@@ -20,7 +20,7 @@ jobs:
           command: |
             apt-get update -y
             apt-get install -y luajit libluajit-5.1-dev lua-ldoc zip \
-              ca-certificates curl zip lua-cjson libpcre3 libcurl4-openssl-dev \
+              ca-certificates curl libpcre3 libcurl4-openssl-dev \
               cmake libhiredis-dev git build-essential libpcre3-dev luarocks
 
       - run:
@@ -49,7 +49,7 @@ jobs:
           command: |
             apt-get update -y
             apt-get install -y lua5.3 liblua5.3-dev lua-ldoc zip \
-              ca-certificates curl zip lua-cjson libpcre3 libcurl4-openssl-dev \
+              ca-certificates curl libpcre3 libcurl4-openssl-dev \
               cmake libhiredis-dev git build-essential libpcre3-dev luarocks
 
       - run:
@@ -78,7 +78,7 @@ jobs:
           command: |
             apt-get update -y
             apt-get install -y lua5.2 liblua5.2-dev lua-ldoc zip \
-              ca-certificates curl zip lua-cjson libpcre3 libcurl4-openssl-dev \
+              ca-certificates curl libpcre3 libcurl4-openssl-dev \
               cmake libhiredis-dev git build-essential libpcre3-dev luarocks
 
       - run:
