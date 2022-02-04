@@ -1175,6 +1175,8 @@ LuaLDClientAllFlags(lua_State *const l)
 
     LuaPushJSON(l, result);
 
+    LDJSONFree(result);
+
     return 1;
 }
 
