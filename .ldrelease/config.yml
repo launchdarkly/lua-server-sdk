@@ -1,14 +1,17 @@
+version: 2
+
 repo:
   public: lua-server-sdk
   private: lua-server-sdk-private
 
-circleci:
-  linux:
-    image: ubuntu:18.04
+jobs:
+- circleCI:
+    linux:
+      image: ubuntu:18.04
 
 documentation:
   title: LaunchDarkly Server-Side SDK for Lua
-  githubPages: true
+  gitHubPages: true
 
 sdk:
   displayName: "Lua (server-side)"
