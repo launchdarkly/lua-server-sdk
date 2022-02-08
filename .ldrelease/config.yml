@@ -5,8 +5,7 @@ repo:
   private: lua-server-sdk-private
 
 jobs:
-- circleCI:
-    linux:
+  - docker:
       image: ubuntu:18.04
 
 documentation:
