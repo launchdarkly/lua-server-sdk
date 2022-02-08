@@ -125,5 +125,11 @@ function TestAll:testRedisBasic()
     u.assertEquals(e, c:boolVariation(user, "test", e))
 end
 
+function TestAll:testVersion()
+    local version = l.version()
+    u.assertNotIsNil(version)
+    u.assertStrMatches(version, "(%d+)%.(%d+)%.(%d+)(.*)")
+end
+
 local runner = u.LuaUnit.new()
 os.exit(runner:runSuite())
