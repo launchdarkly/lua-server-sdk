@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly Lua Server-side SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.2.2] - 2022-02-08
+### Fixed:
+- Remove accidental check-in of temporary documentation build files.
+
 ## [1.2.1] - 2022-02-08
 ### Changed:
 - Updated release configuration.
