@@ -2,6 +2,16 @@
 
 All notable changes to the LaunchDarkly Lua Server-side SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.2.0] - 2022-02-07
+### Added:
+- Added `version()` function to retrieve SDK version
+
+### Fixed:
+- Fixed memory leak in `AllFlags` API.
+
+### Removed:
+- Removed references to unused `cjson` package.
+
 ## [1.1.0] - 2021-02-04
 ### Added:
 - Added the `alias` method. This can be used to associate two user objects for analytics purposes by generating an alias event.
