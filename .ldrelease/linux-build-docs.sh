@@ -12,6 +12,4 @@ cp launchdarkly-server-sdk-redis.c tmp/
 
 ldoc tmp
 
-mkdir -p $PROJECT_DIR/artifacts
-cd $PROJECT_DIR/doc
-zip -r $PROJECT_DIR/artifacts/docs.zip *
+cp -r ${PROJECT_DIR}/docs/* ${LD_RELEASE_DOCS_DIR}
