@@ -655,7 +655,7 @@ lazyLoad = {
 }
 
 /***
-Initialize a new client, and connect to LaunchDarkly.
+Initialize a new client, and connect to LaunchDarkly. Applications should instantiate a single instance for the lifetime of their application.
 @function makeClient
 @tparam table config list of configuration options
 @tparam string config.key Environment SDK key
