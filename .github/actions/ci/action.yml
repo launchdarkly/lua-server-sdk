@@ -1,0 +1,25 @@
+name: CI Workflow
+description: 'Shared CI workflow.'
+inputs:
+  lua-version:
+    description: 'Which version of Lua to use?'
+    required: false
+    default: "5.3"
+
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Lua
+      uses: leafo/gh-actions-lua@v10.0.0
+      with:
+        luaVersion: ${{ inputs.lua-version }}
+    - name: Setup C Server-side SDK
+      shell: bash
+      run: ./scripts/build-c-server.sh
+    - name: Build Lua Server-side SDK
+      shell: bash
+      run:  sudo luarocks make launchdarkly-server-sdk-1.0-0.rockspec
+    - name: Build Lua Server-side SDK with Redis
+      shell: bash
+      run: sudo luarocks make launchdarkly-server-sdk-redis-1.0-0.rockspec
