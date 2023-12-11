@@ -12,6 +12,11 @@ runs:
       uses: leafo/gh-actions-lua@v10.0.0
       with:
         luaVersion: ${{ inputs.lua-version }}
+    - name: Install C Server-side SDK Dependencies
+      shell: bash
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y libcurl4-openssl-dev
     - name: Setup C Server-side SDK
       shell: bash
       run: ./scripts/build-c-server.sh
