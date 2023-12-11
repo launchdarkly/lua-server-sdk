@@ -2,10 +2,14 @@
 
 set -e
 
-# This only runs in the Linux build, since the docs are the same for all platforms.
+# The first argument is the directory where the docs should be built.
 
-# LD_RELEASE_TEMP_DIR is guaranteed to be empty, and will not be checked into version control.
-DOCS_BUILD_DIR="$LD_RELEASE_TEMP_DIR/docs"
+if [ -z "$1" ]; then
+    echo "Usage: $0 <docs-build-dir>"
+    exit 1
+fi
+
+DOCS_BUILD_DIR=$1
 mkdir "$DOCS_BUILD_DIR"
 
 cp launchdarkly-server-sdk.c "$DOCS_BUILD_DIR"

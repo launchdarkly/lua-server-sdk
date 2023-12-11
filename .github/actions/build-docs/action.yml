@@ -6,4 +6,4 @@ runs:
   steps:
     - name: Build Documentation
       shell: bash
-      run: ./scripts/build-docs.sh
+      run: ./scripts/build-docs.sh docs
