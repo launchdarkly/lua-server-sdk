@@ -9,9 +9,9 @@ runs:
   using: composite
   steps:
     - uses: leafo/gh-actions-lua@v10.0.0
-    - uses: leafo/gh-actions-luarocks@v4.3.0
       with:
         luaVersion: ${{ inputs.lua-version }}
+    - uses: leafo/gh-actions-luarocks@v4.3.0
     - name: Install C Server-side SDK Dependencies
       shell: bash
       run: |
@@ -33,4 +33,10 @@ runs:
 
     - name: Run tests
       shell: bash
+      if: ${{ ! contains(inputs.lua-version, 'jit') }}
       run: lua test.lua
+
+    - name: Run tests (JIT)
+      shell: bash
+      if: ${{ contains(inputs.lua-version, 'jit') }}
+      run: luajit test.lua
