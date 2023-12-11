@@ -11,7 +11,7 @@ Server-side SDK for LaunchDarkly.
 
 #include <launchdarkly/api.h>
 
-#define SDKVersion "1.2.2" // {x-release-please-version}
+#define SDKVersion "1.2.2" /* {x-release-please-version} */
 
 static struct LDJSON *
 LuaValueToJSON(lua_State *const l, const int i);
