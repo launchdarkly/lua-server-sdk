@@ -1256,7 +1256,11 @@ luaopen_launchdarkly_server_sdk(lua_State *const l)
     lua_setfield(l, -2, "__index");
     ld_luaL_setfuncs(l, launchdarkly_store_methods, 0);
 
-    luaL_newlib(l, launchdarkly_functions);
+    #if LUA_VERSION_NUM == 503 || LUA_VERSION_NUM == 502
+        luaL_newlib(l, launchdarkly_functions);
+    #else
+        luaL_register(l, "launchdarkly-server-sdk", launchdarkly_functions);
+    #endif
 
     return 1;
 }

@@ -99,6 +99,12 @@ static void luaL_setfuncs (lua_State *L, const luaL_Reg *l, int nup) {
 int
 luaopen_launchdarkly_server_sdk_redis(lua_State *const l)
 {
-    luaL_newlib(l, launchdarkly_functions);
+    #if LUA_VERSION_NUM == 503 || LUA_VERSION_NUM == 502
+        luaL_newlib(l, launchdarkly_functions);
+    #else
+        luaL_register(l, "launchdarkly-server-sdk-redis",
+            launchdarkly_functions);
+    #endif
+
     return 1;
 }
