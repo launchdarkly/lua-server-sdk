@@ -4,10 +4,6 @@ inputs:
   lua-version:
     description: 'Which version of Lua to use?'
     required: true
-  luarocks-version:
-    description: 'Which version of LuaRocks to use?'
-    required: false
-    default: "3.1.3"
 
 runs:
   using: composite
@@ -16,7 +12,6 @@ runs:
     - uses: leafo/gh-actions-luarocks@v4.3.0
       with:
         luaVersion: ${{ inputs.lua-version }}
-        luaRocksVersion: ${{ inputs.luarocks-version }}
     - name: Install C Server-side SDK Dependencies
       shell: bash
       run: |
@@ -29,7 +24,7 @@ runs:
       run: ./scripts/build-c-server.sh
     - name: Build Lua Server-side SDK
       shell: bash
-      run:  sudo luarocks make launchdarkly-server-sdk-1.0-0.rockspec
+      run:  luarocks make launchdarkly-server-sdk-1.0-0.rockspec
     - name: Build Lua Server-side SDK with Redis
       shell: bash
-      run: sudo luarocks make launchdarkly-server-sdk-redis-1.0-0.rockspec
+      run: luarocks make launchdarkly-server-sdk-redis-1.0-0.rockspec
