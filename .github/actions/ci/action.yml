@@ -3,9 +3,7 @@ description: 'Shared CI workflow.'
 inputs:
   lua-version:
     description: 'Which version of Lua to use?'
-    required: false
-    default: "5.3"
-
+    required: true
 
 runs:
   using: composite
@@ -13,7 +11,7 @@ runs:
     - name: Setup Lua
       uses: leafo/gh-actions-lua@v10.0.0
       with:
-        luaVersion: "5.3"
+        luaVersion: ${{ inputs.lua-version }}
     - name: Setup C Server-side SDK
       shell: bash
       run: ./scripts/build-c-server.sh

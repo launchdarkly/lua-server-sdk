@@ -15,7 +15,7 @@ jobs:
 
     strategy:
       matrix:
-        lua-versions: [5.2, 5.3, luajit-2.0.5]
+        version: ["5.2", "5.3", "luajit-2.0.5"]
 
     steps:
       - uses: actions/checkout@v4
@@ -24,4 +24,4 @@ jobs:
 
       - uses: ./.github/actions/ci
         with:
-          lua-version: ${{ matrix.lua-version }}
+          lua-version: ${{ matrix.version }}
