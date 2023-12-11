@@ -1,0 +1,14 @@
+{
+  "packages": {
+    ".": {
+      "release-type": "simple",
+      "bump-minor-pre-major": true,
+      "versioning": "default",
+      "//Delete this 3": "extra-files is only needed if your release is not supported, or you have extra files that need the version number. Delete the entire node if you don't need it.",
+      "extra-files": [
+        "demo_version.xml",
+        "demo_version.txt"
+      ]
+    }
+  }
+}
