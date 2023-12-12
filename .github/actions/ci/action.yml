@@ -2,7 +2,7 @@ name: CI Workflow
 description: 'Shared CI workflow.'
 inputs:
   lua-version:
-    description: 'Which version of Lua to use?'
+    description: 'Version of Lua to use for building and testing.'
     required: true
 
 runs:
