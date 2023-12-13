@@ -21,13 +21,13 @@ Server-side SDK for LaunchDarkly.
 
 #define SDKVersion "1.2.2" /* {x-release-please-version} */
 
-static struct LDJSON *
+static LDValue
 LuaValueToJSON(lua_State *const l, const int i);
 
-static struct LDJSON *
+static LDValue
 LuaTableToJSON(lua_State *const l, const int i);
 
-static struct LDJSON *
+static LDValue
 LuaArrayToJSON(lua_State *const l, const int i);
 
 static void
@@ -35,6 +35,15 @@ LuaPushJSON(lua_State *const l, LDValue j);
 
 static int globalLoggingCallback;
 static lua_State *globalLuaState;
+
+static int lua_tablelen(lua_State *L, int index)
+{
+    #if LUA_VERSION_NUM >= 502
+    return lua_rawlen(L, index);
+    #else
+    return lua_objlen(L, index);
+    #endif
+}
 
 static void
 logHandler(const enum LDLogLevel level, const char * const line)
@@ -69,7 +78,7 @@ LuaLDRegisterLogger(lua_State *const l)
     globalLuaState        = l;
     globalLoggingCallback = luaL_ref(l, LUA_REGISTRYINDEX);
 
-// TODO: Install custom loggger
+    // TODO: Install custom loggger
    // LDConfigureGlobalLogger(LDLogLevel_Enum(level, LD_LOG_INFO), logHandler);
 
     return 0;
@@ -149,7 +158,7 @@ LuaArrayToJSON(lua_State *const l, const int i)
     return LDArrayBuilder_Build(result);
 }
 
-static struct LDJSON *
+static LDValue
 LuaTableToJSON(lua_State *const l, const int i)
 {
     LDObjectBuilder result = LDObjectBuilder_New();
@@ -175,7 +184,7 @@ LuaTableToJSON(lua_State *const l, const int i)
 static void
 LuaPushJSONObject(lua_State *const l, LDValue j)
 {
-    struct LDValue_ObjectIter iter;
+    LDValue_ObjectIter iter;
 
     lua_newtable(l);
 
@@ -186,9 +195,9 @@ LuaPushJSONObject(lua_State *const l, LDValue j)
 }
 
 static void
-LuaPushJSONArray(lua_State *const l, const struct LDJSON *const j)
+LuaPushJSONArray(lua_State *const l, LDValue j)
 {
-    struct LDValue_ArrayIter iter;
+    LDValue_ArrayIter iter;
 
     lua_newtable(l);
 
@@ -312,19 +321,47 @@ LuaLDUserNew(lua_State *const l)
         LDContextBuilder_Attributes_Set(builder, "user", "country", LDValue_NewString(luaL_checkstring(l, -1)));
     }
 
+
+    lua_getfield(l, 1, "secondary");
+
+    if (lua_isstring(l, -1)) {
+       // TODO: Log a warning that this was removed
+
+
+    }
+
     lua_getfield(l, 1, "custom");
 
+    // The individual fields of custom are added to the top-level of the context.
+    // TODO: document this.
     if (lua_istable(l, -1)) {
-        // TODO: Iterate through the props and add as individual attributes
+        lua_pushnil(l);
+
+        while (lua_next(l, -2) != 0) {
+            const char *const key = luaL_checkstring(l, -2);
+
+            LDValue value = LuaValueToJSON(l, -1);
+
+            LDContextBuilder_Attributes_Set(builder, "user", key, value);
+
+            lua_pop(l, 1);
+        }
     }
 
     lua_getfield(l, 1, "privateAttributeNames");
 
     if (lua_istable(l, -1)) {
+        int n = lua_tablelen(l, -1);
 
-        // TODO: Iterate throughthe table and add the attribute names
-        LDContextBuilder_Attributes_AddPrivateAttribute(builder, "user", "foo");
+        for (int i = 1; i <= n; i++) {
+            lua_rawgeti(l, -1, i);
 
+            if (lua_isstring(l, -1)) {
+                LDContextBuilder_Attributes_AddPrivateAttribute(builder, "user", luaL_checkstring(l, -1));
+            }
+
+            lua_pop(l, 1);
+        }
     }
 
     LDContext context = LDContextBuilder_Build(builder);
@@ -352,12 +389,16 @@ LuaLDVersion(lua_State *const l)
     return 1;
 }
 
+/**
+Frees a user object.
+@deprecated Users are deprecated. Use contexts instead.
+*/
 static int
 LuaLDUserFree(lua_State *const l)
 {
     LDContext *context;
 
-    context = (struct LDUser **)luaL_checkudata(l, 1, "LaunchDarklyContext");
+    context = (LDContext *)luaL_checkudata(l, 1, "LaunchDarklyContext");
 
     if (*context) {
         LDContext_Free(*context);
@@ -367,10 +408,10 @@ LuaLDUserFree(lua_State *const l)
     return 0;
 }
 
-static struct LDConfig *
+static LDServerConfig
 makeConfig(lua_State *const l, const int i)
 {
-    struct LDConfig *config;
+    LDServerConfigBuilder builder;
 
     luaL_checktype(l, i, LUA_TTABLE);
 
@@ -378,119 +419,132 @@ makeConfig(lua_State *const l, const int i)
 
     const char *const key = luaL_checkstring(l, -1);
 
-    config = LDConfigNew(key);
+    builder = LDServerConfigBuilder_New(key);
 
     lua_getfield(l, i, "baseURI");
 
     if (lua_isstring(l, -1)) {
-        LDConfigSetBaseURI(config, luaL_checkstring(l, -1));
+        LDServerConfigBuilder_ServiceEndpoints_PollingBaseURL(builder, luaL_checkstring(l, -1));
     }
 
     lua_getfield(l, i, "streamURI");
 
     if (lua_isstring(l, -1)) {
-        LDConfigSetStreamURI(config, luaL_checkstring(l, -1));
+        LDServerConfigBuilder_ServiceEndpoints_StreamingBaseURL(builder, luaL_checkstring(l, -1));
     }
 
     lua_getfield(l, i, "eventsURI");
 
     if (lua_isstring(l, -1)) {
-        LDConfigSetEventsURI(config, luaL_checkstring(l, -1));
+        LDServerConfigBuilder_ServiceEndpoints_EventsBaseURL(builder, luaL_checkstring(l, -1));
     }
 
     lua_getfield(l, i, "stream");
 
     if (lua_isboolean(l, -1)) {
-        LDConfigSetStream(config, lua_toboolean(l, -1));
+        // TODO: Switch between poll/streaming data systems
+        //LDConfigSetStream(config, lua_toboolean(l, -1));
     }
 
     lua_getfield(l, i, "sendEvents");
 
-    if (lua_isstring(l, -1)) {
-        LDConfigSetSendEvents(config, lua_toboolean(l, -1));
+    if (lua_isboolean(l, -1)) {
+        LDServerConfigBuilder_Events_Enabled(builder, lua_toboolean(l, -1));
     }
 
     lua_getfield(l, i, "eventsCapacity");
 
     if (lua_isnumber(l, -1)) {
-        LDConfigSetEventsCapacity(config, luaL_checkinteger(l, -1));
+        LDServerConfigBuilder_Events_Capacity(builder, luaL_checkinteger(l, -1));
     }
 
     lua_getfield(l, i, "timeout");
 
     if (lua_isnumber(l, -1)) {
-        LDConfigSetTimeout(config, luaL_checkinteger(l, -1));
+        // TODO: Use timeout
     }
 
     lua_getfield(l, i, "flushInterval");
 
     if (lua_isnumber(l, -1)) {
-        LDConfigSetFlushInterval(config, luaL_checkinteger(l, -1));
+        LDServerConfigBuilder_Events_FlushIntervalMs(builder, luaL_checkinteger(l, -1));
     }
 
     lua_getfield(l, i, "pollInterval");
 
     if (lua_isnumber(l, -1)) {
-        LDConfigSetPollInterval(config, luaL_checkinteger(l, -1));
+        // TODO: Set poll data system
     }
 
     lua_getfield(l, i, "offline");
 
     if (lua_isboolean(l, -1)) {
-        LDConfigSetOffline(config, lua_toboolean(l, -1));
+        // TODO: Document change in behavior (offline now disables events + data system)
+        LDServerConfigBuilder_Offline(builder, lua_toboolean(l, -1));
     }
 
     lua_getfield(l, i, "useLDD");
 
     if (lua_isboolean(l, -1)) {
-        LDConfigSetUseLDD(config, lua_toboolean(l, -1));
+        // TODO: Warn that this needs to be setup
     }
 
     lua_getfield(l, i, "inlineUsersInEvents");
 
     if (lua_isboolean(l, -1)) {
-        LDConfigInlineUsersInEvents(config, lua_toboolean(l, -1));
+        // TODO: warn this was removed
     }
 
     lua_getfield(l, i, "allAttributesPrivate");
 
     if (lua_isboolean(l, -1)) {
-        LDConfigSetAllAttributesPrivate(config, lua_toboolean(l, -1));
+       LDServerConfigBuilder_Events_AllAttributesPrivate(builder, lua_toboolean(l, -1));
     }
 
     lua_getfield(l, i, "userKeysCapacity");
 
     if (lua_isnumber(l, -1)) {
-        LDConfigSetUserKeysCapacity(config, luaL_checkinteger(l, -1));
+        // TODO: We don't have a C binding for this yet
+        //LDConfigSetUserKeysCapacity(config, luaL_checkinteger(l, -1));
     }
 
     lua_getfield(l, i, "featureStoreBackend");
 
     if (lua_isuserdata(l, -1)) {
-        struct LDStoreInterface **storeInterface;
-
-        storeInterface = (struct LDStoreInterface **)
-            luaL_checkudata(l, -1, "LaunchDarklyStoreInterface");
-
-        LDConfigSetFeatureStoreBackend(config, *storeInterface);
+        // TODO: Setup the store reader backend
+        // struct LDStoreInterface **storeInterface;
+        //
+        // storeInterface = (struct LDStoreInterface **)
+        //     luaL_checkudata(l, -1, "LaunchDarklyStoreInterface");
+        //
+        // LDConfigSetFeatureStoreBackend(config, *storeInterface);
     }
 
     lua_getfield(l, 1, "privateAttributeNames");
 
     if (lua_istable(l, -1)) {
-        struct LDJSON *attrs, *iter;
-        attrs = LuaValueToJSON(l, -1);
+        int n = lua_tablelen(l, -1);
 
-        for (iter = LDGetIter(attrs); iter; iter = LDIterNext(iter)) {
-            LDConfigAddPrivateAttribute(config, LDValue_GetString(iter));
+        for (int i = 1; i <= n; i++) {
+            lua_rawgeti(l, -1, i);
+
+            if (lua_isstring(l, -1)) {
+                LDServerConfigBuilder_Events_PrivateAttribute(builder, luaL_checkstring(l, -1));
+            }
+
+            lua_pop(l, 1);
         }
-
-        LDJSONFree(attrs);
     }
 
-    LDConfigSetWrapperInfo(config, "lua-server-sdk", SDKVersion);
+    LDServerConfigBuilder_HttpProperties_WrapperName(builder, "lua-server-sdk");
+    LDServerConfigBuilder_HttpProperties_WrapperVersion(builder, SDKVersion);
 
-    return config;
+
+    LDServerConfig out_config;
+    LDServerConfigBuilder_Build(builder, &out_config);
+
+    // TODO: Check result of the call
+    return out_config;
 }
 
 /***
@@ -553,7 +607,7 @@ static int
 LuaLDClientInit(lua_State *const l)
 {
     LDServerSDK client;
-    LDConfig config;
+    LDServerConfig config;
     unsigned int timeout;
 
     if (lua_gettop(l) != 2) {
@@ -567,8 +621,7 @@ LuaLDClientInit(lua_State *const l)
 
     client = LDServerSDK_New(config);
 
-    struct LDServerSDK *c =
-        (struct LDServerSDK *)lua_newuserdata(l, sizeof(client));
+    LDServerSDK *c = (LDServerSDK *) lua_newuserdata(l, sizeof(client));
 
     *c = client;
 
@@ -594,29 +647,24 @@ LuaLDClientClose(lua_State *const l)
 }
 
 static void
-LuaPushDetails(lua_State *const l, struct LDDetails *const details,
-    struct LDJSON *const value)
+LuaPushDetails(lua_State *const l, LDEvalDetail details,
+    LDValue value)
 {
-    struct LDJSON *reason;
-
-    reason = LDReasonToJSON(details);
-
     lua_newtable(l);
+    /** TODO: C bindings for this? */
 
-    LuaPushJSON(l, reason);
     lua_setfield(l, -2, "reason");
 
     if (details->hasVariation) {
-        lua_pushnumber(l, details->variationIndex);
+        lua_pushnumber(l, LDEvalDetail_VariationIndex(details));
         lua_setfield(l, -2, "variationIndex");
     }
 
     LuaPushJSON(l, value);
     lua_setfield(l, -2, "value");
 
-    LDDetailsClear(details);
-    LDJSONFree(value);
-    LDJSONFree(reason);
+    LDEvalDetail_Free(details);
+    LDValue_Free(value);
 }
 
 /**
@@ -666,9 +714,10 @@ Evaluate a boolean flag and return an explanation
 static int
 LuaLDClientBoolVariationDetail(lua_State *const l)
 {
-    struct LDClient **client;
-    struct LDUser **user;
-    struct LDDetails details;
+    LDServerSDK *client;
+    LDContext *context;
+
+    LDEvalDetail details;
 
     if (lua_gettop(l) != 4) {
         return luaL_error(l, "expecting exactly 4 arguments");
@@ -676,16 +725,16 @@ LuaLDClientBoolVariationDetail(lua_State *const l)
 
     LDDetailsInit(&details);
 
-    client = (struct LDClient **)luaL_checkudata(l, 1, "LaunchDarklyClient");
+    client = (LDServerSDK *)luaL_checkudata(l, 1, "LaunchDarklyClient");
 
-    user = (struct LDUser **)luaL_checkudata(l, 2, "LaunchDarklyUser");
+    LDContext *context = (LDContext *) luaL_checkudata(l, 2, "LaunchDarklyContext");
 
     const char *const key = luaL_checkstring(l, 3);
 
     const int fallback = lua_toboolean(l, 4);
 
-    const LDBoolean result =
-        LDBoolVariation(*client, *user, key, fallback, &details);
+    const bool result =
+        LDServerSDK_BoolVariation(*client, *user, key, fallback, &details);
 
     LuaPushDetails(l, &details, LDValue_NewBool(result));
 
@@ -704,22 +753,22 @@ Evaluate an integer flag
 static int
 LuaLDClientIntVariation(lua_State *const l)
 {
-    struct LDClient **client;
-    struct LDUser **user;
+    LDServerSDK *client;
+    LDContext *context;
 
     if (lua_gettop(l) != 4) {
         return luaL_error(l, "expecting exactly 4 arguments");
     }
 
-    client = (struct LDClient **)luaL_checkudata(l, 1, "LaunchDarklyClient");
+    client = (LDServerSDK *)luaL_checkudata(l, 1, "LaunchDarklyClient");
 
-    user = (struct LDUser **)luaL_checkudata(l, 2, "LaunchDarklyUser");
+    LDContext *context = (LDContext *) luaL_checkudata(l, 2, "LaunchDarklyContext");
 
     const char *const key = luaL_checkstring(l, 3);
 
     const int fallback = luaL_checkinteger(l, 4);
 
-    const int result = LDIntVariation(*client, *user, key, fallback, NULL);
+    const int result = LDServerSDK_IntVariation(*client, *user, key, fallback, NULL);
 
     lua_pushnumber(l, result);
 
@@ -738,9 +787,9 @@ Evaluate an integer flag and return an explanation
 static int
 LuaLDClientIntVariationDetail(lua_State *const l)
 {
-    struct LDClient **client;
-    struct LDUser **user;
-    struct LDDetails details;
+    LDServerSDK *client;
+    LDContext *context;
+   LDEvalDetail details;
 
     if (lua_gettop(l) != 4) {
         return luaL_error(l, "expecting exactly 4 arguments");
@@ -748,9 +797,9 @@ LuaLDClientIntVariationDetail(lua_State *const l)
 
     LDDetailsInit(&details);
 
-    client = (struct LDClient **)luaL_checkudata(l, 1, "LaunchDarklyClient");
+    client = (LDServerSDK *)luaL_checkudata(l, 1, "LaunchDarklyClient");
 
-    user = (struct LDUser **)luaL_checkudata(l, 2, "LaunchDarklyUser");
+    LDContext *context = (LDContext *) luaL_checkudata(l, 2, "LaunchDarklyContext");
 
     const char *const key = luaL_checkstring(l, 3);
 
@@ -775,16 +824,16 @@ Evaluate a double flag
 static int
 LuaLDClientDoubleVariation(lua_State *const l)
 {
-    struct LDClient **client;
-    struct LDUser **user;
+    LDServerSDK *client;
+    LDContext *context;
 
     if (lua_gettop(l) != 4) {
         return luaL_error(l, "expecting exactly 4 arguments");
     }
 
-    client = (struct LDClient **)luaL_checkudata(l, 1, "LaunchDarklyClient");
+    client = (LDServerSDK *)luaL_checkudata(l, 1, "LaunchDarklyClient");
 
-    user = (struct LDUser **)luaL_checkudata(l, 2, "LaunchDarklyUser");
+    LDContext *context = (LDContext *) luaL_checkudata(l, 2, "LaunchDarklyContext");
 
     const char *const key = luaL_checkstring(l, 3);
 
@@ -810,9 +859,9 @@ Evaluate a double flag and return an explanation
 static int
 LuaLDClientDoubleVariationDetail(lua_State *const l)
 {
-    struct LDClient **client;
-    struct LDUser **user;
-    struct LDDetails details;
+    LDServerSDK *client;
+    LDContext *context;
+   LDEvalDetail details;
 
     if (lua_gettop(l) != 4) {
         return luaL_error(l, "expecting exactly 4 arguments");
@@ -820,9 +869,9 @@ LuaLDClientDoubleVariationDetail(lua_State *const l)
 
     LDDetailsInit(&details);
 
-    client = (struct LDClient **)luaL_checkudata(l, 1, "LaunchDarklyClient");
+    client = (LDServerSDK *)luaL_checkudata(l, 1, "LaunchDarklyClient");
 
-    user = (struct LDUser **)luaL_checkudata(l, 2, "LaunchDarklyUser");
+    LDContext *context = (LDContext *) luaL_checkudata(l, 2, "LaunchDarklyContext");
 
     const char *const key = luaL_checkstring(l, 3);
 
@@ -848,16 +897,16 @@ Evaluate a string flag
 static int
 LuaLDClientStringVariation(lua_State *const l)
 {
-    struct LDClient **client;
-    struct LDUser **user;
+    LDServerSDK *client;
+    LDContext *context;
 
     if (lua_gettop(l) != 4) {
         return luaL_error(l, "expecting exactly 4 arguments");
     }
 
-    client = (struct LDClient **)luaL_checkudata(l, 1, "LaunchDarklyClient");
+    client = (LDServerSDK *)luaL_checkudata(l, 1, "LaunchDarklyClient");
 
-    user = (struct LDUser **)luaL_checkudata(l, 2, "LaunchDarklyUser");
+    LDContext *context = (LDContext *) luaL_checkudata(l, 2, "LaunchDarklyContext");
 
     const char *const key = luaL_checkstring(l, 3);
 
@@ -885,9 +934,9 @@ Evaluate a string flag and return an explanation
 static int
 LuaLDClientStringVariationDetail(lua_State *const l)
 {
-    struct LDClient **client;
-    struct LDUser **user;
-    struct LDDetails details;
+    LDServerSDK *client;
+    LDContext *context;
+   LDEvalDetail details;
 
     if (lua_gettop(l) != 4) {
         return luaL_error(l, "expecting exactly 4 arguments");
@@ -895,9 +944,9 @@ LuaLDClientStringVariationDetail(lua_State *const l)
 
     LDDetailsInit(&details);
 
-    client = (struct LDClient **)luaL_checkudata(l, 1, "LaunchDarklyClient");
+    client = (LDServerSDK *)luaL_checkudata(l, 1, "LaunchDarklyClient");
 
-    user = (struct LDUser **)luaL_checkudata(l, 2, "LaunchDarklyUser");
+    LDContext *context = (LDContext *) luaL_checkudata(l, 2, "LaunchDarklyContext");
 
     const char *const key = luaL_checkstring(l, 3);
 
@@ -925,23 +974,23 @@ Evaluate a json flag
 static int
 LuaLDClientJSONVariation(lua_State *const l)
 {
-    struct LDClient **client;
-    struct LDUser **user;
+    LDServerSDK *client;
+    LDContext *context;
     struct LDJSON *fallback, *result;
 
     if (lua_gettop(l) != 4) {
         return luaL_error(l, "expecting exactly 4 arguments");
     }
 
-    client = (struct LDClient **)luaL_checkudata(l, 1, "LaunchDarklyClient");
+    client = (LDServerSDK *)luaL_checkudata(l, 1, "LaunchDarklyClient");
 
-    user = (struct LDUser **)luaL_checkudata(l, 2, "LaunchDarklyUser");
+    LDContext *context = (LDContext *) luaL_checkudata(l, 2, "LaunchDarklyContext");
 
     const char *const key = luaL_checkstring(l, 3);
 
     fallback = LuaValueToJSON(l, 4);
 
-    result = LDJSONVariation(*client, *user, key, fallback, NULL);
+    result = LDServerSDK_JSONVariation(*client, *user, key, fallback, NULL);
 
     LuaPushJSON(l, result);
 
@@ -963,30 +1012,29 @@ Evaluate a json flag and return an explanation
 static int
 LuaLDClientJSONVariationDetail(lua_State *const l)
 {
-    struct LDClient **client;
-    struct LDUser **user;
-    struct LDJSON *fallback, *result;
-    struct LDDetails details;
+    LDServerSDK *client;
+    LDContext *context;
+    LDValue fallback, result;
+
+    LDEvalDetail details;
 
     if (lua_gettop(l) != 4) {
         return luaL_error(l, "expecting exactly 4 arguments");
     }
 
-    LDDetailsInit(&details);
+    client = (LDServerSDK *)luaL_checkudata(l, 1, "LaunchDarklyClient");
 
-    client = (struct LDClient **)luaL_checkudata(l, 1, "LaunchDarklyClient");
-
-    user = (struct LDUser **)luaL_checkudata(l, 2, "LaunchDarklyUser");
+    context = (LDContext *)luaL_checkudata(l, 2, "LaunchDarklyContext");
 
     const char *const key = luaL_checkstring(l, 3);
 
     fallback = LuaValueToJSON(l, 4);
 
-    result = LDJSONVariation(*client, *user, key, fallback, &details);
+    result = LDServerSDK_JSONVariationDetail(*client, *context, key, fallback, &details);
 
-    LuaPushDetails(l, &details, result);
+    LuaPushDetails(l, details, result);
 
-    LDJSONFree(fallback);
+    LDValue_Free(fallback);
 
     return 1;
 }
@@ -999,15 +1047,13 @@ Immediately flushes queued events.
 static int
 LuaLDClientFlush(lua_State *const l)
 {
-    struct LDClient **client;
-
     if (lua_gettop(l) != 1) {
         return luaL_error(l, "expecting exactly 1 argument");
     }
 
-    client = (struct LDClient **)luaL_checkudata(l, 1, "LaunchDarklyClient");
+    LDServerSDK *client = (LDServerSDK *) luaL_checkudata(l, 1, "LaunchDarklyClient");
 
-    LDClientFlush(*client);
+    LDServerSDK_Flush(*client, LD_NONBLOCKING);
 
     return 0;
 }
@@ -1025,20 +1071,17 @@ can be attached to the event as JSON.
 static int
 LuaLDClientTrack(lua_State *const l)
 {
-    struct LDClient **client;
-    struct LDUser **user;
-    struct LDJSON *value;
-
     if (lua_gettop(l) < 3 || lua_gettop(l) > 5) {
         return luaL_error(l, "expecting 3-5 arguments");
     }
 
-    client = (struct LDClient **)luaL_checkudata(l, 1, "LaunchDarklyClient");
+    LDServerSDK *client = (LDServerSDK *) luaL_checkudata(l, 1, "LaunchDarklyClient");
 
     const char *const key = luaL_checkstring(l, 2);
 
-    user = (struct LDUser **)luaL_checkudata(l, 3, "LaunchDarklyUser");
+    LDContext *context = (LDContext *) luaL_checkudata(l, 3, "LaunchDarklyContext");
 
+    LDValue value;
     if (lua_isnil(l, 4)) {
         value = NULL;
     } else {
@@ -1048,42 +1091,15 @@ LuaLDClientTrack(lua_State *const l)
     if (lua_gettop(l) == 5 && lua_isnumber(l, 5)) {
         const double metric = luaL_checknumber(l, 5);
 
-        LDClientTrackMetric(*client, key, *user, value, metric);
+        LDServerSDK_TrackMetric(*client, *context, key, metric, value);
     } else {
-        LDClientTrack(*client, key, *user, value);
+        LDServerSDK_TrackData(*client, *context, key, value);
     }
 
     return 0;
 }
 
-/***
-Associates two users for analytics purposes by generating an alias event.
-@function alias
-@tparam user currentUser An opaque user object from @{makeUser}
-@tparam user previousUser An opaque user object from @{makeUser}
-@treturn nil
-*/
-static int
-LuaLDClientAlias(lua_State *const l)
-{
-    struct LDClient **client;
-    struct LDUser **currentUser, **previousUser;
-    struct LDJSON *value;
-
-    if (lua_gettop(l) != 3) {
-        return luaL_error(l, "expected exactly three arguments");
-    }
-
-    client = (struct LDClient **)luaL_checkudata(l, 1, "LaunchDarklyClient");
-    currentUser = (struct LDUser **)luaL_checkudata(l, 2, "LaunchDarklyUser");
-    previousUser = (struct LDUser **)luaL_checkudata(l, 3, "LaunchDarklyUser");
-
-    if (!LDClientAlias(*client, *currentUser, *previousUser)) {
-        return luaL_error(l, "LDClientAlias failed");
-    }
-
-    return 0;
-}
+// TODO: Document alias was removed, use multi context instead
 
 /***
 Check if a client has been fully initialized. This may be useful if the
@@ -1100,9 +1116,9 @@ LuaLDClientIsInitialized(lua_State *const l)
         return luaL_error(l, "expecting exactly 1 argument");
     }
 
-    client = (struct LDClient **)luaL_checkudata(l, 1, "LaunchDarklyClient");
+    LDServerSDK *client = (LDServerSDK *) luaL_checkudata(l, 1, "LaunchDarklyClient");
 
-    lua_pushboolean(l, LDClientIsInitialized(*client));
+    lua_pushboolean(l, LDServerSDK_Initialized(*client));
 
     return 1;
 }
@@ -1116,17 +1132,14 @@ Generates an identify event for a user.
 static int
 LuaLDClientIdentify(lua_State *const l)
 {
-    struct LDClient **client;
-    struct LDUser **user;
-
     if (lua_gettop(l) != 2) {
         return luaL_error(l, "expecting exactly 2 arguments");
     }
 
-    client = (struct LDClient **)luaL_checkudata(l, 1, "LaunchDarklyClient");
-    user = (struct LDUser **)luaL_checkudata(l, 2, "LaunchDarklyUser");
+    LDServerSDK *client = (LDServerSDK *) luaL_checkudata(l, 1, "LaunchDarklyClient");
+    LDContext *context = (LDContext *) luaL_checkudata(l, 2, "LaunchDarklyContext");
 
-    LDClientIdentify(*client, *user);
+    LDServerSDK_Identify(*client, *context);
 
     return 0;
 }
@@ -1141,23 +1154,26 @@ This does not send analytics events back to LaunchDarkly.
 static int
 LuaLDClientAllFlags(lua_State *const l)
 {
-    struct LDClient **client;
-    struct LDUser **user;
-    struct LDJSON *result;
-
     if (lua_gettop(l) != 2) {
         return luaL_error(l, "expecting exactly 2 arguments");
     }
 
-    client = (struct LDClient **)luaL_checkudata(l, 1, "LaunchDarklyClient");
+    LDServerSDK *client = (LDServerSDK *) luaL_checkudata(l, 1, "LaunchDarklyClient");
 
-    user = (struct LDUser **)luaL_checkudata(l, 2, "LaunchDarklyUser");
+    LDContext *context = (LDContext *) luaL_checkudata(l, 2, "LaunchDarklyContext");
 
-    result = LDAllFlags(*client, *user);
+    LDAllFlagsState state = LDServerSDK_AllFlagsState(*client, *context. LD_ALLFLAGSSTATE_DEFAULT);
 
-    LuaPushJSON(l, result);
 
-    LDJSONFree(result);
+    char* serialized = LDAllFlagsState_SerializeJSON(state);
+
+    /** TODO: Need to add a C binding to expose this as an LDValue, or have an iterator specific to it. **/
+    LDMemory_FreeString(serialized);
+
+    LDAllFlagsState_Free(state);
+
+    /* For now, return an empty table. */
+    lua_newtable(l);
 
     return 1;
 }
@@ -1183,7 +1199,6 @@ static const struct luaL_Reg launchdarkly_client_methods[] = {
     { "jsonVariationDetail",   LuaLDClientJSONVariationDetail   },
     { "flush",                 LuaLDClientFlush                 },
     { "track",                 LuaLDClientTrack                 },
-    { "alias",                 LuaLDClientAlias                 },
     { "allFlags",              LuaLDClientAllFlags              },
     { "isInitialized",         LuaLDClientIsInitialized         },
     { "identify",              LuaLDClientIdentify              },
@@ -1228,7 +1243,7 @@ luaopen_launchdarkly_server_sdk(lua_State *const l)
     lua_setfield(l, -2, "__index");
     ld_luaL_setfuncs(l, launchdarkly_client_methods, 0);
 
-    luaL_newmetatable(l, "LaunchDarklyUser");
+    luaL_newmetatable(l, "LaunchDarklyContext");
     lua_pushvalue(l, -1);
     lua_setfield(l, -2, "__index");
     ld_luaL_setfuncs(l, launchdarkly_user_methods, 0);
