@@ -9,7 +9,15 @@ Server-side SDK for LaunchDarkly.
 #include <stdbool.h>
 #include <string.h>
 
-#include <launchdarkly/api.h>
+#include <launchdarkly/server_side/bindings/c/sdk.h>
+#include <launchdarkly/server_side/bindings/c/config/builder.h>
+
+#include <launchdarkly/bindings/c/logging/log_level.h>
+#include <launchdarkly/bindings/c/context_builder.h>
+#include <launchdarkly/bindings/c/array_builder.h>
+#include <launchdarkly/bindings/c/object_builder.h>
+
+
 
 #define SDKVersion "1.2.2" /* {x-release-please-version} */
 
@@ -23,42 +31,20 @@ static struct LDJSON *
 LuaArrayToJSON(lua_State *const l, const int i);
 
 static void
-LuaPushJSON(lua_State *const l, const struct LDJSON *const j);
+LuaPushJSON(lua_State *const l, LDValue j);
 
 static int globalLoggingCallback;
 static lua_State *globalLuaState;
 
 static void
-logHandler(const LDLogLevel level, const char * const line)
+logHandler(const enum LDLogLevel level, const char * const line)
 {
     lua_rawgeti(globalLuaState, LUA_REGISTRYINDEX, globalLoggingCallback);
 
-    lua_pushstring(globalLuaState, LDLogLevelToString(level));
+    lua_pushstring(globalLuaState, LDLogLevel_Name(level, "unknown"));
     lua_pushstring(globalLuaState, line);
 
     lua_call(globalLuaState, 2, 0);
-}
-
-static LDLogLevel
-LuaStringToLogLevel(const char *const text)
-{
-    if (strcmp(text, "FATAL") == 0) {
-        return LD_LOG_FATAL;
-    } else if (strcmp(text, "CRITICAL") == 0) {
-        return LD_LOG_CRITICAL;
-    } else if (strcmp(text, "ERROR") == 0) {
-        return LD_LOG_ERROR;
-    } else if (strcmp(text, "WARNING") == 0) {
-        return LD_LOG_WARNING;
-    } else if (strcmp(text, "INFO") == 0) {
-        return LD_LOG_INFO;
-    } else if (strcmp(text, "DEBUG") == 0) {
-        return LD_LOG_DEBUG;
-    } else if (strcmp(text, "TRACE") == 0) {
-        return LD_LOG_TRACE;
-    }
-
-    return LD_LOG_INFO;
 }
 
 /***
@@ -83,7 +69,8 @@ LuaLDRegisterLogger(lua_State *const l)
     globalLuaState        = l;
     globalLoggingCallback = luaL_ref(l, LUA_REGISTRYINDEX);
 
-    LDConfigureGlobalLogger(LuaStringToLogLevel(level), logHandler);
+// TODO: Install custom loggger
+   // LDConfigureGlobalLogger(LDLogLevel_Enum(level, LD_LOG_INFO), logHandler);
 
     return 0;
 }
@@ -110,20 +97,20 @@ isArray(lua_State *const l, const int i)
     return array;
 }
 
-static struct LDJSON *
+static LDValue
 LuaValueToJSON(lua_State *const l, const int i)
 {
-    struct LDJSON *result;
+    LDValue result = NULL;
 
     switch (lua_type(l, i)) {
         case LUA_TBOOLEAN:
-            result = LDNewBool(lua_toboolean(l, i));
+            result = LDValue_NewBool(lua_toboolean(l, i));
             break;
         case LUA_TNUMBER:
-            result = LDNewNumber(lua_tonumber(l, i));
+            result = LDValue_NewNumber(lua_tonumber(l, i));
             break;
         case LUA_TSTRING:
-            result = LDNewText(lua_tostring(l, i));
+            result = LDValue_NewString(lua_tostring(l, i));
             break;
         case LUA_TTABLE:
             if (isArray(l, i)) {
@@ -133,39 +120,39 @@ LuaValueToJSON(lua_State *const l, const int i)
             }
             break;
         default:
-            result = LDNewNull();
+            result = LDValue_NewNull();
             break;
     }
 
     return result;
 }
 
-static struct LDJSON *
+static LDValue
 LuaArrayToJSON(lua_State *const l, const int i)
 {
-    struct LDJSON *const result = LDNewArray();
+    LDArrayBuilder result = LDArrayBuilder_New();
 
     lua_pushvalue(l, i);
 
     lua_pushnil(l);
 
     while (lua_next(l, -2) != 0) {
-        struct LDJSON *value = LuaValueToJSON(l, -1);
+        LDValue value = LuaValueToJSON(l, -1);
 
-        LDArrayPush(result, value);
+        LDArrayBuilder_Add(result, value);
 
         lua_pop(l, 1);
     }
 
     lua_pop(l, 1);
 
-    return result;
+    return LDArrayBuilder_Build(result);
 }
 
 static struct LDJSON *
 LuaTableToJSON(lua_State *const l, const int i)
 {
-    struct LDJSON *const result = LDNewObject();
+    LDObjectBuilder result = LDObjectBuilder_New();
 
     lua_pushvalue(l, i);
 
@@ -173,64 +160,64 @@ LuaTableToJSON(lua_State *const l, const int i)
 
     while (lua_next(l, -2) != 0) {
         const char *const key      = lua_tostring(l, -2);
-        struct LDJSON *const value = LuaValueToJSON(l, -1);
+        LDValue value = LuaValueToJSON(l, -1);
 
-        LDObjectSetKey(result, key, value);
+        LDObjectBuilder_Add(result, key, value);
 
         lua_pop(l, 1);
     }
 
     lua_pop(l, 1);
 
-    return result;
+    return LDObjectBuilder_Build(result);
 }
 
 static void
-LuaPushJSONObject(lua_State *const l, const struct LDJSON *const j)
+LuaPushJSONObject(lua_State *const l, LDValue j)
 {
-    struct LDJSON *iter;
+    struct LDValue_ObjectIter iter;
 
     lua_newtable(l);
 
-    for (iter = LDGetIter(j); iter; iter = LDIterNext(iter)) {
-        LuaPushJSON(l, iter);
-        lua_setfield(l, -2, LDIterKey(iter));
+    for (iter = LDValue_ObjectIter_New(j); !LDValue_ObjectIter_End(iter); LDValue_ObjectIter_Next(iter)) {
+        LuaPushJSON(l, LDValue_ObjectIter_Value(iter));
+        lua_setfield(l, -2, LDValue_ObjectIter_Key(iter));
     }
 }
 
 static void
 LuaPushJSONArray(lua_State *const l, const struct LDJSON *const j)
 {
-    struct LDJSON *iter;
+    struct LDValue_ArrayIter iter;
 
     lua_newtable(l);
 
     int index = 1;
 
-    for (iter = LDGetIter(j); iter; iter = LDIterNext(iter)) {
-        LuaPushJSON(l, iter);
+    for (iter = LDValue_ArrayIter_New(j); !LDValue_ArrayIter_End(iter); LDValue_ArrayIter_Next(iter)) {
+        LuaPushJSON(l, LDValue_ArrayIter_Value(iter));
         lua_rawseti(l, -2, index);
         index++;
     }
 }
 
 static void
-LuaPushJSON(lua_State *const l, const struct LDJSON *const j)
+LuaPushJSON(lua_State *const l, LDValue j)
 {
-    switch (LDJSONGetType(j)) {
-        case LDText:
-            lua_pushstring(l, LDGetText(j));
+    switch (LDValue_Type(j)) {
+        case LDValueType_String:
+            lua_pushstring(l, LDValue_GetString(j));
             break;
-        case LDBool:
-            lua_pushboolean(l, LDGetBool(j));
+        case LDValueType_Bool:
+            lua_pushboolean(l, LDValue_GetBool(j));
             break;
-        case LDNumber:
-            lua_pushnumber(l, LDGetNumber(j));
+        case LDValueType_Number:
+            lua_pushnumber(l, LDValue_GetNumber(j));
             break;
-        case LDObject:
+        case LDValueType_Object:
             LuaPushJSONObject(l, j);
             break;
-        case LDArray:
+        case LDValueType_Array:
             LuaPushJSONArray(l, j);
             break;
         default:
@@ -273,86 +260,80 @@ LuaLDUserNew(lua_State *const l)
 
     const char *const key = luaL_checkstring(l, -1);
 
-    struct LDUser *user = LDUserNew(key);
+    LDContextBuilder builder = LDContextBuilder_New();
+
+    LDContextBuilder_AddKind(builder, "user", key);
 
     lua_getfield(l, 1, "anonymous");
 
     if (lua_isboolean(l, -1)) {
-        LDUserSetAnonymous(user, lua_toboolean(l, -1));
+        LDContextBuilder_Attributes_SetAnonymous(builder, "user", true);
     }
 
     lua_getfield(l, 1, "ip");
 
     if (lua_isstring(l, -1)) {
-        LDUserSetIP(user, luaL_checkstring(l,-1));
+        LDContextBuilder_Attributes_Set(builder, "user", "ip", LDValue_NewString(luaL_checkstring(l, -1)));
     };
 
     lua_getfield(l, 1, "firstName");
 
     if (lua_isstring(l, -1)) {
-        LDUserSetFirstName(user, luaL_checkstring(l,-1));
+        LDContextBuilder_Attributes_Set(builder, "user", "firstName", LDValue_NewString(luaL_checkstring(l, -1)));
     }
 
     lua_getfield(l, 1, "lastName");
 
     if (lua_isstring(l, -1)) {
-        LDUserSetLastName(user, luaL_checkstring(l, -1));
+        LDContextBuilder_Attributes_Set(builder, "user", "lastName", LDValue_NewString(luaL_checkstring(l, -1)));
     }
 
     lua_getfield(l, 1, "email");
 
     if (lua_isstring(l, -1)) {
-        LDUserSetEmail(user, luaL_checkstring(l, -1));
+        LDContextBuilder_Attributes_Set(builder, "user", "email", LDValue_NewString(luaL_checkstring(l, -1)));
     }
 
     lua_getfield(l, 1, "name");
 
     if (lua_isstring(l, -1)) {
-        LDUserSetName(user, luaL_checkstring(l, -1));
+        LDContextBuilder_Attributes_SetName(builder, "user", luaL_checkstring(l, -1));
     }
 
     lua_getfield(l, 1, "avatar");
 
     if (lua_isstring(l, -1)) {
-        LDUserSetAvatar(user, luaL_checkstring(l, -1));
+        LDContextBuilder_Attributes_Set(builder, "user", "avatar", LDValue_NewString(luaL_checkstring(l, -1)));
     }
 
     lua_getfield(l, 1, "country");
 
     if (lua_isstring(l, -1)) {
-        LDUserSetCountry(user, luaL_checkstring(l, -1));
-    }
-
-    lua_getfield(l, 1, "secondary");
-
-    if (lua_isstring(l, -1)) {
-        LDUserSetSecondary(user, luaL_checkstring(l, -1));
+        LDContextBuilder_Attributes_Set(builder, "user", "country", LDValue_NewString(luaL_checkstring(l, -1)));
     }
 
     lua_getfield(l, 1, "custom");
 
     if (lua_istable(l, -1)) {
-        LDUserSetCustom(user, LuaValueToJSON(l, -1));
+        // TODO: Iterate through the props and add as individual attributes
     }
 
     lua_getfield(l, 1, "privateAttributeNames");
 
     if (lua_istable(l, -1)) {
-        struct LDJSON *attrs, *iter;
-        attrs = LuaValueToJSON(l, -1);
 
-        for (iter = LDGetIter(attrs); iter; iter = LDIterNext(iter)) {
-            LDUserAddPrivateAttribute(user, LDGetText(iter));
-        }
+        // TODO: Iterate throughthe table and add the attribute names
+        LDContextBuilder_Attributes_AddPrivateAttribute(builder, "user", "foo");
 
-        LDJSONFree(attrs);
     }
 
-    struct LDUser **u = (struct LDUser **)lua_newuserdata(l, sizeof(user));
+    LDContext context = LDContextBuilder_Build(builder);
 
-    *u = user;
+    LDContext *u = (LDContext *)lua_newuserdata(l, sizeof(context));
 
-    luaL_getmetatable(l, "LaunchDarklyUser");
+    *u = context;
+
+    luaL_getmetatable(l, "LaunchDarklyContext");
     lua_setmetatable(l, -2);
 
     return 1;
@@ -374,13 +355,13 @@ LuaLDVersion(lua_State *const l)
 static int
 LuaLDUserFree(lua_State *const l)
 {
-    struct LDUser **user;
+    LDContext *context;
 
-    user = (struct LDUser **)luaL_checkudata(l, 1, "LaunchDarklyUser");
+    context = (struct LDUser **)luaL_checkudata(l, 1, "LaunchDarklyContext");
 
-    if (*user) {
-        LDUserFree(*user);
-        *user = NULL;
+    if (*context) {
+        LDContext_Free(*context);
+        *context = NULL;
     }
 
     return 0;
@@ -501,7 +482,7 @@ makeConfig(lua_State *const l, const int i)
         attrs = LuaValueToJSON(l, -1);
 
         for (iter = LDGetIter(attrs); iter; iter = LDIterNext(iter)) {
-            LDConfigAddPrivateAttribute(config, LDGetText(iter));
+            LDConfigAddPrivateAttribute(config, LDValue_GetString(iter));
         }
 
         LDJSONFree(attrs);
@@ -571,8 +552,8 @@ returned.
 static int
 LuaLDClientInit(lua_State *const l)
 {
-    struct LDClient *client;
-    struct LDConfig *config;
+    LDServerSDK client;
+    LDConfig config;
     unsigned int timeout;
 
     if (lua_gettop(l) != 2) {
@@ -581,12 +562,13 @@ LuaLDClientInit(lua_State *const l)
 
     config = makeConfig(l, 1);
 
+    // TODO: use timeout
     timeout = luaL_checkinteger(l, 2);
 
-    client = LDClientInit(config, timeout);
+    client = LDServerSDK_New(config);
 
-    struct LDClient **c =
-        (struct LDClient **)lua_newuserdata(l, sizeof(client));
+    struct LDServerSDK *c =
+        (struct LDServerSDK *)lua_newuserdata(l, sizeof(client));
 
     *c = client;
 
@@ -599,12 +581,12 @@ LuaLDClientInit(lua_State *const l)
 static int
 LuaLDClientClose(lua_State *const l)
 {
-    struct LDClient **client;
+    LDServerSDK *client;
 
-    client = (struct LDClient **)luaL_checkudata(l, 1, "LaunchDarklyClient");
+    client = (LDServerSDK *)luaL_checkudata(l, 1, "LaunchDarklyClient");
 
-    if (*client) {
-        LDClientClose(*client);
+    if (client) {
+        LDServerSDK_Free(*client);
         *client = NULL;
     }
 
@@ -649,23 +631,23 @@ Evaluate a boolean flag
 static int
 LuaLDClientBoolVariation(lua_State *const l)
 {
-    struct LDClient **client;
-    struct LDUser **user;
+    LDServerSDK *client;
+    LDContext *context;
 
     if (lua_gettop(l) != 4) {
         return luaL_error(l, "expecting exactly 4 arguments");
     }
 
-    client = (struct LDClient **)luaL_checkudata(l, 1, "LaunchDarklyClient");
+    client = (LDServerSDK *)luaL_checkudata(l, 1, "LaunchDarklyClient");
 
-    user = (struct LDUser **)luaL_checkudata(l, 2, "LaunchDarklyUser");
+    context = (LDContext *)luaL_checkudata(l, 2, "LaunchDarklyContext");
 
     const char *const key = luaL_checkstring(l, 3);
 
     const int fallback = lua_toboolean(l, 4);
 
-    const LDBoolean result =
-        LDBoolVariation(*client, *user, key, fallback, NULL);
+    const bool result =
+        LDServerSDK_BoolVariation(*client, *context, key, fallback);
 
     lua_pushboolean(l, result);
 
@@ -705,7 +687,7 @@ LuaLDClientBoolVariationDetail(lua_State *const l)
     const LDBoolean result =
         LDBoolVariation(*client, *user, key, fallback, &details);
 
-    LuaPushDetails(l, &details, LDNewBool(result));
+    LuaPushDetails(l, &details, LDValue_NewBool(result));
 
     return 1;
 }
@@ -776,7 +758,7 @@ LuaLDClientIntVariationDetail(lua_State *const l)
 
     const int result = LDIntVariation(*client, *user, key, fallback, &details);
 
-    LuaPushDetails(l, &details, LDNewNumber(result));
+    LuaPushDetails(l, &details, LDValue_NewNumber(result));
 
     return 1;
 }
@@ -849,7 +831,7 @@ LuaLDClientDoubleVariationDetail(lua_State *const l)
     const double result =
         LDDoubleVariation(*client, *user, key, fallback, &details);
 
-    LuaPushDetails(l, &details, LDNewNumber(result));
+    LuaPushDetails(l, &details, LDValue_NewNumber(result));
 
     return 1;
 }
@@ -924,7 +906,7 @@ LuaLDClientStringVariationDetail(lua_State *const l)
     char *const result =
         LDStringVariation(*client, *user, key, fallback, &details);
 
-    LuaPushDetails(l, &details, LDNewText(result));
+    LuaPushDetails(l, &details, LDValue_NewString(result));
 
     LDFree(result);
 

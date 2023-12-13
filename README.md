@@ -19,7 +19,12 @@ This version of the LaunchDarkly SDK is compatible with the Lua 5.1-5.3 interpre
 Supported C server-side SDK versions
 -----------
 
-This version of the Lua server-side SDK depends on the C server-side SDK. The minimum required version is `2.1.0`, and under `3.0.0`.
+This version of the Lua server-side SDK depends on the C++ server-side SDK C bindings, as well as the 
+C++ server-side SDK's Redis source integration.
+
+The minimum required version is `1.0.0` for the Redis source.
+
+
 
 Getting started
 -----------

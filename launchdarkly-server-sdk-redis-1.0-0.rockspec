@@ -12,7 +12,7 @@ dependencies = {
 
 external_dependencies = {
     LDREDIS = {
-        header = "launchdarkly/store/redis.h"
+        header = "launchdarkly/server_side/integrations/redis/redis_source.hpp"
     }
 }
 
@@ -23,7 +23,7 @@ build = {
           sources = { "launchdarkly-server-sdk-redis.c" },
           incdirs = {"$(LDREDIS_INCDIR)"},
           libdirs = {"$(LDREDIS_LIBDIR)"},
-          libraries = {"ldserverapi-redis"}
+          libraries = {"launchdarkly-cpp-server-redis-source"}
       }
    }
 }

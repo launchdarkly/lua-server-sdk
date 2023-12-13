@@ -13,7 +13,7 @@ dependencies = {
 
 external_dependencies = {
     LD = {
-        header = "launchdarkly/api.h"
+        header = "launchdarkly/server_side/bindings/c/sdk.h"
     }
 }
 
@@ -24,7 +24,7 @@ build = {
           sources = { "launchdarkly-server-sdk.c" },
           incdirs = {"$(LD_INCDIR)"},
           libdirs = {"$(LD_LIBDIR)"},
-          libraries = {"ldserverapi"}
+          libraries = {"launchdarkly-cpp-server"}
       }
    }
 }

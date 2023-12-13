@@ -9,8 +9,8 @@ Server-side SDK for LaunchDarkly Redis store.
 #include <stdbool.h>
 #include <string.h>
 
-#include <launchdarkly/api.h>
-#include <launchdarkly/store/redis.h>
+#include <launchdarkly/server_side/bindings/c/sdk.h>
+#include <launchdarkly/server_side/integrations/redis/redis_source.hpp>
 
 /***
 Initialize a store backend

@@ -21,7 +21,7 @@ runs:
 
     - name: Setup C Server-side SDK
       shell: bash
-      run: ./scripts/build-c-server.sh
+      run: ./scripts/build-c-server.sh launchdarkly-cpp-server-redis-source-v1.0.0
 
     - name: Build Lua Server-side SDK
       shell: bash
