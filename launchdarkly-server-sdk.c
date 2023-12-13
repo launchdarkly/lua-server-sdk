@@ -646,6 +646,72 @@ LuaLDClientClose(lua_State *const l)
     return 0;
 }
 
+static void LuaPushReason(lua_State *const l, LDEvalReason reason) {
+	enum LDEvalReason_Kind reason_kind = LDEvalReason_Kind(reason);
+
+	// Push a string representation opf each reason
+	switch (reason_kind) {
+		case LD_EVALREASON_OFF:
+            lua_pushstring(l, "OFF");
+            break;
+		case LD_EVALREASON_FALLTHROUGH:
+            lua_pushstring(l, "FALLTHROUGH");
+            break;
+		case LD_EVALREASON_TARGET_MATCH:
+			lua_pushstring(l, "TARGET_MATCH");
+            break;
+		case LD_EVALREASON_RULE_MATCH:
+            lua_pushstring(l, "RULE_MATCH");
+			break;
+		case LD_EVALREASON_PREREQUISITE_FAILED:
+            lua_pushstring(l, "PREREQUISITE_FAILED");
+		    break;
+		case LD_EVALREASON_ERROR:
+            lua_pushstring(l, "ERROR");
+	        break;
+		default:
+			lua_pushstring(l, "UNKNOWN");
+            break;
+	}
+
+	lua_setfield(l, -2, "kind");
+
+	enum LDEvalReason_ErrorKind out_error_kind;
+	if (LDEvalReason_ErrorKind(reason, &out_error_kind)) {
+
+		// Switch on out_error_kind, and push the string representation.
+		switch (out_error_kind) {
+			case LD_EVALREASON_ERROR_CLIENT_NOT_READY:
+                lua_pushstring(l, "CLIENT_NOT_READY");
+                break;
+			case LD_EVALREASON_ERROR_USER_NOT_SPECIFIED:
+			    lua_pushstring(l, "USER_NOT_SPECIFIED");
+                break;
+			case LD_EVALREASON_ERROR_FLAG_NOT_FOUND:
+				lua_pushstring(l, "FLAG_NOT_FOUND");
+                break;
+			case LD_EVALREASON_ERROR_WRONG_TYPE:
+				lua_pushstring(l, "WRONG_TYPE");
+                break;
+			case LD_EVALREASON_ERROR_MALFORMED_FLAG:
+                lua_pushstring(l, "MALFORMED_FLAG");
+			    break;
+			case LD_EVALREASON_ERROR_EXCEPTION:
+                lua_pushstring(l, "EXCEPTION");
+			    break;
+			default:
+                lua_pushstring(l, "UNKNOWN");
+				break;
+		}
+
+		lua_setfield(l, -2, "errorKind");
+	}
+
+	bool in_experiment = LDEvalReason_InExperiment(reason);
+	lua_pushboolean(l, in_experiment);
+	lua_setfield(l, -2, "inExperiment");
+}
+
 static void
 LuaPushDetails(lua_State *const l, LDEvalDetail details,
     LDValue value)
@@ -653,7 +719,13 @@ LuaPushDetails(lua_State *const l, LDEvalDetail details,
     lua_newtable(l);
     /** TODO: C bindings for this? */
 
-    lua_setfield(l, -2, "reason");
+
+	LDEvalReason out_reason;
+	if (LDEvalDetail_Reason(details, &out_reason)) {
+		lua_newtable(l);
+		LuaPushReason(l, out_reason);
+		lua_setfield(l, -2, "reason");
+	}
 
     size_t out_variation_index;
     if (LDEvalDetail_VariationIndex(details, &out_variation_index)) {
@@ -672,7 +744,7 @@ LuaPushDetails(lua_State *const l, LDEvalDetail details,
 Evaluate a boolean flag
 @class function
 @name boolVariation
-@tparam user user An opaque user object from @{makeUser}
+@tparam context context An opaque context object from @{makeUser} or @{makeContext}
 @tparam string key The key of the flag to evaluate.
 @tparam boolean fallback The value to return on error
 @treturn boolean The evaluation result, or the fallback value
@@ -707,7 +779,7 @@ LuaLDClientBoolVariation(lua_State *const l)
 Evaluate a boolean flag and return an explanation
 @class function
 @name boolVariationDetail
-@tparam user user An opaque user object from @{makeUser}
+@tparam context context An opaque context object from @{makeUser} or @{makeContext}
 @tparam string key The key of the flag to evaluate.
 @tparam boolean fallback The value to return on error
 @treturn table The evaluation explanation
@@ -740,7 +812,7 @@ LuaLDClientBoolVariationDetail(lua_State *const l)
 Evaluate an integer flag
 @class function
 @name intVariation
-@tparam user user An opaque user object from @{makeUser}
+@tparam context context An opaque context object from @{makeUser} or @{makeContext}
 @tparam string key The key of the flag to evaluate.
 @tparam int fallback The value to return on error
 @treturn int The evaluation result, or the fallback value
@@ -771,7 +843,7 @@ LuaLDClientIntVariation(lua_State *const l)
 Evaluate an integer flag and return an explanation
 @class function
 @name intVariationDetail
-@tparam user user An opaque user object from @{makeUser}
+@tparam context context An opaque context object from @{makeUser} or @{makeContext}
 @tparam string key The key of the flag to evaluate.
 @tparam int fallback The value to return on error
 @treturn table The evaluation explanation
@@ -803,7 +875,7 @@ LuaLDClientIntVariationDetail(lua_State *const l)
 Evaluate a double flag
 @class function
 @name doubleVariation
-@tparam user user An opaque user object from @{makeUser}
+@tparam context context An opaque context object from @{makeUser} or @{makeContext}
 @tparam string key The key of the flag to evaluate.
 @tparam number fallback The value to return on error
 @treturn double The evaluation result, or the fallback value
@@ -835,7 +907,7 @@ LuaLDClientDoubleVariation(lua_State *const l)
 Evaluate a double flag and return an explanation
 @class function
 @name doubleVariationDetail
-@tparam user user An opaque user object from @{makeUser}
+@tparam context context An opaque context object from @{makeUser} or @{makeContext}
 @tparam string key The key of the flag to evaluate.
 @tparam number fallback The value to return on error
 @treturn table The evaluation explanation
@@ -868,7 +940,7 @@ LuaLDClientDoubleVariationDetail(lua_State *const l)
 Evaluate a string flag
 @class function
 @name stringVariation
-@tparam user user An opaque user object from @{makeUser}
+@tparam context context An opaque context object from @{makeUser} or @{makeContext}
 @tparam string key The key of the flag to evaluate.
 @tparam string fallback The value to return on error
 @treturn string The evaluation result, or the fallback value
@@ -902,7 +974,7 @@ LuaLDClientStringVariation(lua_State *const l)
 Evaluate a string flag and return an explanation
 @class function
 @name stringVariationDetail
-@tparam user user An opaque user object from @{makeUser}
+@tparam context context An opaque context object from @{makeUser} or @{makeContext}
 @tparam string key The key of the flag to evaluate.
 @tparam string fallback The value to return on error
 @treturn table The evaluation explanation
@@ -938,7 +1010,7 @@ LuaLDClientStringVariationDetail(lua_State *const l)
 Evaluate a json flag
 @class function
 @name jsonVariation
-@tparam user user An opaque user object from @{makeUser}
+@tparam context context An opaque context object from @{makeUser} or @{makeContext}
 @tparam string key The key of the flag to evaluate.
 @tparam table fallback The value to return on error
 @treturn table The evaluation result, or the fallback value
@@ -972,7 +1044,7 @@ LuaLDClientJSONVariation(lua_State *const l)
 Evaluate a json flag and return an explanation
 @class function
 @name jsonVariationDetail
-@tparam user user An opaque user object from @{makeUser}
+@tparam context context An opaque context object from @{makeUser} or @{makeContext}
 @tparam string key The key of the flag to evaluate.
 @tparam table fallback The value to return on error
 @treturn table The evaluation explanation
@@ -1026,7 +1098,7 @@ Reports that a user has performed an event. Custom data, and a metric
 can be attached to the event as JSON.
 @function track
 @tparam string key The name of the event
-@tparam user user An opaque user object from @{makeUser}
+@tparam context context An opaque context object from @{makeUser} or @{makeContext}
 @tparam[opt] table data A value to be associated with an event
 @tparam[optchain] number metric A value to be associated with an event
 @treturn nil
@@ -1087,7 +1159,7 @@ LuaLDClientIsInitialized(lua_State *const l)
 /***
 Generates an identify event for a user.
 @function identify
-@tparam user user An opaque user object from @{makeUser}
+@tparam context context An opaque context object from @{makeUser} or @{makeContext}
 @treturn nil
 */
 static int
@@ -1109,7 +1181,7 @@ LuaLDClientIdentify(lua_State *const l)
 Returns a map from feature flag keys to values for a given user.
 This does not send analytics events back to LaunchDarkly.
 @function allFlags
-@tparam user user An opaque user object from @{makeUser}
+@tparam context context An opaque context object from @{makeUser} or @{makeContext}
 @treturn table
 */
 static int

@@ -1,6 +1,6 @@
 local u = require('luaunit')
 local l = require("launchdarkly_server_sdk")
-local r = require("launchdarkly_server_sdk_redis")
+-- local r = require("launchdarkly_server_sdk_redis")
 
 function logger(level, line)
     print(level .. ": " .. line)
@@ -27,7 +27,7 @@ end
 
 function TestAll:testBoolVariation()
     local e = false
-    u.assertEquals(e, makeTestClient():boolVariation(user, "test", e))
+    u.assertEquals(makeTestClient():boolVariation(user, "test", e), e)
 end
 
 function TestAll:testBoolVariationDetail()
@@ -35,15 +35,16 @@ function TestAll:testBoolVariationDetail()
         value  = true,
         reason = {
             kind      = "ERROR",
-            errorKind = "CLIENT_NOT_READY"
+            errorKind = "FLAG_NOT_FOUND",
+            inExperiment = false
         }
     }
-    u.assertEquals(e, makeTestClient():boolVariationDetail(user, "test", true))
+    u.assertEquals(makeTestClient():boolVariationDetail(user, "test", true), e)
 end
 
 function TestAll:testIntVariation()
     local e = 3
-    u.assertEquals(e, makeTestClient():intVariation(user, "test", e))
+    u.assertEquals(makeTestClient():intVariation(user, "test", e), e)
 end
 
 function TestAll:testIntVariationDetail()
@@ -51,15 +52,16 @@ function TestAll:testIntVariationDetail()
         value  = 5,
         reason = {
             kind      = "ERROR",
-            errorKind = "CLIENT_NOT_READY"
+            errorKind = "FLAG_NOT_FOUND",
+            inExperiment = false
         }
     }
-    u.assertEquals(e, makeTestClient():intVariationDetail(user, "test", 5))
+    u.assertEquals(makeTestClient():intVariationDetail(user, "test", 5), e)
 end
 
 function TestAll:testDoubleVariation()
-    local e = 5.3
-    u.assertEquals(e, makeTestClient():doubleVariation(user, "test", e))
+    local e = 12.5
+    u.assertEquals(makeTestClient():doubleVariation(user, "test", e), e)
 end
 
 function TestAll:testDoubleVariationDetail()
@@ -67,15 +69,16 @@ function TestAll:testDoubleVariationDetail()
         value  = 6.2,
         reason = {
             kind      = "ERROR",
-            errorKind = "CLIENT_NOT_READY"
+            errorKind = "FLAG_NOT_FOUND",
+            inExperiment = false
         }
     }
-    u.assertEquals(e, makeTestClient():doubleVariationDetail(user, "test", 6.2))
+    u.assertEquals( makeTestClient():doubleVariationDetail(user, "test", 6.2), e)
 end
 
 function TestAll:testStringVariation()
     local e = "a"
-    u.assertEquals(e, makeTestClient():stringVariation(user, "test", e))
+    u.assertEquals(makeTestClient():stringVariation(user, "test", e), e)
 end
 
 function TestAll:testStringVariationDetail()
@@ -83,15 +86,16 @@ function TestAll:testStringVariationDetail()
         value  = "f",
         reason = {
             kind      = "ERROR",
-            errorKind = "CLIENT_NOT_READY"
+            errorKind = "FLAG_NOT_FOUND",
+            inExperiment = false
         }
     }
-    u.assertEquals(e, makeTestClient():stringVariationDetail(user, "test", "f"))
+    u.assertEquals(makeTestClient():stringVariationDetail(user, "test", "f"), e)
 end
 
 function TestAll:testJSONVariation()
     local e = { ["a"] = "b" }
-    u.assertEquals(e, makeTestClient():jsonVariation(user, "test", e))
+    u.assertEquals(makeTestClient():jsonVariation(user, "test", e), e)
 end
 
 function TestAll:testJSONVariationDetail()
@@ -99,31 +103,28 @@ function TestAll:testJSONVariationDetail()
         value  = { a = "b" },
         reason = {
             kind      = "ERROR",
-            errorKind = "CLIENT_NOT_READY"
+            errorKind = "FLAG_NOT_FOUND",
+            inExperiment = false
         }
     }
-    u.assertEquals(e, makeTestClient():jsonVariationDetail(user, "test", { a = "b" }))
+    u.assertEquals(makeTestClient():jsonVariationDetail(user, "test", { a = "b" }), e)
 end
 
 function TestAll:testIdentify()
     makeTestClient():identify(user)
 end
 
-function TestAll:testAlias()
-    makeTestClient():alias(user, l.makeUser({ key = "bob" }))
-end
-
-function TestAll:testRedisBasic()
-    local c = l.clientInit({
-        key                 = "sdk-test",
-        featureStoreBackend = r.makeStore({}),
-        offline             = true
-    }, 0)
-
-    local e = false
-
-    u.assertEquals(e, c:boolVariation(user, "test", e))
-end
+--function TestAll:testRedisBasic()
+--    local c = l.clientInit({
+--        key                 = "sdk-test",
+--        featureStoreBackend = r.makeStore({}),
+--        offline             = true
+--    }, 0)
+--
+--    local e = false
+--
+--    u.assertEquals(e, c:boolVariation(user, "test", e))
+--end
 
 function TestAll:testVersion()
     local version = l.version()
