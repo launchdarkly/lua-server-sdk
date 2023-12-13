@@ -1,7 +1,8 @@
 LaunchDarkly Server-Side SDK for Lua
 ===========================
 
-[![CircleCI](https://circleci.com/gh/launchdarkly/lua-server-sdk.svg?style=svg)](https://circleci.com/gh/launchdarkly/lua-server-sdk)
+[![Actions Status](https://github.com/launchdarkly/lua-server-sdk-private/actions/workflows/ci.yml/badge.svg)](https://github.com/launchdarkly/lua-server-sdk/actions/workflows/ci.yml)
+[![Documentation](https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8)](https://launchdarkly.github.io/lua-server-sdk)
 
 LaunchDarkly overview
 -------------------------

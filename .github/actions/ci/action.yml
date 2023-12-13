@@ -1,0 +1,42 @@
+name: CI Workflow
+description: 'Shared CI workflow.'
+inputs:
+  lua-version:
+    description: 'Version of Lua to use for building and testing.'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - uses: leafo/gh-actions-lua@35bcb06abec04ec87df82e08caa84d545348536e
+      with:
+        luaVersion: ${{ inputs.lua-version }}
+    - uses: leafo/gh-actions-luarocks@e65774a6386cb4f24e293dca7fc4ff89165b64c5
+    - name: Install C Server-side SDK Dependencies
+      shell: bash
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y libcurl4-openssl-dev
+        sudo apt-get install -y libhiredis-dev
+
+    - name: Setup C Server-side SDK
+      shell: bash
+      run: ./scripts/build-c-server.sh
+
+    - name: Build Lua Server-side SDK
+      shell: bash
+      run:  luarocks make launchdarkly-server-sdk-1.0-0.rockspec
+
+    - name: Build Lua Server-side SDK with Redis
+      shell: bash
+      run: luarocks make launchdarkly-server-sdk-redis-1.0-0.rockspec
+
+    - name: Run tests
+      shell: bash
+      if: ${{ ! contains(inputs.lua-version, 'jit') }}
+      run: lua test.lua
+
+    - name: Run tests (JIT)
+      shell: bash
+      if: ${{ contains(inputs.lua-version, 'jit') }}
+      run: luajit test.lua

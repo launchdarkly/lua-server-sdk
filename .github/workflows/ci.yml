@@ -1,0 +1,27 @@
+name: Run CI
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - '**.md' # Do not need to run CI for markdown changes.
+  pull_request:
+    branches: [ main ]
+    paths-ignore:
+      - '**.md'
+
+jobs:
+  linux-build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        version: ["5.1", "5.2", "5.3", "luajit-2.0.5"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # If you only need the current version keep this.
+
+      - uses: ./.github/actions/ci
+        with:
+          lua-version: ${{ matrix.version }}
