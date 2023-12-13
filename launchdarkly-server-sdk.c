@@ -655,8 +655,9 @@ LuaPushDetails(lua_State *const l, LDEvalDetail details,
 
     lua_setfield(l, -2, "reason");
 
-    if (details->hasVariation) {
-        lua_pushnumber(l, LDEvalDetail_VariationIndex(details));
+    size_t out_variation_index;
+    if (LDEvalDetail_VariationIndex(details, &out_variation_index)) {
+        lua_pushnumber(l, out_variation_index);
         lua_setfield(l, -2, "variationIndex");
     }
 
@@ -714,18 +715,11 @@ Evaluate a boolean flag and return an explanation
 static int
 LuaLDClientBoolVariationDetail(lua_State *const l)
 {
-    LDServerSDK *client;
-    LDContext *context;
-
-    LDEvalDetail details;
-
     if (lua_gettop(l) != 4) {
         return luaL_error(l, "expecting exactly 4 arguments");
     }
 
-    LDDetailsInit(&details);
-
-    client = (LDServerSDK *)luaL_checkudata(l, 1, "LaunchDarklyClient");
+    LDServerSDK *client = (LDServerSDK *)luaL_checkudata(l, 1, "LaunchDarklyClient");
 
     LDContext *context = (LDContext *) luaL_checkudata(l, 2, "LaunchDarklyContext");
 
@@ -733,10 +727,11 @@ LuaLDClientBoolVariationDetail(lua_State *const l)
 
     const int fallback = lua_toboolean(l, 4);
 
+    LDEvalDetail details;
     const bool result =
-        LDServerSDK_BoolVariation(*client, *user, key, fallback, &details);
+        LDServerSDK_BoolVariationDetail(*client, *context, key, fallback, &details);
 
-    LuaPushDetails(l, &details, LDValue_NewBool(result));
+    LuaPushDetails(l, details, LDValue_NewBool(result));
 
     return 1;
 }
@@ -753,14 +748,11 @@ Evaluate an integer flag
 static int
 LuaLDClientIntVariation(lua_State *const l)
 {
-    LDServerSDK *client;
-    LDContext *context;
-
     if (lua_gettop(l) != 4) {
         return luaL_error(l, "expecting exactly 4 arguments");
     }
 
-    client = (LDServerSDK *)luaL_checkudata(l, 1, "LaunchDarklyClient");
+    LDServerSDK *client = (LDServerSDK *) luaL_checkudata(l, 1, "LaunchDarklyClient");
 
     LDContext *context = (LDContext *) luaL_checkudata(l, 2, "LaunchDarklyContext");
 
@@ -768,7 +760,7 @@ LuaLDClientIntVariation(lua_State *const l)
 
     const int fallback = luaL_checkinteger(l, 4);
 
-    const int result = LDServerSDK_IntVariation(*client, *user, key, fallback, NULL);
+    const int result = LDServerSDK_IntVariation(*client, *context, key, fallback);
 
     lua_pushnumber(l, result);
 
@@ -787,17 +779,11 @@ Evaluate an integer flag and return an explanation
 static int
 LuaLDClientIntVariationDetail(lua_State *const l)
 {
-    LDServerSDK *client;
-    LDContext *context;
-   LDEvalDetail details;
-
     if (lua_gettop(l) != 4) {
         return luaL_error(l, "expecting exactly 4 arguments");
     }
 
-    LDDetailsInit(&details);
-
-    client = (LDServerSDK *)luaL_checkudata(l, 1, "LaunchDarklyClient");
+    LDServerSDK *client = (LDServerSDK *) luaL_checkudata(l, 1, "LaunchDarklyClient");
 
     LDContext *context = (LDContext *) luaL_checkudata(l, 2, "LaunchDarklyContext");
 
@@ -805,9 +791,10 @@ LuaLDClientIntVariationDetail(lua_State *const l)
 
     const int fallback = luaL_checkinteger(l, 4);
 
-    const int result = LDIntVariation(*client, *user, key, fallback, &details);
+    LDEvalDetail details;
+    const int result = LDServerSDK_IntVariationDetail(*client, *context, key, fallback, &details);
 
-    LuaPushDetails(l, &details, LDValue_NewNumber(result));
+    LuaPushDetails(l, details, LDValue_NewNumber(result));
 
     return 1;
 }
@@ -824,14 +811,11 @@ Evaluate a double flag
 static int
 LuaLDClientDoubleVariation(lua_State *const l)
 {
-    LDServerSDK *client;
-    LDContext *context;
-
     if (lua_gettop(l) != 4) {
         return luaL_error(l, "expecting exactly 4 arguments");
     }
 
-    client = (LDServerSDK *)luaL_checkudata(l, 1, "LaunchDarklyClient");
+    LDServerSDK *client = (LDServerSDK *) luaL_checkudata(l, 1, "LaunchDarklyClient");
 
     LDContext *context = (LDContext *) luaL_checkudata(l, 2, "LaunchDarklyContext");
 
@@ -840,7 +824,7 @@ LuaLDClientDoubleVariation(lua_State *const l)
     const double fallback = lua_tonumber(l, 4);
 
     const double result =
-        LDDoubleVariation(*client, *user, key, fallback, NULL);
+        LDServerSDK_DoubleVariation(*client, *context, key, fallback);
 
     lua_pushnumber(l, result);
 
@@ -859,17 +843,11 @@ Evaluate a double flag and return an explanation
 static int
 LuaLDClientDoubleVariationDetail(lua_State *const l)
 {
-    LDServerSDK *client;
-    LDContext *context;
-   LDEvalDetail details;
-
     if (lua_gettop(l) != 4) {
         return luaL_error(l, "expecting exactly 4 arguments");
     }
 
-    LDDetailsInit(&details);
-
-    client = (LDServerSDK *)luaL_checkudata(l, 1, "LaunchDarklyClient");
+    LDServerSDK *client = (LDServerSDK *) luaL_checkudata(l, 1, "LaunchDarklyClient");
 
     LDContext *context = (LDContext *) luaL_checkudata(l, 2, "LaunchDarklyContext");
 
@@ -877,10 +855,11 @@ LuaLDClientDoubleVariationDetail(lua_State *const l)
 
     const double fallback = lua_tonumber(l, 4);
 
+    LDEvalDetail details;
     const double result =
-        LDDoubleVariation(*client, *user, key, fallback, &details);
+        LDServerSDK_DoubleVariationDetail(*client, *context, key, fallback, &details);
 
-    LuaPushDetails(l, &details, LDValue_NewNumber(result));
+    LuaPushDetails(l, details, LDValue_NewNumber(result));
 
     return 1;
 }
@@ -897,14 +876,11 @@ Evaluate a string flag
 static int
 LuaLDClientStringVariation(lua_State *const l)
 {
-    LDServerSDK *client;
-    LDContext *context;
-
     if (lua_gettop(l) != 4) {
         return luaL_error(l, "expecting exactly 4 arguments");
     }
 
-    client = (LDServerSDK *)luaL_checkudata(l, 1, "LaunchDarklyClient");
+    LDServerSDK *client = (LDServerSDK *)luaL_checkudata(l, 1, "LaunchDarklyClient");
 
     LDContext *context = (LDContext *) luaL_checkudata(l, 2, "LaunchDarklyContext");
 
@@ -912,12 +888,12 @@ LuaLDClientStringVariation(lua_State *const l)
 
     const char *const fallback = luaL_checkstring(l, 4);
 
-    char *const result =
-        LDStringVariation(*client, *user, key, fallback, NULL);
+    char *result =
+        LDServerSDK_StringVariation(*client, *context, key, fallback);
 
     lua_pushstring(l, result);
 
-    LDFree(result);
+    LDMemory_FreeString(result);
 
     return 1;
 }
@@ -934,17 +910,12 @@ Evaluate a string flag and return an explanation
 static int
 LuaLDClientStringVariationDetail(lua_State *const l)
 {
-    LDServerSDK *client;
-    LDContext *context;
-   LDEvalDetail details;
 
     if (lua_gettop(l) != 4) {
         return luaL_error(l, "expecting exactly 4 arguments");
     }
 
-    LDDetailsInit(&details);
-
-    client = (LDServerSDK *)luaL_checkudata(l, 1, "LaunchDarklyClient");
+    LDServerSDK *client = (LDServerSDK *)luaL_checkudata(l, 1, "LaunchDarklyClient");
 
     LDContext *context = (LDContext *) luaL_checkudata(l, 2, "LaunchDarklyContext");
 
@@ -952,12 +923,13 @@ LuaLDClientStringVariationDetail(lua_State *const l)
 
     const char *const fallback = luaL_checkstring(l, 4);
 
-    char *const result =
-        LDStringVariation(*client, *user, key, fallback, &details);
+    LDEvalDetail details;
+    char *result =
+        LDServerSDK_StringVariationDetail(*client, *context, key, fallback, &details);
 
-    LuaPushDetails(l, &details, LDValue_NewString(result));
+    LuaPushDetails(l, details, LDValue_NewString(result));
 
-    LDFree(result);
+    LDMemory_FreeString(result);
 
     return 1;
 }
@@ -974,28 +946,24 @@ Evaluate a json flag
 static int
 LuaLDClientJSONVariation(lua_State *const l)
 {
-    LDServerSDK *client;
-    LDContext *context;
-    struct LDJSON *fallback, *result;
-
     if (lua_gettop(l) != 4) {
         return luaL_error(l, "expecting exactly 4 arguments");
     }
 
-    client = (LDServerSDK *)luaL_checkudata(l, 1, "LaunchDarklyClient");
+    LDServerSDK *client = (LDServerSDK *) luaL_checkudata(l, 1, "LaunchDarklyClient");
 
     LDContext *context = (LDContext *) luaL_checkudata(l, 2, "LaunchDarklyContext");
 
     const char *const key = luaL_checkstring(l, 3);
 
-    fallback = LuaValueToJSON(l, 4);
+    LDValue fallback = LuaValueToJSON(l, 4);
 
-    result = LDServerSDK_JSONVariation(*client, *user, key, fallback, NULL);
+    LDValue result = LDServerSDK_JsonVariation(*client, *context, key, fallback);
 
     LuaPushJSON(l, result);
 
-    LDJSONFree(fallback);
-    LDJSONFree(result);
+    LDValue_Free(fallback);
+    LDValue_Free(result);
 
     return 1;
 }
@@ -1012,25 +980,20 @@ Evaluate a json flag and return an explanation
 static int
 LuaLDClientJSONVariationDetail(lua_State *const l)
 {
-    LDServerSDK *client;
-    LDContext *context;
-    LDValue fallback, result;
-
-    LDEvalDetail details;
-
     if (lua_gettop(l) != 4) {
         return luaL_error(l, "expecting exactly 4 arguments");
     }
 
-    client = (LDServerSDK *)luaL_checkudata(l, 1, "LaunchDarklyClient");
+    LDServerSDK *client = (LDServerSDK *) luaL_checkudata(l, 1, "LaunchDarklyClient");
 
-    context = (LDContext *)luaL_checkudata(l, 2, "LaunchDarklyContext");
+    LDContext *context = (LDContext *) luaL_checkudata(l, 2, "LaunchDarklyContext");
 
     const char *const key = luaL_checkstring(l, 3);
 
-    fallback = LuaValueToJSON(l, 4);
+    LDValue fallback = LuaValueToJSON(l, 4);
 
-    result = LDServerSDK_JSONVariationDetail(*client, *context, key, fallback, &details);
+    LDEvalDetail details;
+    LDValue result = LDServerSDK_JsonVariationDetail(*client, *context, key, fallback, &details);
 
     LuaPushDetails(l, details, result);
 
@@ -1110,8 +1073,6 @@ initialization timeout was reached.
 static int
 LuaLDClientIsInitialized(lua_State *const l)
 {
-    struct LDClient **client;
-
     if (lua_gettop(l) != 1) {
         return luaL_error(l, "expecting exactly 1 argument");
     }
@@ -1162,8 +1123,7 @@ LuaLDClientAllFlags(lua_State *const l)
 
     LDContext *context = (LDContext *) luaL_checkudata(l, 2, "LaunchDarklyContext");
 
-    LDAllFlagsState state = LDServerSDK_AllFlagsState(*client, *context. LD_ALLFLAGSSTATE_DEFAULT);
-
+    LDAllFlagsState state = LDServerSDK_AllFlagsState(*client, *context, LD_ALLFLAGSSTATE_DEFAULT);
 
     char* serialized = LDAllFlagsState_SerializeJSON(state);
 
@@ -1253,7 +1213,7 @@ luaopen_launchdarkly_server_sdk(lua_State *const l)
     lua_setfield(l, -2, "__index");
     ld_luaL_setfuncs(l, launchdarkly_store_methods, 0);
 
-    #if LUA_VERSION_NUM == 503 || LUA_VERSION_NUM == 502
+    #if LUA_VERSION_NUM >= 502
         luaL_newlib(l, launchdarkly_functions);
     #else
         luaL_register(l, "launchdarkly-server-sdk", launchdarkly_functions);
