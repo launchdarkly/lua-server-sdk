@@ -33,7 +33,9 @@ LuaArrayToJSON(lua_State *const l, const int i);
 static void
 LuaPushJSON(lua_State *const l, LDValue j);
 
-static int globalLoggingCallback;
+static int globalLogEnabledCallback;
+static int globalLogWriteCallback;
+
 static lua_State *globalLuaState;
 
 static int lua_tablelen(lua_State *L, int index)
@@ -45,26 +47,36 @@ static int lua_tablelen(lua_State *L, int index)
     #endif
 }
 
-static void
-logHandler(const enum LDLogLevel level, const char * const line)
-{
-    lua_rawgeti(globalLuaState, LUA_REGISTRYINDEX, globalLoggingCallback);
+
+bool logEnabled(enum LDLogLevel level, void *user_data /* ignored */) {
+	lua_rawgeti(globalLuaState, LUA_REGISTRYINDEX, globalLogEnabledCallback);
 
     lua_pushstring(globalLuaState, LDLogLevel_Name(level, "unknown"));
-    lua_pushstring(globalLuaState, line);
 
-    lua_call(globalLuaState, 2, 0);
+    lua_call(globalLuaState, 1, 1); // one argument (level, string), one result (enable, boolean).
+
+	return lua_toboolean(globalLuaState, -1);
 }
 
+void logWrite(enum LDLogLevel level, const char* msg, void *user_data /* ignored */) {
+	lua_rawgeti(globalLuaState, LUA_REGISTRYINDEX, globalLogWriteCallback);
+
+    lua_pushstring(globalLuaState, LDLogLevel_Name(level, "unknown"));
+    lua_pushstring(globalLuaState, msg);
+
+    lua_call(globalLuaState, 2, 0); // two args (level, string + msg, string), no results.
+}
+
+
 /***
+TODO: Document that the log levels have changed and there is an additional callback, and removed the log level arg.
 Set the global logger for all SDK operations. This function is not thread
-safe, and if used should be done so before other operations. The default
-log level is "INFO".
+safe, and if used should be done so before other operations.
 @function registerLogger
-@tparam string logLevel The level to at. Available options are:
-"FATAL", "CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG", "TRACE".
-@tparam function cb The logging handler. Callback must be of the form
+@tparam function writeCb The logging write handler. Callback must be of the form
 "function (logLevel, logLine) ... end".
+@tparam function enabledCb The log level enabled handler. Callback must be of the form
+"function (logLevel) -> bool ... end". Return true if the given log level is enabled.
 */
 static int
 LuaLDRegisterLogger(lua_State *const l)
@@ -73,13 +85,9 @@ LuaLDRegisterLogger(lua_State *const l)
         return luaL_error(l, "expecting exactly 2 arguments");
     }
 
-    const char *const level = luaL_checkstring(l, 1);
-
     globalLuaState        = l;
-    globalLoggingCallback = luaL_ref(l, LUA_REGISTRYINDEX);
-
-    // TODO: Install custom loggger
-   // LDConfigureGlobalLogger(LDLogLevel_Enum(level, LD_LOG_INFO), logHandler);
+	globalLogEnabledCallback = luaL_ref(l, LUA_REGISTRYINDEX);
+    globalLogWriteCallback = luaL_ref(l, LUA_REGISTRYINDEX);
 
     return 0;
 }
@@ -535,6 +543,19 @@ makeConfig(lua_State *const l, const int i)
             lua_pop(l, 1);
         }
     }
+
+
+	if (globalLogEnabledCallback != LUA_NOREF && globalLogWriteCallback != LUA_NOREF) {
+		struct LDLogBackend backend;
+		LDLogBackend_Init(&backend);
+
+		backend.Write = logWrite;
+		backend.Enabled = logEnabled;
+
+	    LDLoggingCustomBuilder custom_logging = LDLoggingCustomBuilder_New();
+		LDLoggingCustomBuilder_Backend(custom_logging, backend);
+		LDServerConfigBuilder_Logging_Custom(builder, custom_logging);
+	}
 
     LDServerConfigBuilder_HttpProperties_WrapperName(builder, "lua-server-sdk");
     LDServerConfigBuilder_HttpProperties_WrapperVersion(builder, SDKVersion);

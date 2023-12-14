@@ -2,18 +2,22 @@ local u = require('luaunit')
 local l = require("launchdarkly_server_sdk")
 -- local r = require("launchdarkly_server_sdk_redis")
 
-function logger(level, line)
-    print(level .. ": " .. line)
+function logWrite(level, line)
+    print("[" .. level .. "]" .. " " .. line)
 end
 
-l.registerLogger("TRACE", logger)
+function logEnabled(level)
+    return level == "warn" or level == "error"
+end
+
+l.registerLogger(logWrite, logEnabled)
 
 TestAll = {}
 
 function makeTestClient()
     local c = l.clientInit({
         key     = "sdk-test",
-        offline = true
+        offline = True
     }, 0)
 
     return c
@@ -35,7 +39,7 @@ function TestAll:testBoolVariationDetail()
         value  = true,
         reason = {
             kind      = "ERROR",
-            errorKind = "FLAG_NOT_FOUND",
+            errorKind = "CLIENT_NOT_READY",
             inExperiment = false
         }
     }
@@ -52,7 +56,7 @@ function TestAll:testIntVariationDetail()
         value  = 5,
         reason = {
             kind      = "ERROR",
-            errorKind = "FLAG_NOT_FOUND",
+            errorKind = "CLIENT_NOT_READY",
             inExperiment = false
         }
     }
@@ -69,7 +73,7 @@ function TestAll:testDoubleVariationDetail()
         value  = 6.2,
         reason = {
             kind      = "ERROR",
-            errorKind = "FLAG_NOT_FOUND",
+            errorKind = "CLIENT_NOT_READY",
             inExperiment = false
         }
     }
@@ -86,7 +90,7 @@ function TestAll:testStringVariationDetail()
         value  = "f",
         reason = {
             kind      = "ERROR",
-            errorKind = "FLAG_NOT_FOUND",
+            errorKind = "CLIENT_NOT_READY",
             inExperiment = false
         }
     }
@@ -103,7 +107,7 @@ function TestAll:testJSONVariationDetail()
         value  = { a = "b" },
         reason = {
             kind      = "ERROR",
-            errorKind = "FLAG_NOT_FOUND",
+            errorKind = "CLIENT_NOT_READY",
             inExperiment = false
         }
     }
