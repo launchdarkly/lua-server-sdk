@@ -25,11 +25,11 @@ runs:
 
     - name: Build Lua Server-side SDK
       shell: bash
-      run:  luarocks make launchdarkly-server-sdk-1.0-0.rockspec
+      run:  luarocks make launchdarkly-server-sdk-1.0-0.rockspec LD_DIR=./cpp-sdk
 
     - name: Build Lua Server-side SDK with Redis
       shell: bash
-      run: luarocks make launchdarkly-server-sdk-redis-1.0-0.rockspec
+      run: luarocks make launchdarkly-server-sdk-redis-1.0-0.rockspec LD_DIR=./cpp-sdk
 
     - name: Run tests
       shell: bash
