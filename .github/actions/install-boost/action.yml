@@ -1,0 +1,26 @@
+# This custom action is used because the MarkusJx/install-boost does
+# not include all built libraries for mac or windows builds.
+# Specifically, it was missing boost_json.
+name: Install Boost
+description: 'Install boost.'
+inputs:
+  platform_version:
+    required: false
+    default: "22.04"
+  toolset:
+    required: false
+
+outputs:
+  BOOST_ROOT:
+    description: The location of the installed boost.
+    value: ${{ steps.boost-action.outputs.BOOST_ROOT }}
+runs:
+  using: composite
+  steps:
+    - name: Install boost using action
+      uses: MarkusJx/install-boost@v2.4.4
+      id: boost-action
+      with:
+        boost_version: 1.81.0
+        toolset: ${{ inputs.toolset }}
+        platform_version: ${{ inputs.platform_version }}

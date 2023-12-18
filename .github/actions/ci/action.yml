@@ -12,16 +12,20 @@ runs:
       with:
         luaVersion: ${{ inputs.lua-version }}
     - uses: leafo/gh-actions-luarocks@e65774a6386cb4f24e293dca7fc4ff89165b64c5
-    - name: Install C Server-side SDK Dependencies
+    - uses: ./.github/actions/install-boost
+      id: install-boost
+    - name: Install C++ Server-side SDK Dependencies
       shell: bash
       run: |
         sudo apt-get update -y
         sudo apt-get install -y libcurl4-openssl-dev
         sudo apt-get install -y libhiredis-dev
 
-    - name: Setup C Server-side SDK
+    - name: Setup C++ Server-side SDK
       shell: bash
-      run: ./scripts/build-c-server.sh launchdarkly-cpp-server-redis-source-v1.0.0
+      run: ./scripts/build-cpp-server.sh launchdarkly-cpp-server-redis-source-v1.0.0
+      env:
+        BOOST_ROOT: ${{ steps.install-boost.outputs.BOOST_ROOT }}
 
     - name: Build Lua Server-side SDK
       shell: bash

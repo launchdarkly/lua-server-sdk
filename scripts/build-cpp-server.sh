@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Usage: ./scripts/build-c-server.sh <tag>
+# Usage: ./scripts/build-cpp-server.sh <tag>
 
 set -e
 
