@@ -4,7 +4,7 @@ version = "1.0-0"
 
 source = {
    url = "git+https://github.com/launchdarkly/lua-server-sdk.git",
-   tag = "1.0.0"
+   tag = "1.2.2" -- {{ x-release-please-version }}
 }
 
 dependencies = {

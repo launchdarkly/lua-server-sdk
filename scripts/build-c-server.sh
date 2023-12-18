@@ -8,4 +8,4 @@ mkdir build
 cd build
 cmake -D BUILD_SHARED_LIBS=ON -D BUILD_TESTING=OFF -D REDIS_STORE=ON ..
 make
-make install
+sudo make install
