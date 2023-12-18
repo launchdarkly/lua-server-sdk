@@ -1,0 +1,27 @@
+# This custom action is used because the MarkusJx/install-boost does
+# not include all built libraries for mac or windows builds.
+# Specifically, it was missing boost_json.
+name: Install C++ Server-side SDK with Redis Source
+description: 'Obtain prebuilt libraries for the Launchdarkly C++ server-side SDK with Redis Source.'
+inputs:
+    version:
+        required: true
+        description: "Version of the C++ SDK with Redis Source."
+        default: "v1.0.1"
+    path:
+      description: "Where to download the SDK."
+      default: "cpp-sdk"
+
+runs:
+  using: composite
+  steps:
+    - name: Download C++ Server-side SDK with Redis Source
+      uses: robinraju/release-downloader@efa4cd07bd0195e6cc65e9e30c251b49ce4d3e51
+      id: download-cpp-sdk
+      with:
+          repository: "launchdarkly/cpp-sdks"
+          latest: false
+          tag: launchdarkly-cpp-server-redis-source-${{ inputs.version }}
+          fileName: linux-gcc-x64-dynamic.zip
+          out-file-path: ${{ inputs.path }}
+          extract: true
