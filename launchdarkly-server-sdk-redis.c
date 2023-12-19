@@ -50,7 +50,7 @@ LuaLDRedisMakeSource(lua_State *const l)
 }
 
 static const struct luaL_Reg launchdarkly_functions[] = {
-    { "makeStore", LuaLDRedisMakeSource },
+    { "makeRedisSource", LuaLDRedisMakeSource },
     { NULL,        NULL                }
 };
 
