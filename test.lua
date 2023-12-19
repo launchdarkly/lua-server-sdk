@@ -23,7 +23,16 @@ function makeTestClient()
     return c
 end
 
-local user = l.makeUser({ key = "alice" })
+local user = l.makeUser({
+    key = "alice",
+    dataSystem = {
+        enabled = true,
+        method = "streaming",
+        params = {
+            initialReconnectDelayMs = 1000
+        }
+    }
+})
 
 function TestAll:tearDown()
     collectgarbage("collect")

@@ -246,7 +246,7 @@ LuaPushJSON(lua_State *const l, LDValue j)
 }
 
 /***
-Create a new opaque user object.
+Create a new opaque context object of kind 'user'.
 @function makeUser
 @tparam table fields list of user fields.
 @tparam string fields.key The user's key
@@ -258,11 +258,10 @@ Create a new opaque user object.
 @tparam[opt] string fields.name Set the user's name
 @tparam[opt] string fields.avatar Set the user's avatar
 @tparam[opt] string fields.country Set the user's country
-@tparam[opt] string fields.secondary Set the user's secondary key
 @tparam[opt] table fields.privateAttributeNames A list of attributes to
 redact
-@tparam[opt] table fields.custom Set the user's custom JSON
-@return an opaque user object
+@tparam[opt] table fields.custom A table of attributes to set on the user.
+@return an opaque context object
 */
 static int
 LuaLDUserNew(lua_State *const l)
@@ -330,13 +329,9 @@ LuaLDUserNew(lua_State *const l)
     }
 
 
-    lua_getfield(l, 1, "secondary");
 
-    if (lua_isstring(l, -1)) {
-       // TODO: Log a warning that this was removed
+    // TODO: Document that secondary was removed
 
-
-    }
 
     lua_getfield(l, 1, "custom");
 
@@ -416,6 +411,17 @@ LuaLDUserFree(lua_State *const l)
     return 0;
 }
 
+// makeConfig({
+//     dataSystem: {
+//         enabled: bool
+//         method: streaming
+//
+//
+//     }
+// })
+
+
+
 static LDServerConfig
 makeConfig(lua_State *const l, const int i)
 {
@@ -447,11 +453,91 @@ makeConfig(lua_State *const l, const int i)
         LDServerConfigBuilder_ServiceEndpoints_EventsBaseURL(builder, luaL_checkstring(l, -1));
     }
 
-    lua_getfield(l, i, "stream");
+/*
+    local user = l.makeUser({
+        key = "alice",
+        dataSystem = {
+            enabled = true,
+            backgroundSync = {
+                source = "launchdarkly_streaming",
+                initialReconnectDelayMs = 1000
+            }
+lazyLoad = {
+        source = makeRedisSource("redis://localhost:6379", "prefix")
+}
+        }
+    })
+*/
 
-    if (lua_isboolean(l, -1)) {
-        // TODO: Switch between poll/streaming data systems
-        //LDConfigSetStream(config, lua_toboolean(l, -1));
+// TODO: stream, useLDD, and pollInterval, and featureStoreBackend all unified under new dataSystem key
+    lua_getfield(l, i, "dataSystem");
+
+    if (lua_istable(l, -1)) {
+        lua_getfield(l, i, "enabled");
+        if (lua_isboolean(l, -1)) {
+            LDServerConfigBuilder_DataSystem_Enabled(builder, lua_toboolean(l, -1));
+        }
+
+        lua_getfield(l, i, "backgroundSync");
+        if (lua_isnil(l, -1)) {
+            lua_pop(l, 1); /* not an error, perhaps lazyLoad was configured instead */
+
+            lua_getfield(l, i, "lazyLoad");
+            if (lua_isnil(l, -1)) {
+                return luaL_error(l, "dataSystem.lazyLoad specified, must specify a source");
+            } else if (lua_istable(l, -1)) {
+                lua_getfield(l, i, "source");
+
+                if (lua_isnil(l, -1)) {
+                    return luaL_error(l, "dataSystem.lazyLoad.source must be provided");
+                }
+
+                LDServerLazyLoadSource *source = luaL_checkudata(l, 1, "LaunchDarklyStoreInterface");
+
+                LDServerLazyLoadBuilder lazy_load_builder = LDServerLazyLoadBuilder_New();
+
+                LDServerLazyLoadBuilder_Source(lazy_load_builder, source);
+                LDServerLazyLoadBuilder_CacheRefreshMs(lazy_load_builder, 30000);
+                LDServerLazyLoadBuilder_CacheEviction(lazy_load_builder, LDServerLazyLoadCacheEviction_Disabled);
+
+
+                   /* This should be a metatable containing the redis source */
+
+            } else {
+                return luaL_error(l, "dataSystem.lazyLoad must be a table");
+            }
+        } else if (lua_istable(l, -1)) {
+            lua_getfield(l, i, "source");
+
+            if (lua_isstring(l, -1)) {
+                const char *const source = luaL_checkstring(l, -1);
+                if (strcmp(source, "launchdarkly_streaming") == 0) {
+                    LDServerDataSourceStreamBuilder stream_builder = LDServerDataSourceStreamBuilder_New();
+
+                    lua_getfield(l, i, "initialReconnectDelayMs");
+                    if (lua_isnumber(l, -1)) {
+                        LDServerDataSourceStreamBuilder_InitialReconnectDelayMs(stream_builder, luaL_checkinteger(l, -1));
+                    }
+
+                    LDServerConfigBuilder_DataSystem_BackgroundSync_Streaming(builder, stream_builder);
+                } else if (strcmp(source, "launchdarkly_polling") == 0) {
+                    LDServerDataSourcePollBuilder poll_builder = LDServerDataSourcePollBuilder_New();
+
+                    lua_getfield(l, i, "intervalSeconds");
+                    if (lua_isnumber(l, -1)) {
+                        LDServerDataSourcePollBuilder_IntervalS(poll_builder, luaL_checkinteger(l, -1));
+                    }
+
+                    LDServerConfigBuilder_DataSystem_BackgroundSync_Polling(builder, poll_builder);
+                } else {
+                    return luaL_error(l, "dataSystem.method must be 'streaming' or 'polling'");
+                }
+            } else {
+                return luaL_error(l, "dataSystem.backgroundSync.source must be a string");
+            }
+        } else {
+            return luaL_error(l, "dataSystem.backgroundSync must be a table");
+        }
     }
 
     lua_getfield(l, i, "sendEvents");

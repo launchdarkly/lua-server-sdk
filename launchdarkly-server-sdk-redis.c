@@ -12,52 +12,33 @@ Server-side SDK for LaunchDarkly Redis store.
 #include <launchdarkly/server_side/bindings/c/sdk.h>
 #include <launchdarkly/server_side/integrations/redis/redis_source.hpp>
 
+
+
 /***
-Initialize a store backend
-@function makeStore
-@tparam table fields list of configuration options
-@tparam[opt] string fields.host Hostname for Redis.
-@tparam[opt] int fields.port Port for Redis.
-@tparam[opt] string fields.prefix Redis key prefix for SDK values.
-@tparam[opt] int fields.poolSize Number of Redis connections to maintain.
-@return A fresh Redis store backend.
+Create a Redis data source, which can be used instead
+of a LaunchDarkly Streaming or Polling data source.
+@function makeRedisSource
+@tparam string uri Redis URI.
+@tparam string prefix Prefix to use when reading SDK data from Redis.
+@return A new Redis data source, suitable for configuration in the SDK's data system.
 */
 static int
-LuaLDRedisMakeStore(lua_State *const l)
+LuaLDRedisMakeSource(lua_State *const l)
 {
-    struct LDRedisConfig *config;
-    struct LDStoreInterface *storeInterface;
-
     if (lua_gettop(l) != 1) {
-        return luaL_error(l, "expecting exactly 1 argument");
+        return luaL_error(l, "expecting exactly 2 arguments");
     }
 
-    luaL_checktype(l, 1, LUA_TTABLE);
 
-    config = LDRedisConfigNew();
+	const char* uri = luaL_checkstring(l, 1);
+	const char* prefix = luaL_checkstring(l, 2);
 
-    lua_getfield(l, 1, "host");
-
-    if (lua_isstring(l, -1)) {
-        LDRedisConfigSetHost(config, luaL_checkstring(l, -1));
-    }
-
-    lua_getfield(l, 1, "prefix");
-
-    if (lua_isstring(l, -1)) {
-        LDRedisConfigSetPrefix(config, luaL_checkstring(l, -1));
-    }
-
-    lua_getfield(l, 1, "port");
-
-    if (lua_isnumber(l, -1)) {
-        LDRedisConfigSetPort(config, luaL_checkinteger(l, -1));
-    }
-
-    lua_getfield(l, 1, "poolSize");
-
-    if (lua_isnumber(l, -1)) {
-        LDRedisConfigSetPoolSize(config, luaL_checkinteger(l, -1));
+	LDServerSDK_RedisSource out_source;
+   	LDStatus status = LDServerSDK_RedisSource_Create(uri, prefix, &out_source);
+    if (!LDStatus_Ok(status)) {
+		lua_pushstring(l, LDStatus_Error(status));
+		LDStatus_Free(status);
+        return luaL_error(l, "failed to create Redis source: " .. lua_tostring(l, -1));
     }
 
     storeInterface = LDStoreInterfaceRedisNew(config);
