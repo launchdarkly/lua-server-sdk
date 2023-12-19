@@ -17,7 +17,15 @@ dependencies = {
 
 external_dependencies = {
     LDREDIS = {
-        header = "launchdarkly/server_side/bindings/c/integrations/redis/redis_source.h"
+        header = "launchdarkly/server_side/bindings/c/integrations/redis/redis_source.h",
+        library = "launchdarkly-cpp-server-redis-source"
+    },
+    platforms = {
+        linux = {
+            HIREDIS = {
+                library = "libhiredis.so.1.1.0"
+            }
+        }
     }
 }
 
