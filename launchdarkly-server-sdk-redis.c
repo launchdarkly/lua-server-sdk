@@ -9,8 +9,7 @@ Server-side SDK for LaunchDarkly Redis store.
 #include <stdbool.h>
 #include <string.h>
 
-#include <launchdarkly/server_side/bindings/c/sdk.h>
-#include <launchdarkly/server_side/integrations/redis/redis_source.hpp>
+#include <launchdarkly/server_side/bindings/c/integrations/redis/redis_source.h>
 
 
 
@@ -33,20 +32,16 @@ LuaLDRedisMakeSource(lua_State *const l)
 	const char* uri = luaL_checkstring(l, 1);
 	const char* prefix = luaL_checkstring(l, 2);
 
-	LDServerSDK_RedisSource out_source;
-   	LDStatus status = LDServerSDK_RedisSource_Create(uri, prefix, &out_source);
-    if (!LDStatus_Ok(status)) {
-		lua_pushstring(l, LDStatus_Error(status));
-		LDStatus_Free(status);
-        return luaL_error(l, "failed to create Redis source: " .. lua_tostring(l, -1));
+    struct LDServerLazyLoadRedisResult out_result;
+   	bool success = LDServerLazyLoadRedisSource_New(uri, prefix, &out_result);
+    if (!success) {
+        return luaL_error(l, "failed to create Redis source: %s", out_result.error_message);
     }
 
-    storeInterface = LDStoreInterfaceRedisNew(config);
+    LDServerLazyLoadRedisSource *i =
+        (LDServerLazyLoadRedisSource *) lua_newuserdata(l, sizeof(out_result.source));
 
-    struct LDStoreInterface **i =
-        (struct LDStoreInterface **)lua_newuserdata(l, sizeof(storeInterface));
-
-    *i = storeInterface;
+    *i = out_result.source;
 
     luaL_getmetatable(l, "LaunchDarklyStoreInterface");
     lua_setmetatable(l, -2);
@@ -55,7 +50,7 @@ LuaLDRedisMakeSource(lua_State *const l)
 }
 
 static const struct luaL_Reg launchdarkly_functions[] = {
-    { "makeStore", LuaLDRedisMakeStore },
+    { "makeStore", LuaLDRedisMakeSource },
     { NULL,        NULL                }
 };
 
@@ -80,7 +75,7 @@ static void luaL_setfuncs (lua_State *L, const luaL_Reg *l, int nup) {
 int
 luaopen_launchdarkly_server_sdk_redis(lua_State *const l)
 {
-    #if LUA_VERSION_NUM == 503 || LUA_VERSION_NUM == 502
+    #if LUA_VERSION_NUM >= 502
         luaL_newlib(l, launchdarkly_functions);
     #else
         luaL_register(l, "launchdarkly-server-sdk-redis",

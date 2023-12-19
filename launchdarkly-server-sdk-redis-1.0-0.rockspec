@@ -12,7 +12,7 @@ dependencies = {
 
 external_dependencies = {
     LDREDIS = {
-        header = "launchdarkly/server_side/integrations/redis/redis_source.hpp"
+        header = "launchdarkly/server_side/bindings/c/integrations/redis/redis_source.h"
     }
 }
 
