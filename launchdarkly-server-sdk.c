@@ -484,27 +484,25 @@ lazyLoad = {
 
             lua_getfield(l, i, "lazyLoad");
             if (lua_isnil(l, -1)) {
-                return luaL_error(l, "dataSystem.lazyLoad specified, must specify a source");
+                luaL_error(l, "dataSystem.lazyLoad specified, must specify a source");
             } else if (lua_istable(l, -1)) {
                 lua_getfield(l, i, "source");
 
                 if (lua_isnil(l, -1)) {
-                    return luaL_error(l, "dataSystem.lazyLoad.source must be provided");
+                    luaL_error(l, "dataSystem.lazyLoad.source must be provided");
                 }
 
-                LDServerLazyLoadSource *source = luaL_checkudata(l, 1, "LaunchDarklyStoreInterface");
+                LDServerLazyLoadSourcePtr *source = luaL_checkudata(l, 1, "LaunchDarklyStoreInterface");
 
                 LDServerLazyLoadBuilder lazy_load_builder = LDServerLazyLoadBuilder_New();
 
-                LDServerLazyLoadBuilder_Source(lazy_load_builder, source);
-                LDServerLazyLoadBuilder_CacheRefreshMs(lazy_load_builder, 30000);
-                LDServerLazyLoadBuilder_CacheEviction(lazy_load_builder, LDServerLazyLoadCacheEviction_Disabled);
+                LDServerLazyLoadBuilder_SourcePtr(lazy_load_builder, *source);
 
 
                    /* This should be a metatable containing the redis source */
 
             } else {
-                return luaL_error(l, "dataSystem.lazyLoad must be a table");
+                luaL_error(l, "dataSystem.lazyLoad must be a table");
             }
         } else if (lua_istable(l, -1)) {
             lua_getfield(l, i, "source");
@@ -530,13 +528,13 @@ lazyLoad = {
 
                     LDServerConfigBuilder_DataSystem_BackgroundSync_Polling(builder, poll_builder);
                 } else {
-                    return luaL_error(l, "dataSystem.method must be 'streaming' or 'polling'");
+                    luaL_error(l, "dataSystem.method must be 'streaming' or 'polling'");
                 }
             } else {
-                return luaL_error(l, "dataSystem.backgroundSync.source must be a string");
+                luaL_error(l, "dataSystem.backgroundSync.source must be a string");
             }
         } else {
-            return luaL_error(l, "dataSystem.backgroundSync must be a table");
+            luaL_error(l, "dataSystem.backgroundSync must be a table");
         }
     }
 
