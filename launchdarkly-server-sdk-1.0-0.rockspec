@@ -2,6 +2,8 @@ package = "launchdarkly-server-sdk"
 
 rockspec_format = "3.0"
 
+supported_platforms = {"linux"}
+
 version = "1.0-0"
 
 source = {
@@ -20,6 +22,8 @@ external_dependencies = {
     platforms = {
         linux = {
             BOOST= {
+                -- The library depends on boost_json and boost_url, but we only need to test for the existence
+                -- of one of them since they are both part of the boost distribution.
                 library = "libboost_json-mt-x64.so.1.81.0"
             }
         }
@@ -37,7 +41,7 @@ build = {
       ["launchdarkly_server_sdk"] = {
           sources = { "launchdarkly-server-sdk.c" },
           incdirs = {"$(LD_INCDIR)"},
-          libdirs = {"$(LD_LIBDIR)", "$(BOOST_LIBDIR)"},
+          libdirs = {"$(LD_LIBDIR)"},
           libraries = {"launchdarkly-cpp-server"}
       }
    }
