@@ -21,7 +21,7 @@ runs:
       with:
           repository: "launchdarkly/cpp-sdks"
           latest: false
-          tag: launchdarkly-cpp-server-redis-source-${{ inputs.version }}
+          tag: ${{ inputs.version }}
           fileName: linux-gcc-x64-dynamic.zip
           out-file-path: ${{ inputs.path }}
           extract: true
