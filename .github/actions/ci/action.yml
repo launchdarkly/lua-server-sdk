@@ -14,7 +14,7 @@ runs:
     - uses: leafo/gh-actions-luarocks@e65774a6386cb4f24e293dca7fc4ff89165b64c5
     - uses: ./.github/actions/install-cpp-sdk-redis
       with:
-          version: redis-c-binding-prerelease-v1.1.0
+          version: redis-source-bindings-v1.1.0
           path: cpp-sdk
     - name: Install C++ Server-side SDK Dependencies
       shell: bash
