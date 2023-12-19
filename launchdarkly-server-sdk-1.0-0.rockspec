@@ -17,11 +17,12 @@ dependencies = {
 
 external_dependencies = {
     LD = {
-        header = "launchdarkly/server_side/bindings/c/sdk.h"
+        header = "launchdarkly/server_side/bindings/c/sdk.h",
+        library = "launchdarkly-cpp-server"
     },
     platforms = {
         linux = {
-            BOOST= {
+            BOOST = {
                 -- The library depends on boost_json and boost_url, but we only need to test for the existence
                 -- of one of them since they are both part of the boost distribution.
                 library = "libboost_json-mt-x64.so.1.81.0"
