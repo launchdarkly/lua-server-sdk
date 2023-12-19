@@ -8,11 +8,20 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: leafo/gh-actions-lua@35bcb06abec04ec87df82e08caa84d545348536e
+    - name: Install Lua
+      uses: leafo/gh-actions-lua@35bcb06abec04ec87df82e08caa84d545348536e
       with:
         luaVersion: ${{ inputs.lua-version }}
-    - uses: leafo/gh-actions-luarocks@e65774a6386cb4f24e293dca7fc4ff89165b64c5
-    - uses: ./.github/actions/install-cpp-sdk-redis
+    - name: Install LuaRocks
+      uses: leafo/gh-actions-luarocks@e65774a6386cb4f24e293dca7fc4ff89165b64c5
+    - name: Install Boost
+      id: install-boost
+      uses: MarkusJx/install-boost@v2.4.4
+      with:
+        boost_version: 1.81.0
+        platform_version: "22.04"
+    - name: Install CPP SDK
+      uses: ./.github/actions/install-cpp-sdk-redis
       with:
           version: redis-source-bindings-v1.1.0
           path: cpp-sdk
@@ -20,23 +29,33 @@ runs:
       shell: bash
       run: |
         sudo apt-get update -y
-        sudo apt-get install -y libcurl4-openssl-dev
         sudo apt-get install -y libhiredis-dev
 
     - name: Build Lua Server-side SDK
       shell: bash
-      run:  luarocks make launchdarkly-server-sdk-1.0-0.rockspec LD_DIR=./cpp-sdk/build-dynamic/release
+      run:  |
+        luarocks make launchdarkly-server-sdk-1.0-0.rockspec \
+        LD_DIR=./cpp-sdk/build-dynamic/release \
+        BOOST_DIR=${{ steps.install-boost.outputs.BOOST_ROOT }}
 
     - name: Build Lua Server-side SDK with Redis
       shell: bash
-      run: luarocks make launchdarkly-server-sdk-redis-1.0-0.rockspec LDREDIS_DIR=./cpp-sdk/build-dynamic/release
+      run: |
+        luarocks make launchdarkly-server-sdk-redis-1.0-0.rockspec \
+        LDREDIS_DIR=./cpp-sdk/build-dynamic/release \
+        LD_DIR=./cpp-sdk/build-dynamic/release \
+        BOOST_DIR=${{ steps.install-boost.outputs.BOOST_ROOT }}
 
     - name: Run tests
       shell: bash
       if: ${{ ! contains(inputs.lua-version, 'jit') }}
-      run: lua test.lua
+      run: luarocks test launchdarkly-server-sdk-1.0-0.rockspec
+      env:
+        LD_LIBRARY_PATH: ${{ steps.install-boost.outputs.BOOST_ROOT }}/lib
 
     - name: Run tests (JIT)
       shell: bash
       if: ${{ contains(inputs.lua-version, 'jit') }}
       run: luajit test.lua
+      env:
+        LD_LIBRARY_PATH: ${{ steps.install-boost.outputs.BOOST_ROOT }}/lib
