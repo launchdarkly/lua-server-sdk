@@ -21,6 +21,11 @@ external_dependencies = {
     }
 }
 
+test = {
+    type = "command",
+    script = "redis-test.lua"
+}
+
 build = {
    type = "builtin",
    modules = {
