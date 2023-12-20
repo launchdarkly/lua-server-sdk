@@ -31,31 +31,31 @@ end
 
 function TestAll:testSetAllConfigFields()
     local c = l.clientInit("sdk-test", {
-        offline = true,
-        appInfo = {
-            identifier = "MyApp",
-            version = "1.0.0"
-        },
-        serviceEndpoints = {
-            streamingBaseURL = "foo",
-            pollingBaseURL = "bar",
-            eventsBaseURL = "baz"
-        },
-        dataSystem = {
-            backgroundSync = {
-                streaming = {
-                    initialReconnectDelayMilliseconds = 1000
-                }
-            }
-        },
-        events = {
-            capacity = 1000,
-            --contextKeysCapacity = 100, TODO: add once c binding available
-            enabled = true,
-            flushIntervalMilliseconds = 100,
-            allAttributesPrivate = true,
-            privateAttributes = {"/foo", "/bar"}
-        }
+        offline = true
+        --appInfo = {
+        --    identifier = "MyApp",
+        --    version = "1.0.0"
+        --},
+        --serviceEndpoints = {
+        --    streamingBaseURL = "foo",
+        --    pollingBaseURL = "bar",
+        --    eventsBaseURL = "baz"
+        --},
+        --dataSystem = {
+        --    backgroundSync = {
+        --        streaming = {
+        --            initialReconnectDelayMilliseconds = 1000
+        --        }
+        --    }
+        --},
+        --events = {
+        --    capacity = 1000,
+        --    --contextKeysCapacity = 100, TODO: add once c binding available
+        --    enabled = true,
+        --    flushIntervalMilliseconds = 100,
+        --    allAttributesPrivate = true,
+        --    privateAttributes = {"/foo", "/bar"}
+        --}
     })
 end
 --
