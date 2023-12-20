@@ -23,7 +23,6 @@ function makeTestClient()
             },
         }
     })
-
     return c
 end
 

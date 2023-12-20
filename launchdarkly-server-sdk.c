@@ -557,25 +557,10 @@ struct field_validator top_level_fields[] = {
     {"events", LUA_TTABLE, parse_table, &event_config }
 };
 
-
 DEFINE_CONFIG(top_level_config, "config", top_level_fields);
 
-
-// todo: appinfo
-
-
-struct field_validator * find_field(const char *key, struct config* cfg) {
-    for (int i = 0; i < cfg->n; i++) {
-        if (strcmp(cfg->fields[i].key, key) == 0) {
-            return &cfg->fields[i];
-        }
-    }
-    return NULL;
-}
-
-#define DEBUG 1
-
-#define debug_print(foo) do { if (DEBUG) printf(foo); } while (0)
+// Finds a field by key in the given config, or returns NULL.
+struct field_validator * find_field(const char *key, struct config* cfg);
 
 void traverse_config(lua_State *const l, int i, LDServerConfigBuilder builder, struct config *cfg) {
     luaL_checktype(l, -1, LUA_TTABLE);
@@ -601,6 +586,15 @@ void traverse_config(lua_State *const l, int i, LDServerConfigBuilder builder, s
         lua_pop(l, 2);
     }
     lua_pop(l, 1);
+}
+
+struct field_validator * find_field(const char *key, struct config* cfg) {
+    for (int i = 0; i < cfg->n; i++) {
+        if (strcmp(cfg->fields[i].key, key) == 0) {
+            return &cfg->fields[i];
+        }
+    }
+    return NULL;
 }
 
 static LDServerConfig

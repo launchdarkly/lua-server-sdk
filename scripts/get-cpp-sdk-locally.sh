@@ -1,12 +1,15 @@
 #!/bin/bash
 
-# This is meant to be run when testing out changes locally without the help of CI.
-# In CI, the C++ SDK's prebuilt Linux artifacts are fetched.
+# This is meant to be run when testing out changes locally. In contrast, the remote CI
+# fetches prebuilt artifacts from github based on a release tag.
 #
 # Locally, it's more convenient to built the C++ SDK from source - to be able to switch branches,
 # change built options, etc.
 
 # Usage: ./scripts/build-cpp-server.sh <tag>
+# If no tag is supplied, it uses 'main'.
+#
+# The SDK headers/libs are installed in ./cpp-sdks/build/INSTALL.
 
 set -e
 

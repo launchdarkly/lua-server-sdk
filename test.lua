@@ -50,7 +50,7 @@ function TestAll:testSetAllConfigFields()
         },
         events = {
             capacity = 1000,
-            --contextKeysCapacity = 100, TODO: once c binding available
+            --contextKeysCapacity = 100, TODO: add once c binding available
             enabled = true,
             flushIntervalMilliseconds = 100,
             allAttributesPrivate = true
