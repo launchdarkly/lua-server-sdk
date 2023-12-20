@@ -471,22 +471,21 @@ static void parse_table(lua_State *const l, int i,  LDServerConfigBuilder builde
 static void parse_string_array(lua_State *const l, int i, LDServerConfigBuilder builder, void* user_data) {
     void (*setter)(LDServerConfigBuilder, const char*) = user_data;
 
-    int n = lua_tablelen(l, -1);
+    int n = lua_tablelen(l, i);
 
-    for (int i = 1; i <= n; i++) {
-        lua_rawgeti(l, -1, i);
+    for (int j = 1; j <= n; j++) {
+        lua_rawgeti(l, i, j);
         if (lua_isstring(l, -1)) {
             setter(builder, lua_tostring(l, -1));
         }
         lua_pop(l, 1);
     }
-
 }
 
 // Special purpose parser for grabbing a store interface from a userdata.
 static void parse_lazyload_source(lua_State *const l, int i, LDServerConfigBuilder builder, void* user_data) {
 // TODO: replace checkudata
-    LDServerLazyLoadSourcePtr *source = luaL_checkudata(l, i, "LaunchDarklyStoreInterface");
+    LDServerLazyLoadSourcePtr *source = lua_touserdata(l, i);
     LDServerLazyLoadBuilder lazy_load_builder = LDServerLazyLoadBuilder_New();
     LDServerLazyLoadBuilder_SourcePtr(lazy_load_builder, *source);
 
