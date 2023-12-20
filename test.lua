@@ -31,11 +31,11 @@ end
 
 function TestAll:testSetAllConfigFields()
     local c = l.clientInit("sdk-test", {
-        offline = true
-        --appInfo = {
-        --    identifier = "MyApp",
-        --    version = "1.0.0"
-        --},
+        offline = true,
+        appInfo = {
+            identifier = "MyApp",
+            version = "1.0.0"
+        }
         --serviceEndpoints = {
         --    streamingBaseURL = "foo",
         --    pollingBaseURL = "bar",
