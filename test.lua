@@ -53,7 +53,8 @@ function TestAll:testSetAllConfigFields()
             --contextKeysCapacity = 100, TODO: add once c binding available
             enabled = true,
             flushIntervalMilliseconds = 100,
-            allAttributesPrivate = true
+            allAttributesPrivate = true,
+            privateAttributes = {"/foo", "/bar"}
         }
     })
 end

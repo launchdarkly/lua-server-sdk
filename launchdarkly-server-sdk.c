@@ -426,24 +426,24 @@ struct field_validator {
     void *user_data;
 };
 
-// Parses a string from the top of the stack and then calls a setter function
-// stored in user_data. The setter must have the signature (LDServerConfigBuilder, const char*).
+// Parses a string and then calls a setter function stored in user_data.
+// The setter must have the signature (LDServerConfigBuilder, const char*).
 static void parse_string(lua_State *const l, int i, LDServerConfigBuilder builder, void* user_data) {
     const char *const uri = luaL_checkstring(l, i);
     void (*setter)(LDServerConfigBuilder, const char*) = user_data;
     setter(builder, uri);
 }
 
-// Parses a bool from the top of the stack and then calls a setter function
-// stored in user_data. The setter must have the signature (LDServerConfigBuilder, bool).
+// Parses a bool and then calls a setter function stored in user_data.
+// The setter must have the signature (LDServerConfigBuilder, bool).
 static void parse_bool(lua_State *const l, int i, LDServerConfigBuilder builder, void* user_data) {
     const bool value = lua_toboolean(l, i);
     void (*setter)(LDServerConfigBuilder, bool) = user_data;
     setter(builder, value);
 }
 
-// Parses a number from the top of the stack and then calls a setter function
-// stored in user_data. The setter must have the signature (LDServerConfigBuilder, int).
+// Parses a number and then calls a setter function stored in user_data.
+// The setter must have the signature (LDServerConfigBuilder, int).
 static void parse_number(lua_State *const l, int i, LDServerConfigBuilder builder, void* user_data) {
     const int value = lua_tointeger(l, i);
     void (*setter)(LDServerConfigBuilder, int) = user_data;
@@ -455,12 +455,35 @@ static void parse_number(lua_State *const l, int i, LDServerConfigBuilder builde
 struct config;
 
 // Forward declaration for same reason as above. Traverses a config recursively,
-// calling the appropriate parse function for each field.
-void traverse_config(lua_State *const l, int i, LDServerConfigBuilder builder, struct config *cfg);
+// calling the appropriate parse function for each field. It expects a table to be
+// on top of the stack.
+void traverse_config(lua_State *const l, LDServerConfigBuilder builder, struct config *cfg);
 
+// Parses a table using traverse_config.
 static void parse_table(lua_State *const l, int i, LDServerConfigBuilder builder, void* user_data) {
+    // since traverse_config expects the table to be on top of the stack,
+    // make it so.
     lua_pushvalue(l, i);
-    traverse_config(l, i, builder, user_data);
+    traverse_config(l, builder, user_data);
+}
+
+// Parses an array of strings. Items that aren't strings are silently ignored.
+static void parse_string_array(lua_State *const l, int i, LDServerConfigBuilder builder, void* user_data) {
+    void (*setter)(LDServerConfigBuilder, const char*) = user_data;
+
+    lua_pushvalue(l, i);
+
+    int n = lua_tablelen(l, -1);
+
+    for (int i = 1; i <= n; i++) {
+        lua_rawgeti(l, -1, i);
+        if (lua_isstring(l, -1)) {
+            setter(builder, luaL_checkstring(l, -1));
+        }
+        lua_pop(l, 1);
+    }
+
+    lua_pop(l, 1);
 }
 
 // Special purpose parser for grabbing a store interface from a userdata.
@@ -529,7 +552,7 @@ struct field_validator event_fields[] = {
     {"capacity", LUA_TNUMBER, parse_number, LDServerConfigBuilder_Events_Capacity},
     {"flushIntervalMilliseconds", LUA_TNUMBER, parse_number, LDServerConfigBuilder_Events_FlushIntervalMs},
     {"allAttributesPrivate", LUA_TBOOLEAN, parse_bool, LDServerConfigBuilder_Events_AllAttributesPrivate},
-    {"privateAttributeNames", LUA_TTABLE, NULL, NULL} /* TODO */
+    {"privateAttributes", LUA_TTABLE, parse_string_array, LDServerConfigBuilder_Events_PrivateAttribute}
 };
 
 DEFINE_CONFIG(event_config, "events", event_fields);
@@ -562,9 +585,8 @@ DEFINE_CONFIG(top_level_config, "config", top_level_fields);
 // Finds a field by key in the given config, or returns NULL.
 struct field_validator * find_field(const char *key, struct config* cfg);
 
-void traverse_config(lua_State *const l, int i, LDServerConfigBuilder builder, struct config *cfg) {
+void traverse_config(lua_State *const l, LDServerConfigBuilder builder, struct config *cfg) {
     luaL_checktype(l, -1, LUA_TTABLE);
-
     lua_pushnil(l);
     while (lua_next(l, -2) != 0) {
         lua_pushvalue(l, -2);
@@ -600,31 +622,16 @@ struct field_validator * find_field(const char *key, struct config* cfg) {
 static LDServerConfig
 makeConfig(lua_State *const l)
 {
-    // We are passed two arguments. One string (sdk key), followed by
-    // a table of config options.
+    // We have been passed two arguments:
+    // First: the SDK key (string)
+    // Second: the config structure (table)
 
     const char* sdk_key = luaL_checkstring(l, 1);
     LDServerConfigBuilder builder = LDServerConfigBuilder_New(sdk_key);
-    traverse_config(l, 2, builder, &top_level_config);
 
-
-
-    //
-    // if (has_table(l, i, "privateAttributeNames")) {
-    //     int n = lua_tablelen(l, -1);
-    //
-    //     for (int i = 1; i <= n; i++) {
-    //         lua_rawgeti(l, -1, i);
-    //
-    //         if (lua_isstring(l, -1)) {
-    //             LDServerConfigBuilder_Events_PrivateAttribute(builder, luaL_checkstring(l, -1));
-    //         } else {
-    //             luaL_error(l, "privateAttributeNames[%d] is not a string", i);
-    //         }
-    //
-    //         lua_pop(l, 1);
-    //     }
-    // }
+    // Recursively visit the heirarchical configs, modifying the builder
+    // as we go along.
+    traverse_config(l, builder, &top_level_config);
 
 	if (globalLogEnabledCallback != LUA_NOREF && globalLogWriteCallback != LUA_NOREF) {
 		struct LDLogBackend backend;
