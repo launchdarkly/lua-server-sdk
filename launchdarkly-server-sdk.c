@@ -19,7 +19,13 @@ Server-side SDK for LaunchDarkly.
 #include <launchdarkly/bindings/c/array_builder.h>
 #include <launchdarkly/bindings/c/object_builder.h>
 
+#define DEBUG 1
 
+#ifdef DEBUG
+#define DEBUG_PRINT(fmt, ...) printf(fmt, __VA_ARGS__)
+#else
+#define DEBUG_PRINT(fmt, ...)
+#endif
 
 #define SDKVersion "1.2.2" /* {x-release-please-version} */
 
@@ -467,16 +473,20 @@ static void parse_table(lua_State *const l, int i,  LDServerConfigBuilder builde
     traverse_config(l, builder, user_data);
 }
 
+
+
 // Parses an array of strings. Items that aren't strings are silently ignored.
 static void parse_string_array(lua_State *const l, int i, LDServerConfigBuilder builder, void* user_data) {
     void (*setter)(LDServerConfigBuilder, const char*) = user_data;
-
     int n = lua_tablelen(l, i);
+    DEBUG_PRINT("parsing string array of length %d\n", n);
 
     for (int j = 1; j <= n; j++) {
         lua_rawgeti(l, i, j);
         if (lua_isstring(l, -1)) {
-            setter(builder, lua_tostring(l, -1));
+            const char* elem = lua_tostring(l, -1);
+            DEBUG_PRINT("array[%d] = %s\n", j, elem);
+            setter(builder, elem);
         }
         lua_pop(l, 1);
     }
@@ -503,7 +513,7 @@ struct config {
 
 // Use this macro to define new config tables. Config tables can be nested arbitrarily.
 #define DEFINE_CONFIG(name, path, fields) \
-    struct config name = {#path, fields, ARR_SIZE(fields)}
+    struct config name = {path, fields, ARR_SIZE(fields)}
 
 
 struct field_validator lazyload_fields[] = {
@@ -583,8 +593,7 @@ DEFINE_CONFIG(top_level_config, "config", top_level_fields);
 struct field_validator * find_field(const char *key, struct config* cfg);
 
 void traverse_config(lua_State *const l, LDServerConfigBuilder builder, struct config *cfg) {
-
-    printf("traverse_config: %s\n", cfg->name);
+    DEBUG_PRINT("traversing %s\n", cfg->name);
     if (lua_type(l, -1) != LUA_TTABLE) {
         luaL_error(l, "%s must be a table", cfg->name);
     }
@@ -594,6 +603,8 @@ void traverse_config(lua_State *const l, LDServerConfigBuilder builder, struct c
         const char* key = lua_tostring(l, -1);
         int type = lua_type(l, -2);
 
+        DEBUG_PRINT("inspecting field %s (%s)\n", key, lua_typename(l, type));
+
         struct field_validator *field = find_field(key, cfg);
         if (field == NULL) {
             luaL_error(l, "unrecognized %s field: %s", cfg->name, key);
@@ -602,7 +613,6 @@ void traverse_config(lua_State *const l, LDServerConfigBuilder builder, struct c
             luaL_error(l, "%s field %s must be a %s", cfg->name, key, lua_typename(l, field->type));
         }
         if (field->parse != NULL) {
-            printf("parsing %s\n", key);
             field->parse(l, -2, builder, field->user_data);
         } else {
             luaL_error(l, "%s missing field parser for %s", cfg->name, key);
@@ -635,7 +645,13 @@ makeConfig(lua_State *const l)
     // as we go along.
     traverse_config(l, builder, &top_level_config);
 
-	if (globalLogEnabledCallback != LUA_NOREF && globalLogWriteCallback != LUA_NOREF) {
+    bool logging_callbacks_set =
+            globalLogEnabledCallback != LUA_NOREF &&
+            globalLogWriteCallback != LUA_NOREF;
+
+    DEBUG_PRINT("logging callbacks set? %s\n", logging_callbacks_set ? "true" : "false");
+
+	if (logging_callbacks_set) {
 		struct LDLogBackend backend;
 		LDLogBackend_Init(&backend);
 
