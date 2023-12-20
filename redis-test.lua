@@ -16,7 +16,6 @@ TestAll = {}
 
 function makeTestClient()
     local c = l.clientInit("sdk-test", {
-        baseURI = "foo",
         dataSystem = {
             enabled = true,
             lazyLoad = {
