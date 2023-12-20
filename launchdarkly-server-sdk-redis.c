@@ -24,7 +24,7 @@ of a LaunchDarkly Streaming or Polling data source.
 static int
 LuaLDRedisMakeSource(lua_State *const l)
 {
-    if (lua_gettop(l) != 1) {
+    if (lua_gettop(l) != 2) {
         return luaL_error(l, "expecting exactly 2 arguments");
     }
 

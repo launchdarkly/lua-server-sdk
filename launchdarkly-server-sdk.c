@@ -411,17 +411,6 @@ LuaLDUserFree(lua_State *const l)
     return 0;
 }
 
-// makeConfig({
-//     dataSystem: {
-//         enabled: bool
-//         method: streaming
-//
-//
-//     }
-// })
-
-
-
 static LDServerConfig
 makeConfig(lua_State *const l, const int i)
 {
@@ -452,22 +441,6 @@ makeConfig(lua_State *const l, const int i)
     if (lua_isstring(l, -1)) {
         LDServerConfigBuilder_ServiceEndpoints_EventsBaseURL(builder, luaL_checkstring(l, -1));
     }
-
-/*
-    local user = l.makeUser({
-        key = "alice",
-        dataSystem = {
-            enabled = true,
-            backgroundSync = {
-                source = "launchdarkly_streaming",
-                initialReconnectDelayMs = 1000
-            }
-lazyLoad = {
-        source = makeRedisSource("redis://localhost:6379", "prefix")
-}
-        }
-    })
-*/
 
 // TODO: stream, useLDD, and pollInterval, and featureStoreBackend all unified under new dataSystem key
     lua_getfield(l, i, "dataSystem");

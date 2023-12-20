@@ -16,22 +16,19 @@ TestAll = {}
 
 function makeTestClient()
     local c = l.clientInit({
-        key     = "sdk-test",
-        offline = True
+        key = "sdk-test",
+        dataSystem = {
+            lazyLoad = {
+                source = r.makeRedisSource('redis://localhost:1234', 'test-prefix')
+            }
+        }
     }, 0)
 
     return c
 end
 
 local user = l.makeUser({
-    key = "alice",
-    dataSystem = {
-        enabled = true,
-        method = "streaming",
-        params = {
-            initialReconnectDelayMs = 1000
-        }
-    }
+    key = "alice"
 })
 
 function TestAll:tearDown()
@@ -39,20 +36,8 @@ function TestAll:tearDown()
 end
 
 function TestAll:testRedisBasic()
-    local c = l.clientInit({
-        key                 = "sdk-test",
-        dataSystem = {
-            backgroundSync = {
-                lazyLoad = {
-                    source = r.makeRedisSource("redis://localhost:1234", "test-prefix")
-                }
-            }
-        }
-    }, 0)
-
     local e = false
-
-    u.assertEquals(e, c:boolVariation(user, "test", e))
+    u.assertEquals(e, makeTestClient():boolVariation(user, "test", e))
 end
 
 local runner = u.LuaUnit.new()

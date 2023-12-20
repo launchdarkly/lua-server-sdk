@@ -23,14 +23,7 @@ function makeTestClient()
 end
 
 local user = l.makeUser({
-    key = "alice",
-    dataSystem = {
-        enabled = true,
-        method = "streaming",
-        params = {
-            initialReconnectDelayMs = 1000
-        }
-    }
+    key = "alice"
 })
 
 function TestAll:tearDown()
@@ -125,18 +118,6 @@ end
 function TestAll:testIdentify()
     makeTestClient():identify(user)
 end
-
---function TestAll:testRedisBasic()
---    local c = l.clientInit({
---        key                 = "sdk-test",
---        featureStoreBackend = r.makeStore({}),
---        offline             = true
---    }, 0)
---
---    local e = false
---
---    u.assertEquals(e, c:boolVariation(user, "test", e))
---end
 
 function TestAll:testVersion()
     local version = l.version()
