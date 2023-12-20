@@ -8,6 +8,8 @@ Server-side SDK for LaunchDarkly.
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <stdio.h>
+#include <stdarg.h>
 
 #include <launchdarkly/server_side/bindings/c/sdk.h>
 #include <launchdarkly/server_side/bindings/c/config/builder.h>
@@ -411,196 +413,280 @@ LuaLDUserFree(lua_State *const l)
     return 0;
 }
 
-static LDServerConfig
-makeConfig(lua_State *const l, const int i)
-{
-    LDServerConfigBuilder builder;
+static void debug(lua_State *const l, const int i){
+    int t = lua_type(l, -1);
+    switch (t) {
+
+    case LUA_TSTRING:  /* strings */
+        printf("`%s'", lua_tostring(l, i));
+        break;
+
+    case LUA_TBOOLEAN:  /* booleans */
+        printf(lua_toboolean(l, i) ? "true" : "false");
+        break;
+
+    case LUA_TNUMBER:  /* numbers */
+        printf("%g", lua_tonumber(l, i));
+        break;
+
+    default:  /* other values */
+        printf("%s", lua_typename(l, t));
+        break;
+
+    }
+    printf("\n");
+}
+static bool has_table(lua_State *const l, const int i, const char* name) {
+    lua_getfield(l, i, name);
+    debug(l, i);
+    if (lua_istable(l, -1)) {
+        return true;
+    }
+    lua_pop(l, 1);
+    return false;
+}
+
+static bool has_string(lua_State *const l, const int i, const char* name) {
+    lua_getfield(l, i, name);
+    if (lua_isstring(l, -1)) {
+        return true;
+    }
+    lua_pop(l, 1);
+    return false;
+}
+
+static void require_string(lua_State *const l, const int i, const char* name, const char* full_path) {
+    lua_getfield(l, i, name);
+    if (!lua_isstring(l, -1)) {
+        luaL_error(l, "%s must be provided as a string", full_path ? full_path : name);
+    }
+}
+
+static void require_field(lua_State *const l, const int i, const char* name, const char* full_path) {
+    lua_getfield(l, i, name);
+    if (lua_isnil(l, -1)) {
+        luaL_error(l, "%s must be provided", full_path ? full_path : name);
+    }
+}
+
+static void dump_table(lua_State *const l, const int i) {
+    lua_pushnil(l);
+    while (lua_next(l, i) != 0) {
+        printf("%s: %s\n",
+            luaL_checkstring(l, -2),
+            lua_typename(l, lua_type(l, -1)));
+        lua_pop(l, 1);
+    }
+}
+
+static bool has_number(lua_State *const l, const int i, const char* name) {
+    lua_getfield(l, i, name);
+    if (lua_isnumber(l, -1)) {
+        return true;
+    }
+    lua_pop(l, 1);
+    return false;
+}
+
+static bool bool_or_default(lua_State *const l, const int i, const char* name, const bool default_value)  {
+    bool result = default_value;
+    lua_getfield(l, i, name);
+    if (lua_isboolean(l, -1)) {
+        result = lua_toboolean(l, -1);
+    }
+    lua_pop(l, 1);
+    return result;
+}
+
+
+struct field_validator {
+    const char* key;
+    int type;
+    void (*parse) (lua_State *const l, int i, LDServerConfigBuilder builder, void* user_data);
+    void *user_data;
+};
+
+static void parse_uri(lua_State *const l, int i, LDServerConfigBuilder builder, void* user_data) {
+    const char *const uri = luaL_checkstring(l, -1);
+    void (*setter)(LDServerConfigBuilder, const char*) = user_data;
+    setter(builder, uri);
+}
+
+static void parse_bool(lua_State *const l, int i, LDServerConfigBuilder builder, void* user_data) {
+    const bool value = lua_toboolean(l, -1);
+    void (*setter)(LDServerConfigBuilder, bool) = user_data;
+    setter(builder, value);
+}
+
+static void parse_number(lua_State *const l, int i, LDServerConfigBuilder builder, void* user_data) {
+    const int value = lua_tointeger(l, -1);
+    void (*setter)(LDServerConfigBuilder, int) = user_data;
+    setter(builder, value);
+}
+
+struct field_validator top_level_fields[] = {
+    {"baseURI", LUA_TSTRING, parse_uri, LDServerConfigBuilder_ServiceEndpoints_PollingBaseURL},
+    {"streamURI", LUA_TSTRING, parse_uri, LDServerConfigBuilder_ServiceEndpoints_StreamingBaseURL},
+    {"eventsURI", LUA_TSTRING, parse_uri, LDServerConfigBuilder_ServiceEndpoints_EventsBaseURL},
+    {"offline", LUA_TBOOLEAN, parse_bool, LDServerConfigBuilder_Offline},
+    {"sendEvents", LUA_TBOOLEAN, parse_bool, LDServerConfigBuilder_Events_Enabled},
+    {"contextKeysCapacity", LUA_TNUMBER, parse_number, NULL},
+    {"allAttributesPrivate", LUA_TBOOLEAN, parse_bool, LDServerConfigBuilder_Events_AllAttributesPrivate},
+    {"eventsCapacity", LUA_TNUMBER, parse_number, LDServerConfigBuilder_Events_Capacity},
+    {"flushInterval", LUA_TNUMBER, parse_number, LDServerConfigBuilder_Events_FlushIntervalMs},
+    {"privateAttributeNames", LUA_TTABLE},
+    {"dataSystem", LUA_TTABLE}
+};
+
+// todo: appinfo
+
+#define ARR_SIZE(x) (sizeof(x) / sizeof(x[0]))
+
+struct field_validator * find_field(const char *key, struct field_validator *fields, int n) {
+    for (int i = 0; i < n; i++) {
+        if (strcmp(fields[i].key, key) == 0) {
+            return &fields[i];
+        }
+    }
+    return NULL;
+}
+
+#define DEBUG 1
+
+#define debug_print(foo) do { if (DEBUG) printf(foo); } while (0)
+
+void traverse_config(lua_State *const l, int i, LDServerConfigBuilder builder) {
 
     luaL_checktype(l, i, LUA_TTABLE);
 
-    lua_getfield(l, i, "key");
+    lua_pushnil(l);
+    while (lua_next(l, -2)) {
+        lua_pushvalue(l, -2);
 
-    const char *const key = luaL_checkstring(l, -1);
+        const char* key = lua_tostring(l, -1);
+        int type = lua_type(l, -2);
 
-    builder = LDServerConfigBuilder_New(key);
-
-    lua_getfield(l, i, "baseURI");
-
-    if (lua_isstring(l, -1)) {
-        LDServerConfigBuilder_ServiceEndpoints_PollingBaseURL(builder, luaL_checkstring(l, -1));
-    }
-
-    lua_getfield(l, i, "streamURI");
-
-    if (lua_isstring(l, -1)) {
-        LDServerConfigBuilder_ServiceEndpoints_StreamingBaseURL(builder, luaL_checkstring(l, -1));
-    }
-
-    lua_getfield(l, i, "eventsURI");
-
-    if (lua_isstring(l, -1)) {
-        LDServerConfigBuilder_ServiceEndpoints_EventsBaseURL(builder, luaL_checkstring(l, -1));
-    }
-
-// TODO: stream, useLDD, and pollInterval, and featureStoreBackend all unified under new dataSystem key
-    lua_getfield(l, i, "dataSystem");
-
-    if (lua_istable(l, -1)) {
-        lua_getfield(l, i, "enabled");
-        if (lua_isboolean(l, -1)) {
-            LDServerConfigBuilder_DataSystem_Enabled(builder, lua_toboolean(l, -1));
+        struct field_validator *field = find_field(key, top_level_fields, ARR_SIZE(top_level_fields));
+        if (field == NULL) {
+            luaL_error(l, "unrecognized config field: %s", key);
         }
-
-        lua_getfield(l, i, "backgroundSync");
-        if (lua_isnil(l, -1)) {
-            lua_pop(l, 1); /* not an error, perhaps lazyLoad was configured instead */
-
-            lua_getfield(l, i, "lazyLoad");
-            if (lua_isnil(l, -1)) {
-                luaL_error(l, "dataSystem.lazyLoad specified, must specify a source");
-            } else if (lua_istable(l, -1)) {
-                lua_getfield(l, i, "source");
-
-                if (lua_isnil(l, -1)) {
-                    luaL_error(l, "dataSystem.lazyLoad.source must be provided");
-                }
-
-                LDServerLazyLoadSourcePtr *source = luaL_checkudata(l, 1, "LaunchDarklyStoreInterface");
-
-                LDServerLazyLoadBuilder lazy_load_builder = LDServerLazyLoadBuilder_New();
-
-                LDServerLazyLoadBuilder_SourcePtr(lazy_load_builder, *source);
-
-
-                   /* This should be a metatable containing the redis source */
-
-            } else {
-                luaL_error(l, "dataSystem.lazyLoad must be a table");
-            }
-        } else if (lua_istable(l, -1)) {
-            lua_getfield(l, i, "source");
-
-            if (lua_isstring(l, -1)) {
-                const char *const source = luaL_checkstring(l, -1);
-                if (strcmp(source, "launchdarkly_streaming") == 0) {
-                    LDServerDataSourceStreamBuilder stream_builder = LDServerDataSourceStreamBuilder_New();
-
-                    lua_getfield(l, i, "initialReconnectDelayMs");
-                    if (lua_isnumber(l, -1)) {
-                        LDServerDataSourceStreamBuilder_InitialReconnectDelayMs(stream_builder, luaL_checkinteger(l, -1));
-                    }
-
-                    LDServerConfigBuilder_DataSystem_BackgroundSync_Streaming(builder, stream_builder);
-                } else if (strcmp(source, "launchdarkly_polling") == 0) {
-                    LDServerDataSourcePollBuilder poll_builder = LDServerDataSourcePollBuilder_New();
-
-                    lua_getfield(l, i, "intervalSeconds");
-                    if (lua_isnumber(l, -1)) {
-                        LDServerDataSourcePollBuilder_IntervalS(poll_builder, luaL_checkinteger(l, -1));
-                    }
-
-                    LDServerConfigBuilder_DataSystem_BackgroundSync_Polling(builder, poll_builder);
-                } else {
-                    luaL_error(l, "dataSystem.method must be 'streaming' or 'polling'");
-                }
-            } else {
-                luaL_error(l, "dataSystem.backgroundSync.source must be a string");
-            }
+        if (field->type != type) {
+            luaL_error(l, "config field %s must be a %s", key, lua_typename(l, field->type));
+        }
+        if (field->parse) {
+            field->parse(l, -2, builder, field->user_data);
         } else {
-            luaL_error(l, "dataSystem.backgroundSync must be a table");
+            luaL_error(l, "missing field parser for %s", key);
         }
+        lua_pop(l, 2);
     }
+    lua_pop(l, 1);
+}
 
-    lua_getfield(l, i, "sendEvents");
+static LDServerConfig
+makeConfig(lua_State *const l)
+{
+    // We are passed two arguments. One string (sdk key), followed by
+    // a table of config options.
 
-    if (lua_isboolean(l, -1)) {
-        LDServerConfigBuilder_Events_Enabled(builder, lua_toboolean(l, -1));
-    }
+    const char* sdk_key = luaL_checkstring(l, 1);
+    LDServerConfigBuilder builder = LDServerConfigBuilder_New(sdk_key);
+    traverse_config(l, 2, builder);
 
-    lua_getfield(l, i, "eventsCapacity");
 
-    if (lua_isnumber(l, -1)) {
-        LDServerConfigBuilder_Events_Capacity(builder, luaL_checkinteger(l, -1));
-    }
-
-    lua_getfield(l, i, "timeout");
-
-    if (lua_isnumber(l, -1)) {
-        // TODO: Use timeout
-    }
-
-    lua_getfield(l, i, "flushInterval");
-
-    if (lua_isnumber(l, -1)) {
-        LDServerConfigBuilder_Events_FlushIntervalMs(builder, luaL_checkinteger(l, -1));
-    }
-
-    lua_getfield(l, i, "pollInterval");
-
-    if (lua_isnumber(l, -1)) {
-        // TODO: Set poll data system
-    }
-
-    lua_getfield(l, i, "offline");
-
-    if (lua_isboolean(l, -1)) {
-        // TODO: Document change in behavior (offline now disables events + data system)
-        LDServerConfigBuilder_Offline(builder, lua_toboolean(l, -1));
-    }
-
-    lua_getfield(l, i, "useLDD");
-
-    if (lua_isboolean(l, -1)) {
-        // TODO: Warn that this needs to be setup
-    }
-
-    lua_getfield(l, i, "inlineUsersInEvents");
-
-    if (lua_isboolean(l, -1)) {
-        // TODO: warn this was removed
-    }
-
-    lua_getfield(l, i, "allAttributesPrivate");
-
-    if (lua_isboolean(l, -1)) {
-       LDServerConfigBuilder_Events_AllAttributesPrivate(builder, lua_toboolean(l, -1));
-    }
-
-    lua_getfield(l, i, "userKeysCapacity");
-
-    if (lua_isnumber(l, -1)) {
-        // TODO: We don't have a C binding for this yet
-        //LDConfigSetUserKeysCapacity(config, luaL_checkinteger(l, -1));
-    }
-
-    lua_getfield(l, i, "featureStoreBackend");
-
-    if (lua_isuserdata(l, -1)) {
-        // TODO: Setup the store reader backend
-        // struct LDStoreInterface **storeInterface;
-        //
-        // storeInterface = (struct LDStoreInterface **)
-        //     luaL_checkudata(l, -1, "LaunchDarklyStoreInterface");
-        //
-        // LDConfigSetFeatureStoreBackend(config, *storeInterface);
-    }
-
-    lua_getfield(l, 1, "privateAttributeNames");
-
-    if (lua_istable(l, -1)) {
-        int n = lua_tablelen(l, -1);
-
-        for (int i = 1; i <= n; i++) {
-            lua_rawgeti(l, -1, i);
-
-            if (lua_isstring(l, -1)) {
-                LDServerConfigBuilder_Events_PrivateAttribute(builder, luaL_checkstring(l, -1));
-            }
-
-            lua_pop(l, 1);
-        }
-    }
-
+    // luaL_error(l, "nope");
+    // // Base, stream, and eventsURIs are optional - but if one is set, all
+    // // must be set (enforced by C++ SDK.)
+    // if (has_string(l, i, "baseURI")) {
+    //     LDServerConfigBuilder_ServiceEndpoints_PollingBaseURL(builder, luaL_checkstring(l, -1));
+    // }
+    // if (has_string(l, i, "streamURI")) {
+    //     LDServerConfigBuilder_ServiceEndpoints_StreamingBaseURL(builder, luaL_checkstring(l, -1));
+    // }
+    // if (has_string(l, i, "eventsURI")) {
+    //     LDServerConfigBuilder_ServiceEndpoints_EventsBaseURL(builder, luaL_checkstring(l, -1));
+    // }
+    //
+    //
+    // LDServerConfigBuilder_Events_Enabled(builder, bool_or_default(l, i, "sendEvents", true));
+    //
+    // if (has_number(l, i, "eventsCapacity")) {
+    //     LDServerConfigBuilder_Events_Capacity(builder, luaL_checkinteger(l, -1));
+    // }
+    // if (has_number(l, i, "flushInterval")) {
+    //     LDServerConfigBuilder_Events_FlushIntervalMs(builder, luaL_checkinteger(l, -1));
+    // }
+    //
+    //
+    //
+    // if (has_table(l, i, "dataSystem")) {
+    //
+    //     LDServerConfigBuilder_DataSystem_Enabled(builder, bool_or_default(l, i, "enabled", true));
+    //
+    //     if (has_table(l, i, "backgroundSync")) {
+    //
+    //         require_string(l, i, "source", "dataSystem.backgroundSync.source");
+    //
+    //         const char *const source = luaL_checkstring(l, -1);
+    //         if (strcmp(source, "streaming") == 0) {
+    //             LDServerDataSourceStreamBuilder stream_builder = LDServerDataSourceStreamBuilder_New();
+    //
+    //             if (has_number(l, i, "initialReconnectDelayMs")) {
+    //                 LDServerDataSourceStreamBuilder_InitialReconnectDelayMs(stream_builder, luaL_checkinteger(l, -1));
+    //             }
+    //
+    //             LDServerConfigBuilder_DataSystem_BackgroundSync_Streaming(builder, stream_builder);
+    //         } else if (strcmp(source, "polling") == 0) {
+    //             LDServerDataSourcePollBuilder poll_builder = LDServerDataSourcePollBuilder_New();
+    //
+    //             if (has_number(l, i, "intervalSeconds")) {
+    //                 LDServerDataSourcePollBuilder_IntervalS(poll_builder, luaL_checkinteger(l, -1));
+    //             }
+    //
+    //             LDServerConfigBuilder_DataSystem_BackgroundSync_Polling(builder, poll_builder);
+    //         } else {
+    //             luaL_error(l, "dataSystem.backgroundSync.source must be 'streaming' or 'polling'");
+    //         }
+    //
+    //     } else if (has_table(l, i, "lazyLoad")) {
+    //
+    //         require_field(l, i, "source", "dataSystem.lazyLoad.source");
+    //
+    //         LDServerLazyLoadSourcePtr *source = luaL_checkudata(l, 1, "LaunchDarklyStoreInterface");
+    //         LDServerLazyLoadBuilder lazy_load_builder = LDServerLazyLoadBuilder_New();
+    //         LDServerLazyLoadBuilder_SourcePtr(lazy_load_builder, *source);
+    //
+    //     } else {
+    //         luaL_error(l, "dataSystem must have field backgroundSync or lazyLoad");
+    //     }
+    // }
+    //
+    // // TODO: Document change in behavior (offline now disables events + data system)
+    // LDServerConfigBuilder_Offline(builder, bool_or_default(l, i, "offline", false));
+    //
+    //
+    // LDServerConfigBuilder_Events_AllAttributesPrivate(builder, bool_or_default(l, i, "allAttributesPrivate", false));
+    //
+    // if (has_number(l, i, "contextKeysCapacity")) {
+    //     // TODO: We don't have a C binding for this yet
+    //     // LDServerConfigBuilder_Events_ContextKeysCapacity(builder, luaL_checkinteger(l, -1));
+    // }
+    //
+    // if (has_table(l, i, "privateAttributeNames")) {
+    //     int n = lua_tablelen(l, -1);
+    //
+    //     for (int i = 1; i <= n; i++) {
+    //         lua_rawgeti(l, -1, i);
+    //
+    //         if (lua_isstring(l, -1)) {
+    //             LDServerConfigBuilder_Events_PrivateAttribute(builder, luaL_checkstring(l, -1));
+    //         } else {
+    //             luaL_error(l, "privateAttributeNames[%d] is not a string", i);
+    //         }
+    //
+    //         lua_pop(l, 1);
+    //     }
+    // }
 
 	if (globalLogEnabledCallback != LUA_NOREF && globalLogWriteCallback != LUA_NOREF) {
 		struct LDLogBackend backend;
@@ -619,9 +705,12 @@ makeConfig(lua_State *const l, const int i)
 
 
     LDServerConfig out_config;
-    LDServerConfigBuilder_Build(builder, &out_config);
-
-    // TODO: Check result of the call
+    LDStatus status = LDServerConfigBuilder_Build(builder, &out_config);
+    if (!LDStatus_Ok(status)) {
+        lua_pushstring(l, LDStatus_Error(status));
+        LDStatus_Free(status);
+        luaL_error(l, "SDK configuration invalid: %s", lua_tostring(l, -1));
+    }
     return out_config;
 }
 
@@ -692,10 +781,7 @@ LuaLDClientInit(lua_State *const l)
         return luaL_error(l, "expecting exactly 2 arguments");
     }
 
-    config = makeConfig(l, 1);
-
-    // TODO: use timeout
-    timeout = luaL_checkinteger(l, 2);
+    config = makeConfig(l);
 
     client = LDServerSDK_New(config);
 

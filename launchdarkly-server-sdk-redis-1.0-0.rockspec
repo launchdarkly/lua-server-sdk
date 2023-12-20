@@ -2,7 +2,7 @@ package = "launchdarkly-server-sdk-redis"
 
 rockspec_format = "3.0"
 
-supported_platforms = {"linux"}
+-- supported_platforms = {"linux"}
 
 version = "1.0-0"
 

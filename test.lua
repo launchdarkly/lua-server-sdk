@@ -14,10 +14,9 @@ l.registerLogger(logWrite, logEnabled)
 TestAll = {}
 
 function makeTestClient()
-    local c = l.clientInit({
-        key     = "sdk-test",
-        offline = True
-    }, 0)
+    local c = l.clientInit("sdk-test", {
+        offline = true
+    })
 
     return c
 end
@@ -40,7 +39,7 @@ function TestAll:testBoolVariationDetail()
         value  = true,
         reason = {
             kind      = "ERROR",
-            errorKind = "CLIENT_NOT_READY",
+            errorKind = "FLAG_NOT_FOUND",
             inExperiment = false
         }
     }
@@ -57,7 +56,7 @@ function TestAll:testIntVariationDetail()
         value  = 5,
         reason = {
             kind      = "ERROR",
-            errorKind = "CLIENT_NOT_READY",
+            errorKind = "FLAG_NOT_FOUND",
             inExperiment = false
         }
     }
@@ -74,7 +73,7 @@ function TestAll:testDoubleVariationDetail()
         value  = 6.2,
         reason = {
             kind      = "ERROR",
-            errorKind = "CLIENT_NOT_READY",
+            errorKind = "FLAG_NOT_FOUND",
             inExperiment = false
         }
     }
@@ -91,7 +90,7 @@ function TestAll:testStringVariationDetail()
         value  = "f",
         reason = {
             kind      = "ERROR",
-            errorKind = "CLIENT_NOT_READY",
+            errorKind = "FLAG_NOT_FOUND",
             inExperiment = false
         }
     }
@@ -108,7 +107,7 @@ function TestAll:testJSONVariationDetail()
         value  = { a = "b" },
         reason = {
             kind      = "ERROR",
-            errorKind = "CLIENT_NOT_READY",
+            errorKind = "FLAG_NOT_FOUND",
             inExperiment = false
         }
     }

@@ -15,14 +15,15 @@ l.registerLogger(logWrite, logEnabled)
 TestAll = {}
 
 function makeTestClient()
-    local c = l.clientInit({
-        key = "sdk-test",
+    local c = l.clientInit("sdk-test", {
+        baseURI = "foo",
         dataSystem = {
+            enabled = true,
             lazyLoad = {
                 source = r.makeRedisSource('redis://localhost:1234', 'test-prefix')
-            }
+            },
         }
-    }, 0)
+    })
 
     return c
 end
