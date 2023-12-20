@@ -419,8 +419,8 @@ struct field_validator {
     const char* key;
     // Expected Lua type of the field.
     int type;
-    // Function pointer to parse the field. If NULL, an error will be reported
-    // at runtime if the field exists. The 'user_data' field is passed in.
+    // Function to parse the value on the top of the stack. If NULL, an error will be reported
+    // at runtime if the field exists.
     void (*parse) (lua_State *const l, int i, LDServerConfigBuilder builder, void* user_data);
     // Store a pointer to arbitrary data for use in 'parse'.
     void *user_data;
@@ -429,7 +429,7 @@ struct field_validator {
 // Parses a string and then calls a setter function stored in user_data.
 // The setter must have the signature (LDServerConfigBuilder, const char*).
 static void parse_string(lua_State *const l, int i, LDServerConfigBuilder builder, void* user_data) {
-    const char *const uri = luaL_checkstring(l, i);
+    const char *const uri = lua_tostring(l, i);
     void (*setter)(LDServerConfigBuilder, const char*) = user_data;
     setter(builder, uri);
 }
@@ -460,7 +460,7 @@ struct config;
 void traverse_config(lua_State *const l, LDServerConfigBuilder builder, struct config *cfg);
 
 // Parses a table using traverse_config.
-static void parse_table(lua_State *const l, int i, LDServerConfigBuilder builder, void* user_data) {
+static void parse_table(lua_State *const l, int i,  LDServerConfigBuilder builder, void* user_data) {
     // since traverse_config expects the table to be on top of the stack,
     // make it so.
     lua_pushvalue(l, i);
@@ -471,23 +471,21 @@ static void parse_table(lua_State *const l, int i, LDServerConfigBuilder builder
 static void parse_string_array(lua_State *const l, int i, LDServerConfigBuilder builder, void* user_data) {
     void (*setter)(LDServerConfigBuilder, const char*) = user_data;
 
-    lua_pushvalue(l, i);
-
     int n = lua_tablelen(l, -1);
 
     for (int i = 1; i <= n; i++) {
         lua_rawgeti(l, -1, i);
         if (lua_isstring(l, -1)) {
-            setter(builder, luaL_checkstring(l, -1));
+            setter(builder, lua_tostring(l, -1));
         }
         lua_pop(l, 1);
     }
 
-    lua_pop(l, 1);
 }
 
 // Special purpose parser for grabbing a store interface from a userdata.
 static void parse_lazyload_source(lua_State *const l, int i, LDServerConfigBuilder builder, void* user_data) {
+// TODO: replace checkudata
     LDServerLazyLoadSourcePtr *source = luaL_checkudata(l, i, "LaunchDarklyStoreInterface");
     LDServerLazyLoadBuilder lazy_load_builder = LDServerLazyLoadBuilder_New();
     LDServerLazyLoadBuilder_SourcePtr(lazy_load_builder, *source);
@@ -586,7 +584,11 @@ DEFINE_CONFIG(top_level_config, "config", top_level_fields);
 struct field_validator * find_field(const char *key, struct config* cfg);
 
 void traverse_config(lua_State *const l, LDServerConfigBuilder builder, struct config *cfg) {
-    luaL_checktype(l, -1, LUA_TTABLE);
+
+    printf("traverse_config: %s\n", cfg->name);
+    if (lua_type(l, -1) != LUA_TTABLE) {
+        luaL_error(l, "%s must be a table", cfg->name);
+    }
     lua_pushnil(l);
     while (lua_next(l, -2) != 0) {
         lua_pushvalue(l, -2);
@@ -601,6 +603,7 @@ void traverse_config(lua_State *const l, LDServerConfigBuilder builder, struct c
             luaL_error(l, "%s field %s must be a %s", cfg->name, key, lua_typename(l, field->type));
         }
         if (field->parse != NULL) {
+            printf("parsing %s\n", key);
             field->parse(l, -2, builder, field->user_data);
         } else {
             luaL_error(l, "%s missing field parser for %s", cfg->name, key);
