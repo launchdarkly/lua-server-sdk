@@ -29,6 +29,35 @@ function TestAll:tearDown()
     collectgarbage("collect")
 end
 
+function TestAll:testSetAllConfigFields()
+    local c = l.clientInit("sdk-test", {
+        offline = true,
+        appInfo = {
+            identifier = "MyApp",
+            version = "1.0.0"
+        },
+        serviceEndpoints = {
+            streamingBaseURL = "foo",
+            pollingBaseURL = "bar",
+            eventsBaseURL = "baz"
+        },
+        dataSystem = {
+            backgroundSync = {
+                streaming = {
+                    initialReconnectDelayMilliseconds = 1000
+                }
+            }
+        },
+        events = {
+            capacity = 1000,
+            --contextKeysCapacity = 100, TODO: once c binding available
+            enabled = true,
+            flushIntervalMilliseconds = 100,
+            allAttributesPrivate = true
+        }
+    })
+end
+
 function TestAll:testBoolVariation()
     local e = false
     u.assertEquals(makeTestClient():boolVariation(user, "test", e), e)
