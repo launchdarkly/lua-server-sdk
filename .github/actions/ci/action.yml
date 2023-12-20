@@ -25,11 +25,6 @@ runs:
       with:
           version: redis-source-bindings-v1.1.0
           path: cpp-sdk
-    - name: Install C++ Server-side SDK Dependencies
-      shell: bash
-      run: |
-        sudo apt-get update -y
-        sudo apt-get install -y libhiredis-dev
 
     - name: Build Lua Server-side SDK
       shell: bash
@@ -43,7 +38,6 @@ runs:
       run: |
         luarocks make launchdarkly-server-sdk-redis-1.0-0.rockspec \
         LDREDIS_DIR=./cpp-sdk/build-dynamic/release \
-        LD_DIR=./cpp-sdk/build-dynamic/release \
         BOOST_DIR=${{ steps.install-boost.outputs.BOOST_ROOT }}
 
     - name: Run Lua Server-side SDK Tests
@@ -70,8 +64,9 @@ runs:
       run: luarocks test launchdarkly-server-sdk-redis-1.0-0.rockspec
       env:
         # Needed because boost isn't installed in default system paths, which is
-        # what the C++ Server-side SDK shared objec expects.
-        LD_LIBRARY_PATH: ${{ steps.install-boost.outputs.BOOST_ROOT }}/lib
+        # what the C++ Server-side SDK shared object expects. Same for hiredis which is bundled
+        # with the SDK release.
+        LD_LIBRARY_PATH: ${{ steps.install-boost.outputs.BOOST_ROOT }}/lib;./cpp-sdk/build-dynamic/release/lib
 
     - name: Run Lua Server-side SDK with Redis Tests (JIT)
       shell: bash
@@ -79,5 +74,6 @@ runs:
       run: luajit redis-test.lua
       env:
         # Needed because boost isn't installed in default system paths, which is
-        # what the C++ Server-side SDK shared object expects.
-        LD_LIBRARY_PATH: ${{ steps.install-boost.outputs.BOOST_ROOT }}/lib
+        # what the C++ Server-side SDK shared object expects. Same for hiredis which is bundled
+        # with the SDK release.
+        LD_LIBRARY_PATH: ${{ steps.install-boost.outputs.BOOST_ROOT }}/lib;./cpp-sdk/build-dynamic/release/lib

@@ -34,7 +34,7 @@ build = {
           sources = { "launchdarkly-server-sdk-redis.c" },
           incdirs = {"$(LDREDIS_INCDIR)"},
           libdirs = {"$(LDREDIS_LIBDIR)"},
-          libraries = {"launchdarkly-cpp-server-redis-source", "hiredis"}
+          libraries = {"launchdarkly-cpp-server-redis-source"}
       }
    }
 }

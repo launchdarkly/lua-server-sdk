@@ -1,6 +1,5 @@
 local u = require('luaunit')
 local l = require("launchdarkly_server_sdk")
--- local r = require("launchdarkly_server_sdk_redis")
 
 function logWrite(level, line)
     print("[" .. level .. "]" .. " " .. line)

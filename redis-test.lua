@@ -1,4 +1,5 @@
 local u = require('luaunit')
+local l = require("launchdarkly_server_sdk")
 local r = require("launchdarkly_server_sdk_redis")
 
 function logWrite(level, line)
@@ -43,7 +44,7 @@ function TestAll:testRedisBasic()
         dataSystem = {
             backgroundSync = {
                 lazyLoad = {
-                    source = makeRedisSource("redis://localhost:1234", "test-prefix")
+                    source = r.makeRedisSource("redis://localhost:1234", "test-prefix")
                 }
             }
         }
