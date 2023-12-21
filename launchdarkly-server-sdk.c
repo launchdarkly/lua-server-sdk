@@ -641,7 +641,6 @@ makeConfig(lua_State *const l)
     const char* sdk_key = luaL_checkstring(l, 1);
     LDServerConfigBuilder builder = LDServerConfigBuilder_New(sdk_key);
 
-    luaL_checkstack(l, 64, "not enough stack space for config struct");
     // Recursively visit the heirarchical configs, modifying the builder
     // as we go along.
     traverse_config(l, builder, &top_level_config);

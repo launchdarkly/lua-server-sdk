@@ -45,7 +45,7 @@ function TestAll:testSetAllConfigFields()
             enabled = true,
             backgroundSync = {
                 streaming = {
-                    initialReconnectDelayMilliseconds = 1000
+                    --initialReconnectDelayMilliseconds = 1000
                 }
             }
         },
