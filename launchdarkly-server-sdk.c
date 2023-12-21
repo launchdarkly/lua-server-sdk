@@ -75,7 +75,6 @@ void logWrite(enum LDLogLevel level, const char* msg, void *user_data /* ignored
 
 
 /***
-TODO: Document that the log levels have changed and there is an additional callback, and removed the log level arg.
 Set the global logger for all SDK operations. This function is not thread
 safe, and if used should be done so before other operations.
 @function registerLogger
@@ -252,7 +251,19 @@ LuaPushJSON(lua_State *const l, LDValue j)
 }
 
 /***
-Create a new opaque context object of kind 'user'.
+
+Create a new opaque context object of kind 'user'. This method
+has changed from the previous Lua SDK v1.x makeUser, as users are no longer
+supported.
+
+Specifically:
+- 'secondary' is no longer supported.
+- 'privateAttributeNames' is now called 'privateAttributes' and supports
+attribute references (similar to JSON pointer syntax, e.g. /foo/bar).
+- all fields under 'custom' become top-level context attributes, rather than
+being nested under an attribute named 'custom'. For example, { custom = { foo = "bar" } }
+would result in a context with attribute 'foo' equal to 'bar'.
+
 @function makeUser
 @tparam table fields list of user fields.
 @tparam string fields.key The user's key
@@ -264,9 +275,9 @@ Create a new opaque context object of kind 'user'.
 @tparam[opt] string fields.name Set the user's name
 @tparam[opt] string fields.avatar Set the user's avatar
 @tparam[opt] string fields.country Set the user's country
-@tparam[opt] table fields.privateAttributeNames A list of attributes to
+@tparam[opt] table fields.privateAttributes A list of attributes to
 redact
-@tparam[opt] table fields.custom A table of attributes to set on the user.
+@tparam[opt] table fields.custom A table of additional context attributes.
 @return an opaque context object
 */
 static int
@@ -334,15 +345,9 @@ LuaLDUserNew(lua_State *const l)
         LDContextBuilder_Attributes_Set(builder, "user", "country", LDValue_NewString(luaL_checkstring(l, -1)));
     }
 
-
-
-    // TODO: Document that secondary was removed
-
-
     lua_getfield(l, 1, "custom");
 
     // The individual fields of custom are added to the top-level of the context.
-    // TODO: document this.
     if (lua_istable(l, -1)) {
         lua_pushnil(l);
 
@@ -357,7 +362,7 @@ LuaLDUserNew(lua_State *const l)
         }
     }
 
-    lua_getfield(l, 1, "privateAttributeNames");
+    lua_getfield(l, 1, "privateAttributes");
 
     if (lua_istable(l, -1)) {
         int n = lua_tablelen(l, -1);
@@ -767,61 +772,64 @@ makeConfig(lua_State *const l, const char *const sdk_key)
     return out_config;
 }
 
-// TODO: update the config field names
 /***
-Initialize a new client, and connect to LaunchDarkly. Applications should instantiate a single instance for the lifetime of their application.
+Initialize a new client, and connect to LaunchDarkly.
+Applications should instantiate a single instance for the lifetime of their application.
+
 @function initClient
+@param string Environment SDK key
+@param int Initialization timeout in milliseconds. initClient will
+block for this long before returning a non-fully initialized client. Pass 0 to return
+immediately without waiting (note that the client will continue initializing in the background.)
 @tparam table config list of configuration options
-@tparam string config.key Environment SDK key
-@tparam[opt] string config.serviceEndpoints. Set the base URI for connecting to
-LaunchDarkly. You probably don't need to set this unless instructed by
+@tparam[opt] boolean config.offline Sets whether this client is offline.
+An offline client will not make any network connections to LaunchDarkly or
+a data source like Redis, nor send any events, and will return application-defined
+default values for all feature flags.
+@tparam[opt] table config.serviceEndpoints. If you set one custom service endpoint URL,
+you must set all of them. You probably don't need to set this unless instructed by
 LaunchDarkly.
-@tparam[opt] string config.streamURI Set the streaming URI for connecting to
-LaunchDarkly. You probably don't need to set this unless instructed by
-LaunchDarkly.
-@tparam[opt] string config.eventsURI Set the events URI for connecting to
-LaunchDarkly. You probably don't need to set this unless instructed by
-LaunchDarkly.
-@tparam[opt] boolean config.stream Enables or disables real-time streaming
-flag updates. When set to false, an efficient caching polling mechanism is
-used. We do not recommend disabling streaming unless you have been instructed
-to do so by LaunchDarkly support. Defaults to true.
-@tparam[opt] string config.sendEvents Sets whether to send analytics events
+@tparam[opt] string config.serviceEndpoints.streamingBaseURL Set the streaming URL
+for connecting to LaunchDarkly.
+@tparam[opt] string config.serviceEndpoints.eventsURL Set the events URL for
+connecting to LaunchDarkly.
+@tparam[opt] string config.serviceEndpoints.pollingURL Set the polling URL for
+connecting to LaunchDarkly.
+@tparam[opt] table config.events Config options related to event generation and
+delivery.
+@tparam[opt] bool config.events.enabled Sets whether to send analytics events
 back to LaunchDarkly. By default, the client will send events. This differs
-from Offline in that it only affects sending events, not streaming or
-polling.
-@tparam[opt] int config.eventsCapacity The capacity of the events buffer.
+from top-level config option 'offline' in that it only affects sending events,
+not receiving data.
+@tparam[opt] int config.events.capacity The capacity of the events buffer.
 The client buffers up to this many events in memory before flushing. If the
 capacity is exceeded before the buffer is flushed, events will be discarded.
-@tparam[opt] int config.timeout The connection timeout to use when making
-requests to LaunchDarkly.
-@tparam[opt] int config.flushInterval he time between flushes of the event
+@tparam[opt] int config.events.flushIntervalMilliseconds The time between flushes of the event
 buffer. Decreasing the flush interval means that the event buffer is less
 likely to reach capacity.
-@tparam[opt] int config.pollInterval The polling interval
-(when streaming is disabled) in milliseconds.
-@tparam[opt] boolean config.offline Sets whether this client is offline.
-An offline client will not make any network connections to LaunchDarkly,
-and will return default values for all feature flags.
-@tparam[opt] boolean config.allAttributesPrivate Sets whether or not all user
+@tparam[opt] boolean config.events.allAttributesPrivate Sets whether or not all context
 attributes (other than the key) should be hidden from LaunchDarkly. If this
-is true, all user attribute values will be private, not just the attributes
-specified in PrivateAttributeNames.
-@tparam[opt] boolean config.inlineUsersInEvents Set to true if you need to
-see the full user details in every analytics event.
-@tparam[opt] int config.userKeysCapacity The number of user keys that the
-event processor can remember at an one time, so that duplicate user details
+is true, all context attribute values will be private, not just the attributes
+specified in PrivateAttributes.
+@tparam[opt] int config.events.contextKeysCapacity The number of context keys that the
+event processor can remember at an one time, so that duplicate context details
 will not be sent in analytics.
-@tparam[opt] int config.userKeysFlushInterval The interval at which the event
-processor will reset its set of known user keys, in milliseconds.
-@tparam[opt] table config.privateAttributeNames Marks a set of user attribute
-names private. Any users sent to LaunchDarkly with this configuration active
-will have attributes with these names removed.
-@param[opt] backend config.featureStoreBackend Persistent feature store
-backend.
-@tparam int timeoutMilliseconds How long to wait for flags to
-download. If the timeout is reached a non fully initialized client will be
-returned.
+@tparam[opt] table config.events.privateAttributes Marks a set of context attribute
+references as private. Any contexts sent to LaunchDarkly with this configuration active
+will have attributes refered to removed.
+@tparam[opt] table config.appInfo Specify metadata related to your application.
+@tparam[opt] string config.appInfo.identifier An identifier for the application.
+@tparam[opt] string config.appInfo.version The version of the application.
+@tparam[opt] table config.dataSystem Change configuration of the default streaming
+data source, switch to a polling source, or specifu a read-only database source.
+@tparam[opt] table config.dataSystem.backgroundSync Change streaming or polling
+configuration.
+@tparam[opt] int config.dataSystem.backgroundSync.streaming.initialReconnectDelayMilliseconds
+The time to wait before the first reconnection attempt, if the streaming connection is dropped.
+@tparam[opt] int config.dataSystem.lazyLoad.cacheRefreshMilliseconds How long a data item (flag/segment)
+remains cached in memory before requiring a refresh from the database.
+@tparam[opt] userdata config.dataSystem.lazyLoad.source A custom data source. Currently
+only Redis is supported. See @{makeRedisSource}.
 @return A fresh client.
 */
 static int
