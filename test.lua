@@ -44,9 +44,9 @@ function TestAll:testSetAllConfigFields()
         dataSystem = {
             enabled = true,
             backgroundSync = {
-            --    streaming = {
+                streaming = {
             --        initialReconnectDelayMilliseconds = 1000
-            --    }
+                }
             }
         },
         --events = {
