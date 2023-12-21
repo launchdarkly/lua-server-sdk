@@ -14,11 +14,7 @@ l.registerLogger(logWrite, logEnabled)
 TestAll = {}
 
 function makeTestClient()
-    local c = l.clientInit("sdk-test", {
-        offline = true
-    })
-
-    return c
+    return l.clientInit("sdk-test", 0, { offline = true })
 end
 
 local user = l.makeUser({
@@ -30,7 +26,7 @@ function TestAll:tearDown()
 end
 
 function TestAll:testSetAllConfigFields()
-    local c = l.clientInit("sdk-test", {
+    local c = l.clientInit("sdk-test", 0, {
         offline = true,
         appInfo = {
             identifier = "MyApp",

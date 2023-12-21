@@ -19,8 +19,6 @@ Server-side SDK for LaunchDarkly.
 #include <launchdarkly/bindings/c/array_builder.h>
 #include <launchdarkly/bindings/c/object_builder.h>
 
-#define DEBUG 1
-
 #ifdef DEBUG
 #define DEBUG_PRINT(fmt, ...) printf(fmt, __VA_ARGS__)
 #else
@@ -729,13 +727,8 @@ struct field_validator * find_field(const char *key, struct config* cfg) {
 }
 
 static LDServerConfig
-makeConfig(lua_State *const l)
+makeConfig(lua_State *const l, const char *const sdk_key)
 {
-    // We have been passed two arguments:
-    // 1: the SDK key (string)
-    // 2: the config structure (table)
-
-    const char* sdk_key = luaL_checkstring(l, 1);
     LDServerConfigBuilder builder = LDServerConfigBuilder_New(sdk_key);
 
     // Recursively visit the heirarchical configs, modifying the builder
@@ -834,17 +827,20 @@ returned.
 static int
 LuaLDClientInit(lua_State *const l)
 {
-    LDServerSDK client;
-    LDServerConfig config;
-    unsigned int timeout;
 
-    if (lua_gettop(l) != 2) {
-        return luaL_error(l, "expecting exactly 2 arguments");
+    if (lua_gettop(l) != 3) {
+        return luaL_error(l, "expecting exactly 3 arguments");
     }
 
-    config = makeConfig(l);
+    const char *const sdk_key = luaL_checkstring(l, 1);
 
-    client = LDServerSDK_New(config);
+    const int timeout = luaL_checkinteger(l, 2);
+
+    LDServerConfig config = makeConfig(l, sdk_key);
+
+    LDServerSDK client = LDServerSDK_New(config);
+
+    LDServerSDK_Start(client, timeout, NULL);
 
     LDServerSDK *c = (LDServerSDK *) lua_newuserdata(l, sizeof(client));
 

@@ -15,7 +15,7 @@ l.registerLogger(logWrite, logEnabled)
 TestAll = {}
 
 function makeTestClient()
-    local c = l.clientInit("sdk-test", {
+    return l.clientInit("sdk-test", 0, {
         dataSystem = {
             enabled = true,
             lazyLoad = {
@@ -24,7 +24,6 @@ function makeTestClient()
             },
         }
     })
-    return c
 end
 
 local user = l.makeUser({
