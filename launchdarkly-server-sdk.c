@@ -19,6 +19,7 @@ Server-side SDK for LaunchDarkly.
 #include <launchdarkly/bindings/c/array_builder.h>
 #include <launchdarkly/bindings/c/object_builder.h>
 
+#define DEBUG 1
 #ifdef DEBUG
 #define DEBUG_PRINT(fmt, ...) printf(fmt, __VA_ARGS__)
 #else
@@ -392,6 +393,102 @@ LuaLDUserNew(lua_State *const l)
 }
 
 
+static int
+LuaLDContextNew(lua_State *const l) {
+
+    // The single argument is a table containing key/value pairs
+    // which represent kind/contexts. There is no implicit way of constructing
+    // a user context - you need to have a 'user = { .. }'.
+
+    if (lua_gettop(l) != 1) {
+        return luaL_error(l, "expecting exactly 1 argument");
+    }
+
+    luaL_checktype(l, 1, LUA_TTABLE);
+
+    LDContextBuilder builder = LDContextBuilder_New();
+
+
+    lua_pushnil(l);
+    while (lua_next(l, -2) != 0) {
+        lua_pushvalue(l, -2);
+
+
+        int kind_type = lua_type(l, -1);
+        int context_type = lua_type(l, -2);
+
+        if (kind_type != LUA_TSTRING) {
+            LDContextBuilder_Free(builder);
+            luaL_error(l, "top-level table keys must be context kinds; example: user = { ... }");
+        }
+
+        if (context_type != LUA_TTABLE) {
+            LDContextBuilder_Free(builder);
+            luaL_error(l, "top-level table values must be tables; example: user = { ... }");
+        }
+
+        const char* kind = lua_tostring(l, -1);
+
+        DEBUG_PRINT("inspecting %s context\n", kind);
+
+        // The context table is on the top of the stack. It must contain a key.
+        lua_getfield(l, -2, "key");
+        const char *const key = lua_tostring(l, -1);
+        lua_pop(l, 1);
+
+        if (key == NULL) {
+            LDContextBuilder_Free(builder);
+            luaL_error(l, "context kind %s must contain a key", kind);
+        }
+
+        LDContextBuilder_AddKind(builder, kind, key);
+
+        lua_getfield(l, -2, "attributes");
+        int attributes_type = lua_type(l, -1);
+        if (attributes_type == LUA_TTABLE) {
+            /* TODO: add each attribute */
+
+        } else if (attributes_type == LUA_TNIL) {
+            DEBUG_PRINT("no attributes for %s context\n", kind);
+        } else {
+            LDContextBuilder_Free(builder);
+            luaL_error(l, "context kind %s attributes must be a table", kind);
+        }
+        lua_pop(l, 1);
+
+
+        lua_getfield(l, -2, "privateAttributes");
+        int private_attributes_type = lua_type(l, -1);
+        if (private_attributes_type == LUA_TTABLE) {
+            /* TODO: add each private attribute */
+
+        } else if (private_attributes_type == LUA_TNIL) {
+            DEBUG_PRINT("no private attributes for %s context\n", kind);
+        } else {
+            LDContextBuilder_Free(builder);
+            luaL_error(l, "context kind %s privateAttributes must be a table", kind);
+        }
+        lua_pop(l, 1);
+
+
+        lua_pop(l, 2);
+    }
+
+    lua_pop(l, 1);
+
+
+    LDContext context = LDContextBuilder_Build(builder);
+
+    LDContext *u = (LDContext *)lua_newuserdata(l, sizeof(context));
+
+    *u = context;
+
+    luaL_getmetatable(l, "LaunchDarklyContext");
+    lua_setmetatable(l, -2);
+    return 1;
+}
+
+
 /***
 Return SDK version.
 @function version
@@ -405,11 +502,10 @@ LuaLDVersion(lua_State *const l)
 }
 
 /**
-Frees a user object.
-@deprecated Users are deprecated. Use contexts instead.
+Frees a context object.
 */
 static int
-LuaLDUserFree(lua_State *const l)
+LuaLDContextFree(lua_State *const l)
 {
     LDContext *context;
 
@@ -1447,6 +1543,7 @@ LuaLDClientAllFlags(lua_State *const l)
 static const struct luaL_Reg launchdarkly_functions[] = {
     { "clientInit",     LuaLDClientInit     },
     { "makeUser",       LuaLDUserNew        },
+    { "makeContext",    LuaLDContextNew     },
     { "registerLogger", LuaLDRegisterLogger },
     { "version",        LuaLDVersion        },
     { NULL,             NULL                }
@@ -1472,8 +1569,8 @@ static const struct luaL_Reg launchdarkly_client_methods[] = {
     { NULL,                    NULL                             }
 };
 
-static const struct luaL_Reg launchdarkly_user_methods[] = {
-    { "__gc", LuaLDUserFree },
+static const struct luaL_Reg launchdarkly_context_methods[] = {
+    { "__gc", LuaLDContextFree },
     { NULL,   NULL          }
 };
 
@@ -1512,7 +1609,7 @@ luaopen_launchdarkly_server_sdk(lua_State *const l)
     luaL_newmetatable(l, "LaunchDarklyContext");
     lua_pushvalue(l, -1);
     lua_setfield(l, -2, "__index");
-    ld_luaL_setfuncs(l, launchdarkly_user_methods, 0);
+    ld_luaL_setfuncs(l, launchdarkly_context_methods, 0);
 
     luaL_newmetatable(l, "LaunchDarklySourceInterface");
     lua_pushvalue(l, -1);

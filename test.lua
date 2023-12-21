@@ -56,7 +56,7 @@ function TestAll:testSetAllConfigFields()
     })
 end
 
-function TestAll:testImplicitUserContext()
+function TestAll:testUserContext()
     local c = l.makeContext({
         user = {
             key = "bob",
@@ -76,7 +76,7 @@ end
 
 
 function TestAll:testMultiKindContext()
-    l.makeContext({
+    local c = l.makeContext({
         user = {
             key = "bob",
             attributes = {
@@ -95,6 +95,19 @@ function TestAll:testMultiKindContext()
     })
     u.assertEquals(c.kinds, {"user", "vehicle"})
     u.assertEquals(c.canonicalKey, "user:bob:vehicle:tractor")
+end
+
+function TestAll:testInvalidContexts()
+    u.assertErrorMsgContains("must be context kinds", l.makeContext, {"foo", "bar"})
+    u.assertErrorMsgContains("must be tables", l.makeContext, {foo = 3})
+    u.assertErrorMsgContains("expecting exactly", l.makeContext, "foo", "bar")
+    u.assertErrorMsgContains("table expected", l.makeContext, 3)
+    u.assertErrorMsgContains("table expected", l.makeContext, "foo")
+    u.assertErrorMsgContains("device attributes must be a table", l.makeContext, {device = {key = "foo", attributes = 3}})
+    u.assertErrorMsgContains("device privateAttributes must be a table", l.makeContext, {device = {key = "foo", privateAttributes = 3}})
+    u.assertErrorMsgContains("must contain a key", l.makeContext, {device = {}})
+
+
 end
 
 function TestAll:testBoolVariation()
