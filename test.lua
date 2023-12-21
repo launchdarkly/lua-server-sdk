@@ -41,13 +41,14 @@ function TestAll:testSetAllConfigFields()
             pollingBaseURL = "bar",
             eventsBaseURL = "baz"
         },
-        --dataSystem = {
-        --    backgroundSync = {
-        --        streaming = {
-        --            initialReconnectDelayMilliseconds = 1000
-        --        }
-        --    }
-        --},
+        dataSystem = {
+            enabled = true
+            --backgroundSync = {
+            --    streaming = {
+            --        initialReconnectDelayMilliseconds = 1000
+            --    }
+            --}
+        },
         --events = {
         --    capacity = 1000,
         --    --contextKeysCapacity = 100, TODO: add once c binding available
