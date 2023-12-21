@@ -56,6 +56,36 @@ function TestAll:testSetAllConfigFields()
     })
 end
 
+function TestAll:testImplicitUserContext()
+    local c = l.makeContext({
+        key = "foo"
+    })
+    u.assertEquals(c.kinds, {"user"})
+    u.assertEquals(c.canonicalKey, "foo")
+end
+
+function TestAll:testExplicitContextKind()
+    local c = l.makeContext({
+        kind = "device",
+        key = "foo"
+    })
+    u.assertEquals(c.kinds, {"device"})
+    u.assertEquals(c.canonicalKey, "foo")
+end
+
+function TestAll:testMultiKindContext()
+    local c = l.makeContext({
+        device = {
+            key = "foo"
+        },
+        user = {
+            key = "bar"
+        }
+    })
+    u.assertEquals(c.kinds, {"device", "user"})
+    u.assertEquals(c.canonicalKey, "device:foo:user:bar")
+end
+
 function TestAll:testBoolVariation()
     local e = false
     u.assertEquals(makeTestClient():boolVariation(user, "test", e), e)
