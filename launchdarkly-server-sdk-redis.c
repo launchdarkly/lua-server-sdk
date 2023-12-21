@@ -43,7 +43,7 @@ LuaLDRedisMakeSource(lua_State *const l)
 
     *i = out_result.source;
 
-    luaL_getmetatable(l, "LaunchDarklyStoreInterface");
+    luaL_getmetatable(l, "LaunchDarklySourceInterface");
     lua_setmetatable(l, -2);
 
     return 1;
@@ -51,7 +51,7 @@ LuaLDRedisMakeSource(lua_State *const l)
 
 static const struct luaL_Reg launchdarkly_functions[] = {
     { "makeRedisSource", LuaLDRedisMakeSource },
-    { NULL,        NULL                }
+    { NULL, NULL}
 };
 
 #if !defined LUA_VERSION_NUM || LUA_VERSION_NUM==501

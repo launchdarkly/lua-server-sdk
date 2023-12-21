@@ -519,13 +519,11 @@ static void parse_string_array(lua_State *const l, int i, void* builder, void* s
     }
 }
 
-// Special purpose parser for grabbing a store interface from a userdata.
+// Special purpose parser for extracting a LaunchDarklySourceInterface from
+// the stack. Setter must have the signature (void*, void*).
 static void parse_lazyload_source(lua_State *const l, int i, void* builder, void* setter) {
-    // TODO: check that this implements the correct userdata.
-    LDServerLazyLoadSourcePtr *source = lua_touserdata(l, i);
-
+    LDServerLazyLoadSourcePtr *source = luaL_checkudata(l, i, "LaunchDarklySourceInterface");
     DEBUG_PRINT("source = %p\n", *source);
-
     void (*source_setter)(void*, void*) = setter;
 
     // Dereferencing source because lua_touserdata returns a pointer (to our pointer).
@@ -1470,7 +1468,7 @@ static const struct luaL_Reg launchdarkly_user_methods[] = {
     { NULL,   NULL          }
 };
 
-static const struct luaL_Reg launchdarkly_store_methods[] = {
+static const struct luaL_Reg launchdarkly_source_methods[] = {
     { NULL, NULL }
 };
 
@@ -1507,10 +1505,10 @@ luaopen_launchdarkly_server_sdk(lua_State *const l)
     lua_setfield(l, -2, "__index");
     ld_luaL_setfuncs(l, launchdarkly_user_methods, 0);
 
-    luaL_newmetatable(l, "LaunchDarklyStoreInterface");
+    luaL_newmetatable(l, "LaunchDarklySourceInterface");
     lua_pushvalue(l, -1);
     lua_setfield(l, -2, "__index");
-    ld_luaL_setfuncs(l, launchdarkly_store_methods, 0);
+    ld_luaL_setfuncs(l, launchdarkly_source_methods, 0);
 
     #if LUA_VERSION_NUM >= 502
         luaL_newlib(l, launchdarkly_functions);
