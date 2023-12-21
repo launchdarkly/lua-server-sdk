@@ -643,7 +643,7 @@ DEFINE_CONFIG(datasystem_config, "dataSystem", datasystem_fields);
 
 struct field_validator event_fields[] = {
     FIELD("enabled", LUA_TBOOLEAN, parse_bool, LDServerConfigBuilder_Events_Enabled),
-    FIELD("contextKeysCapacity", LUA_TNUMBER, NULL, NULL),
+    FIELD("contextKeysCapacity", LUA_TNUMBER, parse_unsigned, LDServerConfigBuilder_Events_ContextKeysCapacity),
     FIELD("capacity", LUA_TNUMBER, parse_unsigned, LDServerConfigBuilder_Events_Capacity),
     FIELD("flushIntervalMilliseconds", LUA_TNUMBER, parse_unsigned, LDServerConfigBuilder_Events_FlushIntervalMs),
     FIELD("allAttributesPrivate", LUA_TBOOLEAN, parse_bool, LDServerConfigBuilder_Events_AllAttributesPrivate),
