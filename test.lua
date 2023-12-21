@@ -58,32 +58,43 @@ end
 
 function TestAll:testImplicitUserContext()
     local c = l.makeContext({
-        key = "foo"
-    })
-    u.assertEquals(c.kinds, {"user"})
-    u.assertEquals(c.canonicalKey, "foo")
-end
-
-function TestAll:testExplicitContextKind()
-    local c = l.makeContext({
-        kind = "device",
-        key = "foo"
-    })
-    u.assertEquals(c.kinds, {"device"})
-    u.assertEquals(c.canonicalKey, "foo")
-end
-
-function TestAll:testMultiKindContext()
-    local c = l.makeContext({
-        device = {
-            key = "foo"
-        },
         user = {
-            key = "bar"
+            key = "bob",
+            attributes = {
+                helmet = {
+                    type = "construction"
+                }
+            },
+            privateAttributes = {
+              "/helmet/type"
+            }
         }
     })
-    u.assertEquals(c.kinds, {"device", "user"})
-    u.assertEquals(c.canonicalKey, "device:foo:user:bar")
+    u.assertEquals(c.kinds, {"user"})
+    u.assertEquals(c.canonicalKey, "bob")
+end
+
+
+function TestAll:testMultiKindContext()
+    l.makeContext({
+        user = {
+            key = "bob",
+            attributes = {
+                age = 42
+            },
+            privateAttributes = {
+                "/age"
+            }
+        },
+        vehicle = {
+            key = "tractor",
+            attributes = {
+                horsepower = 2000
+            }
+        }
+    })
+    u.assertEquals(c.kinds, {"user", "vehicle"})
+    u.assertEquals(c.canonicalKey, "user:bob:vehicle:tractor")
 end
 
 function TestAll:testBoolVariation()
