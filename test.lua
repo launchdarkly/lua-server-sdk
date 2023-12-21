@@ -42,12 +42,12 @@ function TestAll:testSetAllConfigFields()
             eventsBaseURL = "baz"
         },
         dataSystem = {
-            enabled = true
-            --backgroundSync = {
+            enabled = true,
+            backgroundSync = {
             --    streaming = {
             --        initialReconnectDelayMilliseconds = 1000
             --    }
-            --}
+            }
         },
         --events = {
         --    capacity = 1000,

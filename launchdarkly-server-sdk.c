@@ -546,8 +546,8 @@ struct field_validator backgroundsync_fields[] = {
 DEFINE_CONFIG(backgroundsync_config, "dataSystem.backgroundSync", backgroundsync_fields);
 
 struct field_validator datasystem_fields[] = {
-    {"enabled", LUA_TBOOLEAN, parse_bool, LDServerConfigBuilder_DataSystem_Enabled}
-    //{"backgroundSync", LUA_TTABLE, parse_table, &backgroundsync_config},
+    {"enabled", LUA_TBOOLEAN, parse_bool, LDServerConfigBuilder_DataSystem_Enabled},
+    {"backgroundSync", LUA_TTABLE, parse_table, &backgroundsync_config},
    // {"lazyLoad", LUA_TTABLE, parse_table, &lazyload_config}
 };
 
