@@ -35,12 +35,12 @@ function TestAll:testSetAllConfigFields()
         appInfo = {
             identifier = "MyApp",
             version = "1.0.0"
-        }
-        --serviceEndpoints = {
-        --    streamingBaseURL = "foo",
-        --    pollingBaseURL = "bar",
-        --    eventsBaseURL = "baz"
-        --},
+        },
+        serviceEndpoints = {
+            streamingBaseURL = "foo",
+            pollingBaseURL = "bar",
+            eventsBaseURL = "baz"
+        },
         --dataSystem = {
         --    backgroundSync = {
         --        streaming = {
