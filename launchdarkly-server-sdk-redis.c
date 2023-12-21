@@ -15,11 +15,13 @@ Server-side SDK for LaunchDarkly Redis store.
 
 /***
 Create a Redis data source, which can be used instead
-of a LaunchDarkly Streaming or Polling data source.
+of a LaunchDarkly Streaming or Polling data source. This should be configured
+in the SDK's configuration table, under the dataSystem.lazyLoad.source property.
 @function makeRedisSource
-@tparam string uri Redis URI.
-@tparam string prefix Prefix to use when reading SDK data from Redis.
-@return A new Redis data source, suitable for configuration in the SDK's data system.
+@tparam string uri Redis URI. Example: 'redis://localhost:6379'.
+@tparam string prefix Prefix to use when reading SDK data from Redis. This is prefixed to all
+Redis keys used by this SDK. Example: 'my-environment'.
+@return A new Redis data source.
 */
 static int
 LuaLDRedisMakeSource(lua_State *const l)

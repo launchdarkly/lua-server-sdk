@@ -81,7 +81,8 @@ safe, and if used should be done so before other operations.
 @tparam function writeCb The logging write handler. Callback must be of the form
 "function (logLevel, logLine) ... end".
 @tparam function enabledCb The log level enabled handler. Callback must be of the form
-"function (logLevel) -> bool ... end". Return true if the given log level is enabled.
+"function (logLevel) -> bool ... end". Return true if the given log level is enabled. The
+available log levels are 'debug', 'info', 'warn', and 'error'.
 */
 static int
 LuaLDRegisterLogger(lua_State *const l)
@@ -786,7 +787,7 @@ immediately without waiting (note that the client will continue initializing in 
 An offline client will not make any network connections to LaunchDarkly or
 a data source like Redis, nor send any events, and will return application-defined
 default values for all feature flags.
-@tparam[opt] table config.serviceEndpoints. If you set one custom service endpoint URL,
+@tparam[opt] table config.serviceEndpoints If you set one custom service endpoint URL,
 you must set all of them. You probably don't need to set this unless instructed by
 LaunchDarkly.
 @tparam[opt] string config.serviceEndpoints.streamingBaseURL Set the streaming URL
@@ -795,7 +796,7 @@ for connecting to LaunchDarkly.
 connecting to LaunchDarkly.
 @tparam[opt] string config.serviceEndpoints.pollingURL Set the polling URL for
 connecting to LaunchDarkly.
-@tparam[opt] table config.events Config options related to event generation and
+@tparam[opt] table config.events Options related to event generation and
 delivery.
 @tparam[opt] bool config.events.enabled Sets whether to send analytics events
 back to LaunchDarkly. By default, the client will send events. This differs
@@ -810,26 +811,30 @@ likely to reach capacity.
 @tparam[opt] boolean config.events.allAttributesPrivate Sets whether or not all context
 attributes (other than the key) should be hidden from LaunchDarkly. If this
 is true, all context attribute values will be private, not just the attributes
-specified in PrivateAttributes.
+specified via events.privateAttributes.
 @tparam[opt] int config.events.contextKeysCapacity The number of context keys that the
 event processor can remember at an one time, so that duplicate context details
 will not be sent in analytics.
 @tparam[opt] table config.events.privateAttributes Marks a set of context attribute
-references as private. Any contexts sent to LaunchDarkly with this configuration active
+as private. Any contexts sent to LaunchDarkly with this configuration active
 will have attributes refered to removed.
 @tparam[opt] table config.appInfo Specify metadata related to your application.
 @tparam[opt] string config.appInfo.identifier An identifier for the application.
 @tparam[opt] string config.appInfo.version The version of the application.
 @tparam[opt] table config.dataSystem Change configuration of the default streaming
-data source, switch to a polling source, or specifu a read-only database source.
+data source, switch to a polling source, or specify a read-only database source.
+@tparam[opt] bool config.dataSystem.enabled Set to false to disable receiving any data
+from any LaunchDarkly data source (streaming or polling) or a database source (like Redis.)
 @tparam[opt] table config.dataSystem.backgroundSync Change streaming or polling
-configuration.
+configuration. The SDK uses streaming by default. Note that streaming and polling are mutually exclusive.
 @tparam[opt] int config.dataSystem.backgroundSync.streaming.initialReconnectDelayMilliseconds
 The time to wait before the first reconnection attempt, if the streaming connection is dropped.
+@tparam[opt] int config.dataSystem.backgroundSync.polling.intervalSeconds The time between individual
+polling requests.
 @tparam[opt] int config.dataSystem.lazyLoad.cacheRefreshMilliseconds How long a data item (flag/segment)
-remains cached in memory before requiring a refresh from the database.
+remains cached in memory before requiring a refresh from the source.
 @tparam[opt] userdata config.dataSystem.lazyLoad.source A custom data source. Currently
-only Redis is supported. See @{makeRedisSource}.
+only Redis is supported.
 @return A fresh client.
 */
 static int
@@ -1323,7 +1328,7 @@ LuaLDClientFlush(lua_State *const l)
 }
 
 /***
-Reports that a user has performed an event. Custom data, and a metric
+Reports that a context has performed an event. Custom data, and a metric
 can be attached to the event as JSON.
 @function track
 @tparam string key The name of the event
@@ -1386,7 +1391,7 @@ LuaLDClientIsInitialized(lua_State *const l)
 }
 
 /***
-Generates an identify event for a user.
+Generates an identify event for a context.
 @function identify
 @tparam context context An opaque context object from @{makeUser} or @{makeContext}
 @treturn nil
@@ -1407,7 +1412,7 @@ LuaLDClientIdentify(lua_State *const l)
 }
 
 /***
-Returns a map from feature flag keys to values for a given user.
+Returns a map from feature flag keys to values for a given context.
 This does not send analytics events back to LaunchDarkly.
 @function allFlags
 @tparam context context An opaque context object from @{makeUser} or @{makeContext}
