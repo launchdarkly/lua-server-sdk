@@ -420,69 +420,64 @@ LuaLDUserFree(lua_State *const l)
 }
 
 // field_validator is used to validate a single field in a config table.
+// The field delegates to a parse function, which handles extracting the actual
+// type.
 struct field_validator {
-    // Name of the field.
+    // Name of the field used in Lua.
     const char* key;
+
     // Expected Lua type of the field.
     int type;
-    // Function to parse the value on the top of the stack. If NULL, an error will be reported
-    // at runtime if the field exists.
-    void (*parse) (lua_State *const l, int i, LDServerConfigBuilder builder, void* user_data);
-    // Alternative to parse if this field is for a sub-builder for a particular configuration item.
-    // In this case, the function should
-    void (*parse_sub_builder) (lua_State *const l, int i, void* sub_builder, void* user_data);
-    // Store a pointer to arbitrary data for use in 'parse'.
-    void *user_data;
+
+    // Function that parses the value at stack index i.
+    //
+    // The function must agree on the type of the argument 'setter', which is
+    // the value of this struct's 'setter' field.
+    //
+    // For example, parse might handle parsing bools. So the actual
+    // signature for 'setter' might be:
+    // void (*setter)(LDServerConfigBuilder, bool)
+    //
+    // Which would allow the implementation of parse to call setter(builder, value).
+    void (*parse) (lua_State *const l, int i, void* builder, void* setter);
+
+    // Stores a function that is capable of setting a value on an arbitrary builder.
+    // The type of the value being stored is erased here so that field_validator
+    // can handle all necessary types.
+    void *setter;
 };
 
-#define FIELD(key, type, parse, user_data) {key, type, parse, NULL, user_data}
+#define FIELD(key, type, parse, user_data) {key, type, parse, user_data}
 
-#define FIELD_SUB_BUILDER(key, type, parse, user_data) {key, type, NULL, parse, user_data}
-
-// Parses a string and then calls a setter function stored in user_data.
-// The setter must have the signature (LDServerConfigBuilder, const char*).
-static void parse_string(lua_State *const l, int i, LDServerConfigBuilder builder, void* user_data) {
+// Parses a string.
+// The setter must have the signature (void*, const char*).
+static void parse_string(lua_State *const l, int i, void* builder, void* setter) {
     const char *const value = lua_tostring(l, i);
     DEBUG_PRINT("string = %s\n", value ? value : "NULL");
-    void (*setter)(LDServerConfigBuilder, const char*) = user_data;
-    setter(builder, value);
+    void (*string_setter)(void*, const char*) = setter;
+    string_setter(builder, value);
 }
 
-// Parses a bool and then calls a setter function stored in user_data.
-// The setter must have the signature (LDServerConfigBuilder, bool).
-static void parse_bool(lua_State *const l, int i, LDServerConfigBuilder builder, void* user_data) {
+// Parses a bool.
+// The setter must have the signature (void*, bool).
+static void parse_bool(lua_State *const l, int i, void* builder, void* setter) {
     const bool value = lua_toboolean(l, i);
     DEBUG_PRINT("bool = %s\n", value ? "true" : "false");
-    void (*setter)(LDServerConfigBuilder, bool) = user_data;
-    setter(builder, value);
+    void (*bool_setter)(void*, bool) = setter;
+    bool_setter(builder, value);
 }
 
-// Parses a number and then calls a setter function stored in user_data.
-// The setter must have the signature (LDServerConfigBuilder, int).
-static void parse_number(lua_State *const l, int i, LDServerConfigBuilder builder, void* user_data) {
+// Parses a number.
+// The setter must have the signature (void*, unsigned int).
+static void parse_unsigned(lua_State *const l, int i, void* builder, void* setter) {
     const int value = lua_tointeger(l, i);
     DEBUG_PRINT("number = %d\n", value);
-    if (user_data) {
-        void (*setter)(LDServerConfigBuilder, unsigned int) = user_data;
-        setter(builder, value);
+    if (value < 0) {
+        luaL_error(l, "got %d, expected positive int", value);
     }
-}
-
-static void parse_number_stream(lua_State *const l, int i, LDServerDataSourceStreamBuilder builder, void* user_data) {
-    const int value = lua_tointeger(l, i);
-    DEBUG_PRINT("number = %d\n", value);
-    if (user_data) {
-        void (*setter)(LDServerDataSourceStreamBuilder, unsigned int) = user_data;
-        setter(builder, value);
-    }
-}
-
-static void parse_number_poll(lua_State *const l, int i, LDServerDataSourcePollBuilder builder, void* user_data) {
-    const int value = lua_tointeger(l, i);
-    DEBUG_PRINT("number = %d\n", value);
-    if (user_data) {
-        void (*setter)(LDServerDataSourcePollBuilder, unsigned int) = user_data;
-        setter(builder, value);
+    if (setter) {
+        void (*unsigned_int_setter)(void*, unsigned int) = setter;
+        unsigned_int_setter(builder, value);
     }
 }
 
@@ -495,19 +490,21 @@ struct config;
 // on top of the stack.
 void traverse_config(lua_State *const l, LDServerConfigBuilder builder, struct config *cfg);
 
-// Parses a table using traverse_config.
-static void parse_table(lua_State *const l, int i,  LDServerConfigBuilder builder, void* user_data) {
+// Parses a table using traverse_config. Can only be invoked on top level LDServerConfigBuilder
+// configurations, not sub-builders.
+static void parse_table(lua_State *const l, int i, void* builder, void* user_data) {
     // since traverse_config expects the table to be on top of the stack,
     // make it so.
     lua_pushvalue(l, i);
-    traverse_config(l, builder, user_data);
+    traverse_config(l, (LDServerConfigBuilder) builder, user_data);
 }
 
 
 
-// Parses an array of strings. Items that aren't strings are silently ignored.
-static void parse_string_array(lua_State *const l, int i, LDServerConfigBuilder builder, void* user_data) {
-    void (*setter)(LDServerConfigBuilder, const char*) = user_data;
+// Parses an array of strings. Items that aren't strings will trigger an error.
+// The setter must have the signature (void*, const char*).
+static void parse_string_array(lua_State *const l, int i, void* builder, void* setter) {
+    void (*string_setter)(void*, const char*) = setter;
     int n = lua_tablelen(l, i);
     DEBUG_PRINT("parsing string array of length %d\n", n);
 
@@ -516,21 +513,26 @@ static void parse_string_array(lua_State *const l, int i, LDServerConfigBuilder 
         if (lua_isstring(l, -1)) {
             const char* elem = lua_tostring(l, -1);
             DEBUG_PRINT("array[%d] = %s\n", j, elem);
-            setter(builder, elem);
+            string_setter(builder, elem);
+        } else {
+            luaL_error(l, "array[%d] is not a string", j);
         }
         lua_pop(l, 1);
     }
 }
 
 // Special purpose parser for grabbing a store interface from a userdata.
-static void parse_lazyload_source(lua_State *const l, int i, LDServerConfigBuilder builder, void* user_data) {
-// TODO: replace checkudata
+static void parse_lazyload_source(lua_State *const l, int i, void* builder, void* setter) {
+    // TODO: check that this implements the correct userdata.
     LDServerLazyLoadSourcePtr *source = lua_touserdata(l, i);
-    LDServerLazyLoadBuilder lazy_load_builder = LDServerLazyLoadBuilder_New();
-    LDServerLazyLoadBuilder_SourcePtr(lazy_load_builder, *source);
 
-    LDServerConfigBuilder_DataSystem_LazyLoad(builder, lazy_load_builder);
+    void (*source_setter)(void*, void*) = setter;
+    source_setter(builder, source);
 }
+
+
+typedef void* (*new_builder_fn)(void);
+typedef void (*consume_builder_fn)(LDServerConfigBuilder, void*);
 
 // Stores a list of fields and the field count. The name is used for error reporting.
 struct config {
@@ -539,8 +541,8 @@ struct config {
     int n;
 
     void *builder;
-    void* (*new_builder)(void);
-    void (*set_builder)(LDServerConfigBuilder, void*);
+    new_builder_fn new_builder;
+    consume_builder_fn consume_builder;
 
 };
 
@@ -550,39 +552,35 @@ struct config {
 #define DEFINE_CONFIG(name, path, fields) \
     struct config name = {path, fields, ARR_SIZE(fields), NULL, NULL, NULL}
 
-#define DEFINE_SUB_CONFIG(name, path, fields, new_builder, set_builder) \
-    struct config name = {path, fields, ARR_SIZE(fields), NULL, new_builder, set_builder}
+#define DEFINE_SUB_CONFIG(name, path, fields, new_builder, consume_builder) \
+    struct config name = {path, fields, ARR_SIZE(fields), NULL, (new_builder_fn) new_builder, (consume_builder_fn) consume_builder}
 
-bool config_invoke_parser(struct config *cfg, struct field_validator *field, LDServerConfigBuilder builder, lua_State *const l) {
-    if (field->parse != NULL) {
-        DEBUG_PRINT("invoking normal parser for %s\n", field->key);
-        field->parse(l, -2, builder, field->user_data);
-        return true;
-    }
-    if (field->parse_sub_builder != NULL) {
+void config_invoke_parser(struct config *cfg, struct field_validator *field, LDServerConfigBuilder builder, lua_State *const l) {
+    if (cfg->builder) {
         DEBUG_PRINT("invoking sub-builder parser for %s\n", field->key);
-        field->parse_sub_builder(l, -2, cfg->builder, field->user_data);
-        return true;
+        field->parse(l, -2, cfg->builder, field->setter);
+    } else {
+        DEBUG_PRINT("invoking normal parser for %s\n", field->key);
+        field->parse(l, -2, builder, field->setter);
     }
-    return false;
 }
 
 struct field_validator lazyload_fields[] = {
-    FIELD("source", LUA_TUSERDATA, parse_lazyload_source, NULL),
-    FIELD("cacheRefreshMilliseconds", LUA_TNUMBER, parse_number, LDServerLazyLoadBuilder_CacheRefreshMs),
-    FIELD("cacheEvictionPolicy", LUA_TNUMBER, parse_number, LDServerLazyLoadBuilder_CachePolicy)
+    FIELD("source", LUA_TUSERDATA, parse_lazyload_source, LDServerLazyLoadBuilder_SourcePtr),
+    FIELD("cacheRefreshMilliseconds", LUA_TNUMBER, parse_unsigned, LDServerLazyLoadBuilder_CacheRefreshMs),
+    FIELD("cacheEvictionPolicy", LUA_TNUMBER, parse_unsigned, LDServerLazyLoadBuilder_CachePolicy)
 };
 
-DEFINE_CONFIG(lazyload_config, "dataSystem.lazyLoad", lazyload_fields);
+DEFINE_SUB_CONFIG(lazyload_config, "dataSystem.lazyLoad", lazyload_fields, LDServerLazyLoadBuilder_New, LDServerConfigBuilder_DataSystem_LazyLoad);
 
 struct field_validator streaming_fields[] = {
-    FIELD_SUB_BUILDER("initialReconnectDelayMilliseconds", LUA_TNUMBER, parse_number_stream, LDServerDataSourceStreamBuilder_InitialReconnectDelayMs)
+    FIELD("initialReconnectDelayMilliseconds", LUA_TNUMBER, parse_unsigned, LDServerDataSourceStreamBuilder_InitialReconnectDelayMs)
 };
 
 DEFINE_SUB_CONFIG(streaming_config, "dataSystem.backgroundSync.streaming", streaming_fields, LDServerDataSourceStreamBuilder_New, LDServerConfigBuilder_DataSystem_BackgroundSync_Streaming);
 
 struct field_validator polling_fields[] = {
-    FIELD_SUB_BUILDER("intervalSeconds", LUA_TNUMBER, parse_number_poll, LDServerDataSourcePollBuilder_IntervalS)
+    FIELD("intervalSeconds", LUA_TNUMBER, parse_unsigned, LDServerDataSourcePollBuilder_IntervalS)
 };
 
 DEFINE_SUB_CONFIG(polling_config, "dataSystem.backgroundSync.polling", polling_fields, LDServerDataSourcePollBuilder_New, LDServerConfigBuilder_DataSystem_BackgroundSync_Polling);
@@ -607,8 +605,8 @@ DEFINE_CONFIG(datasystem_config, "dataSystem", datasystem_fields);
 struct field_validator event_fields[] = {
     FIELD("enabled", LUA_TBOOLEAN, parse_bool, LDServerConfigBuilder_Events_Enabled),
     FIELD("contextKeysCapacity", LUA_TNUMBER, NULL, NULL),
-    FIELD("capacity", LUA_TNUMBER, parse_number, LDServerConfigBuilder_Events_Capacity),
-    FIELD("flushIntervalMilliseconds", LUA_TNUMBER, parse_number, LDServerConfigBuilder_Events_FlushIntervalMs),
+    FIELD("capacity", LUA_TNUMBER, parse_unsigned, LDServerConfigBuilder_Events_Capacity),
+    FIELD("flushIntervalMilliseconds", LUA_TNUMBER, parse_unsigned, LDServerConfigBuilder_Events_FlushIntervalMs),
     FIELD("allAttributesPrivate", LUA_TBOOLEAN, parse_bool, LDServerConfigBuilder_Events_AllAttributesPrivate),
     FIELD("privateAttributes", LUA_TTABLE, parse_string_array, LDServerConfigBuilder_Events_PrivateAttribute)
 };
@@ -669,17 +667,18 @@ void traverse_config(lua_State *const l, LDServerConfigBuilder builder, struct c
         if (field->type != type) {
             luaL_error(l, "%s field %s must be a %s", cfg->name, key, lua_typename(l, field->type));
         }
-
-        if (!config_invoke_parser(cfg, field, builder, l)) {
+        if (field->parse == NULL) {
             luaL_error(l, "%s missing field parser for %s", cfg->name, key);
+        } else {
+            config_invoke_parser(cfg, field, builder, l);
         }
 
         lua_pop(l, 2);
     }
 
     if (cfg->builder != NULL) {
-        DEBUG_PRINT("invoking sub-builder setter (%p) on sub-builder (%p)\n", cfg->set_builder, cfg->builder);
-        cfg->set_builder(builder, cfg->builder);
+        DEBUG_PRINT("invoking sub-builder consumer (%p) on sub-builder (%p)\n", cfg->consume_builder, cfg->builder);
+        cfg->consume_builder(builder, cfg->builder);
     }
 
     lua_pop(l, 1);
