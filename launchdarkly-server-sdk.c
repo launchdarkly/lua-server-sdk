@@ -491,15 +491,13 @@ struct config;
 void traverse_config(lua_State *const l, LDServerConfigBuilder builder, struct config *cfg);
 
 // Parses a table using traverse_config. Can only be invoked on top level LDServerConfigBuilder
-// configurations, not sub-builders.
+// configurations, not child builders.
 static void parse_table(lua_State *const l, int i, void* builder, void* user_data) {
     // since traverse_config expects the table to be on top of the stack,
     // make it so.
     lua_pushvalue(l, i);
     traverse_config(l, (LDServerConfigBuilder) builder, user_data);
 }
-
-
 
 // Parses an array of strings. Items that aren't strings will trigger an error.
 // The setter must have the signature (void*, const char*).
@@ -526,41 +524,65 @@ static void parse_lazyload_source(lua_State *const l, int i, void* builder, void
     // TODO: check that this implements the correct userdata.
     LDServerLazyLoadSourcePtr *source = lua_touserdata(l, i);
 
+    DEBUG_PRINT("source = %p\n", *source);
+
     void (*source_setter)(void*, void*) = setter;
-    source_setter(builder, source);
+
+    // Dereferencing source because lua_touserdata returns a pointer (to our pointer).
+    source_setter(builder, *source);
 }
 
+// Function that returns a new child builder. This is used to allocate builders
+// which are necessary for building a child config. This is needed when the C++ SDK's
+// API requires a builder to be allocated and passed in to the top-level builder, e.g.
+// the streaming or polling config builders.
+typedef void* (*new_child_builder_fn)(void);
 
-typedef void* (*new_builder_fn)(void);
-typedef void (*consume_builder_fn)(LDServerConfigBuilder, void*);
+// Function that consumes the builder created by a new_child_builder_fn. This passes
+// ownership of the builder back to the top-level configuration builder.
+typedef void (*consume_child_builder_fn)(LDServerConfigBuilder, void*);
 
-// Stores a list of fields and the field count. The name is used for error reporting.
+// Represents a logical chunk of config with a list of fields.
+// Individual fields might themselves be configs.
+//
+// If a child config requires its own builder, then new_builder and consume_builder must be set.
+// In this case, before any fields are parsed, new_builder will be invoked
+// and stored in child_builder. After all fields are parsed, consume_builder will be invoked
+// to transfer ownership of the child to the parent top-level config.
 struct config {
+    // Name of the config, used for errors / logging.
     const char *name;
+
+    // List of fields and length.
     struct field_validator* fields;
     int n;
 
-    void *builder;
-    new_builder_fn new_builder;
-    consume_builder_fn consume_builder;
+    // Null at compile-time; stores the result of new_builder at runtime (if set.)
+    void *child_builder;
 
+    // Assign both if this config needs a child builder.
+    new_child_builder_fn new_child_builder;
+    consume_child_builder_fn consume_child_builder;
 };
 
 #define ARR_SIZE(x) (sizeof(x) / sizeof(x[0]))
 
-// Use this macro to define new config tables. Config tables can be nested arbitrarily.
+// Use this macro to define new config tables.
 #define DEFINE_CONFIG(name, path, fields) \
     struct config name = {path, fields, ARR_SIZE(fields), NULL, NULL, NULL}
 
+// Use this macro to define a config table which requires a child builder.
 #define DEFINE_SUB_CONFIG(name, path, fields, new_builder, consume_builder) \
-    struct config name = {path, fields, ARR_SIZE(fields), NULL, (new_builder_fn) new_builder, (consume_builder_fn) consume_builder}
+    struct config name = {path, fields, ARR_SIZE(fields), NULL, (new_child_builder_fn) new_builder, (consume_child_builder_fn) consume_builder}
 
-void config_invoke_parser(struct config *cfg, struct field_validator *field, LDServerConfigBuilder builder, lua_State *const l) {
-    if (cfg->builder) {
-        DEBUG_PRINT("invoking sub-builder parser for %s\n", field->key);
-        field->parse(l, -2, cfg->builder, field->setter);
+// Invokes a field's parse method, varying the builder argument depending on if this
+// is a top-level or child config.
+void config_invoke_parse(struct config *cfg, struct field_validator *field, LDServerConfigBuilder builder, lua_State *const l) {
+    if (cfg->child_builder) {
+        DEBUG_PRINT("invoking parser for %s with child builder (%p)\n", field->key, cfg->child_builder);
+        field->parse(l, -2, cfg->child_builder, field->setter);
     } else {
-        DEBUG_PRINT("invoking normal parser for %s\n", field->key);
+        DEBUG_PRINT("invoking parser for %s with top-level builder\n", field->key);
         field->parse(l, -2, builder, field->setter);
     }
 }
@@ -571,19 +593,34 @@ struct field_validator lazyload_fields[] = {
     FIELD("cacheEvictionPolicy", LUA_TNUMBER, parse_unsigned, LDServerLazyLoadBuilder_CachePolicy)
 };
 
-DEFINE_SUB_CONFIG(lazyload_config, "dataSystem.lazyLoad", lazyload_fields, LDServerLazyLoadBuilder_New, LDServerConfigBuilder_DataSystem_LazyLoad);
+DEFINE_SUB_CONFIG(lazyload_config,
+    "dataSystem.lazyLoad",
+    lazyload_fields,
+    LDServerLazyLoadBuilder_New,
+    LDServerConfigBuilder_DataSystem_LazyLoad
+);
 
 struct field_validator streaming_fields[] = {
     FIELD("initialReconnectDelayMilliseconds", LUA_TNUMBER, parse_unsigned, LDServerDataSourceStreamBuilder_InitialReconnectDelayMs)
 };
 
-DEFINE_SUB_CONFIG(streaming_config, "dataSystem.backgroundSync.streaming", streaming_fields, LDServerDataSourceStreamBuilder_New, LDServerConfigBuilder_DataSystem_BackgroundSync_Streaming);
+DEFINE_SUB_CONFIG(streaming_config,
+    "dataSystem.backgroundSync.streaming",
+    streaming_fields,
+    LDServerDataSourceStreamBuilder_New,
+    LDServerConfigBuilder_DataSystem_BackgroundSync_Streaming
+);
 
 struct field_validator polling_fields[] = {
     FIELD("intervalSeconds", LUA_TNUMBER, parse_unsigned, LDServerDataSourcePollBuilder_IntervalS)
 };
 
-DEFINE_SUB_CONFIG(polling_config, "dataSystem.backgroundSync.polling", polling_fields, LDServerDataSourcePollBuilder_New, LDServerConfigBuilder_DataSystem_BackgroundSync_Polling);
+DEFINE_SUB_CONFIG(polling_config,
+    "dataSystem.backgroundSync.polling",
+    polling_fields,
+    LDServerDataSourcePollBuilder_New,
+    LDServerConfigBuilder_DataSystem_BackgroundSync_Polling
+);
 
 struct field_validator backgroundsync_fields[] = {
     /* Mutually exclusive */
@@ -647,9 +684,9 @@ void traverse_config(lua_State *const l, LDServerConfigBuilder builder, struct c
         luaL_error(l, "%s must be a table", cfg->name);
     }
 
-    if (cfg->new_builder != NULL) {
-        cfg->builder = cfg->new_builder();
-        DEBUG_PRINT("created sub-builder (%p)\n", cfg->builder);
+    if (cfg->new_child_builder != NULL) {
+        cfg->child_builder = cfg->new_child_builder();
+        DEBUG_PRINT("created child builder (%p) for %s\n", cfg->child_builder, cfg->name);
     }
 
     lua_pushnil(l);
@@ -670,15 +707,15 @@ void traverse_config(lua_State *const l, LDServerConfigBuilder builder, struct c
         if (field->parse == NULL) {
             luaL_error(l, "%s missing field parser for %s", cfg->name, key);
         } else {
-            config_invoke_parser(cfg, field, builder, l);
+            config_invoke_parse(cfg, field, builder, l);
         }
 
         lua_pop(l, 2);
     }
 
-    if (cfg->builder != NULL) {
-        DEBUG_PRINT("invoking sub-builder consumer (%p) on sub-builder (%p)\n", cfg->consume_builder, cfg->builder);
-        cfg->consume_builder(builder, cfg->builder);
+    if (cfg->child_builder != NULL) {
+        DEBUG_PRINT("invoking child builder consumer (%p) on child builder (%p)\n", cfg->consume_child_builder, cfg->child_builder);
+        cfg->consume_child_builder(builder, cfg->child_builder);
     }
 
     lua_pop(l, 1);
@@ -697,8 +734,8 @@ static LDServerConfig
 makeConfig(lua_State *const l)
 {
     // We have been passed two arguments:
-    // First: the SDK key (string)
-    // Second: the config structure (table)
+    // 1: the SDK key (string)
+    // 2: the config structure (table)
 
     const char* sdk_key = luaL_checkstring(l, 1);
     LDServerConfigBuilder builder = LDServerConfigBuilder_New(sdk_key);
@@ -739,12 +776,13 @@ makeConfig(lua_State *const l)
     return out_config;
 }
 
+// TODO: update the config field names
 /***
 Initialize a new client, and connect to LaunchDarkly. Applications should instantiate a single instance for the lifetime of their application.
-@function makeClient
+@function initClient
 @tparam table config list of configuration options
 @tparam string config.key Environment SDK key
-@tparam[opt] string config.baseURI Set the base URI for connecting to
+@tparam[opt] string config.serviceEndpoints. Set the base URI for connecting to
 LaunchDarkly. You probably don't need to set this unless instructed by
 LaunchDarkly.
 @tparam[opt] string config.streamURI Set the streaming URI for connecting to

@@ -19,6 +19,7 @@ function makeTestClient()
         dataSystem = {
             enabled = true,
             lazyLoad = {
+                cacheRefreshMilliseconds = 1000,
                 source = r.makeRedisSource('redis://localhost:1234', 'test-prefix')
             },
         }
