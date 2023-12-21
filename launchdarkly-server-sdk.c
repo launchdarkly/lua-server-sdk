@@ -471,7 +471,6 @@ static void parse_table(lua_State *const l, int i,  LDServerConfigBuilder builde
     // make it so.
     lua_pushvalue(l, i);
     traverse_config(l, builder, user_data);
-    lua_pop(l, 1);
 }
 
 
@@ -620,7 +619,7 @@ void traverse_config(lua_State *const l, LDServerConfigBuilder builder, struct c
         }
         lua_pop(l, 2);
     }
-   // lua_pop(l, 1);
+    lua_pop(l, 1);
 }
 
 struct field_validator * find_field(const char *key, struct config* cfg) {
