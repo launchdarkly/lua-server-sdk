@@ -4,6 +4,9 @@ description: 'Build Documentation.'
 runs:
   using: composite
   steps:
+    - name: Install LDoc
+      shell: bash
+      run: sudo apt-get update -y && sudo apt-get install -y lua-ldoc
     - name: Build Documentation
       shell: bash
-      run: ./scripts/build-docs.sh docs
+      run: ./scripts/build-docs.sh docs-build docs-release
