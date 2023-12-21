@@ -452,7 +452,7 @@ static void parse_bool(lua_State *const l, int i, LDServerConfigBuilder builder,
 // The setter must have the signature (LDServerConfigBuilder, int).
 static void parse_number(lua_State *const l, int i, LDServerConfigBuilder builder, void* user_data) {
     const int value = lua_tointeger(l, i);
-    void (*setter)(LDServerConfigBuilder, int) = user_data;
+    void (*setter)(LDServerConfigBuilder, unsigned int) = user_data;
     setter(builder, value);
 }
 
