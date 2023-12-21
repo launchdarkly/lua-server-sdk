@@ -45,7 +45,7 @@ function TestAll:testSetAllConfigFields()
             enabled = true,
             backgroundSync = {
                 polling = {
-                    intervalSeconds = 1000
+                    -- intervalSeconds = 1000
                 }
             }
         },
