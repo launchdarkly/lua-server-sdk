@@ -455,8 +455,10 @@ static void parse_bool(lua_State *const l, int i, LDServerConfigBuilder builder,
 static void parse_number(lua_State *const l, int i, LDServerConfigBuilder builder, void* user_data) {
     const int value = lua_tointeger(l, i);
     DEBUG_PRINT("number = %d\n", value);
-    void (*setter)(LDServerConfigBuilder, unsigned int) = user_data;
-    setter(builder, value);
+    if (user_data) {
+        void (*setter)(LDServerConfigBuilder, unsigned int) = user_data;
+        setter(builder, value);
+    }
 }
 
 // Forward declaration of the config used in traverse_config, to keep parse_table
@@ -528,7 +530,7 @@ struct field_validator lazyload_fields[] = {
 DEFINE_CONFIG(lazyload_config, "dataSystem.lazyLoad", lazyload_fields);
 
 struct field_validator streaming_fields[] = {
-    {"initialReconnectDelayMilliseconds", LUA_TBOOLEAN, parse_bool, LDServerConfigBuilder_DataSystem_Enabled}
+    {"initialReconnectDelayMilliseconds", LUA_TNUMBER, parse_number, NULL}
 };
 
 DEFINE_CONFIG(streaming_config, "dataSystem.backgroundSync.streaming", streaming_fields);
