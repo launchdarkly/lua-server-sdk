@@ -530,7 +530,7 @@ struct field_validator lazyload_fields[] = {
 DEFINE_CONFIG(lazyload_config, "dataSystem.lazyLoad", lazyload_fields);
 
 struct field_validator streaming_fields[] = {
-    {"initialReconnectDelayMilliseconds", LUA_TNUMBER, parse_number, NULL}
+    {"initialReconnectDelayMilliseconds", LUA_TNUMBER, parse_number, LDServerDataSourceStreamBuilder_InitialReconnectDelayMs}
 };
 
 DEFINE_CONFIG(streaming_config, "dataSystem.backgroundSync.streaming", streaming_fields);
