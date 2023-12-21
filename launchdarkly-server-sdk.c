@@ -435,15 +435,17 @@ struct field_validator {
 // Parses a string and then calls a setter function stored in user_data.
 // The setter must have the signature (LDServerConfigBuilder, const char*).
 static void parse_string(lua_State *const l, int i, LDServerConfigBuilder builder, void* user_data) {
-    const char *const uri = lua_tostring(l, i);
+    const char *const value = lua_tostring(l, i);
+    DEBUG_PRINT("string = %s\n", value ? value : "NULL");
     void (*setter)(LDServerConfigBuilder, const char*) = user_data;
-    setter(builder, uri);
+    setter(builder, value);
 }
 
 // Parses a bool and then calls a setter function stored in user_data.
 // The setter must have the signature (LDServerConfigBuilder, bool).
 static void parse_bool(lua_State *const l, int i, LDServerConfigBuilder builder, void* user_data) {
     const bool value = lua_toboolean(l, i);
+    DEBUG_PRINT("bool = %s\n", value ? "true" : "false");
     void (*setter)(LDServerConfigBuilder, bool) = user_data;
     setter(builder, value);
 }
@@ -452,6 +454,7 @@ static void parse_bool(lua_State *const l, int i, LDServerConfigBuilder builder,
 // The setter must have the signature (LDServerConfigBuilder, int).
 static void parse_number(lua_State *const l, int i, LDServerConfigBuilder builder, void* user_data) {
     const int value = lua_tointeger(l, i);
+    DEBUG_PRINT("number = %d\n", value);
     void (*setter)(LDServerConfigBuilder, unsigned int) = user_data;
     setter(builder, value);
 }
@@ -525,13 +528,13 @@ struct field_validator lazyload_fields[] = {
 DEFINE_CONFIG(lazyload_config, "dataSystem.lazyLoad", lazyload_fields);
 
 struct field_validator streaming_fields[] = {
-    {"initialReconnectDelayMilliseconds", LUA_TNUMBER, parse_number, LDServerDataSourceStreamBuilder_InitialReconnectDelayMs},
+    {"initialReconnectDelayMilliseconds", LUA_TBOOLEAN, parse_bool, LDServerConfigBuilder_DataSystem_Enabled}
 };
 
 DEFINE_CONFIG(streaming_config, "dataSystem.backgroundSync.streaming", streaming_fields);
 
 struct field_validator polling_fields[] = {
-    {"intervalSeconds", LUA_TNUMBER, parse_number, LDServerDataSourcePollBuilder_IntervalS},
+    {"intervalSeconds", LUA_TNUMBER, parse_number, LDServerDataSourcePollBuilder_IntervalS}
 };
 
 DEFINE_CONFIG(polling_config, "dataSystem.backgroundSync.polling", polling_fields);
