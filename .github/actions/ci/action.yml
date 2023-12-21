@@ -23,7 +23,7 @@ runs:
     - name: Install CPP SDK
       uses: ./.github/actions/install-cpp-sdk-redis
       with:
-          version: redis-source-bindings-v1.1.0
+          version: redis-source-v1.1.0
           path: cpp-sdk
 
     - name: Build Lua Server-side SDK
@@ -46,7 +46,7 @@ runs:
       run: luarocks test launchdarkly-server-sdk-1.0-0.rockspec
       env:
         # Needed because boost isn't installed in default system paths, which is
-        # what the C++ Server-side SDK shared objec expects.
+        # what the C++ Server-side SDK shared object expects.
         LD_LIBRARY_PATH: ${{ steps.install-boost.outputs.BOOST_ROOT }}/lib
 
     - name: Run Lua Server-side SDK Tests (JIT)
