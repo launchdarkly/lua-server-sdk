@@ -35,6 +35,10 @@ function TestAll:tearDown()
     collectgarbage("collect")
 end
 
+function TestAll:testInvalidRedisArguments()
+    u.assertErrorMsgContains('invalid URI', r.makeRedisSource, 'not a uri', 'test-prefix')
+end
+
 function TestAll:testVariationWithRedisSource()
     local e = false
     u.assertEquals(e, makeTestClient():boolVariation(user, "test", e))

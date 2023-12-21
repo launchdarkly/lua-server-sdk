@@ -24,7 +24,7 @@ external_dependencies = {
 
 test = {
     type = "command",
-    script = "redis-test.lua"
+    script = "test-redis.lua"
 }
 
 build = {

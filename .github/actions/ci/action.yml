@@ -71,7 +71,7 @@ runs:
     - name: Run Lua Server-side SDK with Redis Tests (JIT)
       shell: bash
       if: ${{ contains(inputs.lua-version, 'jit') }}
-      run: luajit redis-test.lua
+      run: luajit test-redis.lua
       env:
         # Needed because boost isn't installed in default system paths, which is
         # what the C++ Server-side SDK shared object expects. Same for hiredis which is bundled
