@@ -66,6 +66,8 @@ function TestAll:testUserContext()
     local c = l.makeContext({
         user = {
             key = "bob",
+            name = "Bob",
+            anonymous = true,
             attributes = {
                 helmet = {
                     type = "construction"
@@ -79,6 +81,10 @@ function TestAll:testUserContext()
     u.assertIsTrue(c:valid())
     u.assertEquals(c:canonicalKey(), "bob")
     u.assertItemsEquals(c:privateAttributes("user"), {"/helmet/type"})
+    u.assertEquals(c:getAttribute("user", "key"), "bob")
+    u.assertEquals(c:getAttribute("user", "name"), "Bob")
+    u.assertEquals(c:getAttribute("user", "anonymous"), true)
+    u.assertEquals(c:getAttribute("user", "helmet"), {type = "construction"})
 end
 
 
@@ -102,9 +108,19 @@ function TestAll:testMultiKindContext()
     })
     u.assertIsTrue(c:valid())
     u.assertEquals(c:canonicalKey(), "user:bob:vehicle:tractor")
+
     u.assertItemsEquals(c:privateAttributes("user"), {"/age"})
     u.assertItemsEquals(c:privateAttributes("vehicle"), {})
+
     u.assertIsNil(c:privateAttributes("foo"))
+
+    u.assertEquals(c:getAttribute("user", "key"), "bob")
+    u.assertEquals(c:getAttribute("user", "age"), 42)
+    u.assertEquals(c:getAttribute("vehicle", "key"), "tractor")
+    u.assertEquals(c:getAttribute("vehicle", "horsepower"), 2000)
+
+    u.assertIsNil(c:getAttribute("foo", "bar"))
+    u.assertIsNil(c:getAttribute("user", "nonexistent"))
 end
 
 function TestAll:testInvalidContextFormats()
@@ -116,6 +132,8 @@ function TestAll:testInvalidContextFormats()
     u.assertErrorMsgContains("device: attributes must be a table", l.makeContext, {device = {key = "foo", attributes = 3}})
     u.assertErrorMsgContains("device: privateAttributes must be a table", l.makeContext, {device = {key = "foo", privateAttributes = 3}})
     u.assertErrorMsgContains("device: must contain key", l.makeContext, {device = {}})
+    u.assertErrorMsgContains("anonymous must be a boolean", l.makeContext, {user = { key = "foo", anonymous = 3}})
+    u.assertErrorMsgContains("name must be a string", l.makeContext, {user = { key = "foo", name = true }})
 end
 
 function TestAll:testInvalidContexts()
@@ -125,7 +143,13 @@ function TestAll:testInvalidContexts()
     local invalid_kind_name_kind = l.makeContext({kind = {key = "foo"}})
     local invalid_kind_chars = l.makeContext({['invalid chars !'] = {key = "foo"}})
 
-    local invalid_contexts = {empty_key, no_kinds, invalid_kind_name_multi, invalid_kind_name_kind, invalid_kind_chars}
+    local invalid_contexts = {
+        empty_key,
+        no_kinds,
+        invalid_kind_name_multi,
+        invalid_kind_name_kind,
+        invalid_kind_chars
+    }
     for _, context in ipairs(invalid_contexts) do
         u.assertIsFalse(context:valid())
         u.assertNotIsNil(context:errors())

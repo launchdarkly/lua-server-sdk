@@ -399,7 +399,8 @@ LuaLDUserNew(lua_State *const l)
 static void parse_private_attrs_or_cleanup(lua_State *const l, LDContextBuilder builder, const char* kind);
 static void parse_attrs_or_cleanup(lua_State *const l, LDContextBuilder builder, const char* kind);
 static bool field_is_table_or_cleanup(lua_State* const l, int field_type, LDContextBuilder builder, const char* field_name, const char* kind);
-
+static bool field_is_string_or_cleanup(lua_State* const l, int field_type, LDContextBuilder builder, const char* field_name, const char* kind);
+static bool field_is_bool_or_cleanup(lua_State* const l, int field_type, LDContextBuilder builder, const char* field_name, const char* kind);
 
 /**
 
@@ -520,6 +521,19 @@ LuaLDContextNew(lua_State *const l) {
         }
         lua_pop(l, 1);
 
+        lua_getfield(l, -2, "name");
+        if (field_is_string_or_cleanup(l, lua_type(l, -1), builder, "name", kind)) {
+            LDContextBuilder_Attributes_SetName(builder, kind, lua_tostring(l, -1));
+        }
+        lua_pop(l, 1);
+
+        lua_getfield(l, -2, "anonymous");
+        if (field_is_bool_or_cleanup(l, lua_type(l, -1), builder, "anonymous", kind)) {
+            LDContextBuilder_Attributes_SetAnonymous(builder, kind, lua_toboolean(l, -1));
+        }
+        lua_pop(l, 1);
+
+
         lua_pop(l, 2);
     }
 
@@ -546,6 +560,32 @@ static bool field_is_table_or_cleanup(lua_State* const l, int field_type, LDCont
     } else {
         LDContextBuilder_Free(builder);
         luaL_error(l, "context kind %s: %s must be a table", kind, field_name);
+    }
+    return false;
+}
+
+static bool field_is_bool_or_cleanup(lua_State* const l, int field_type, LDContextBuilder builder, const char* field_name, const char* kind) {
+    if (field_type == LUA_TBOOLEAN) {
+        DEBUG_PRINT("field %s for %s context is a boolean\n", field_name, kind);
+        return true;
+    } else if (field_type == LUA_TNIL) {
+        DEBUG_PRINT("no %s for %s context\n", field_name, kind);
+    } else {
+        LDContextBuilder_Free(builder);
+        luaL_error(l, "context kind %s: %s must be a boolean", kind, field_name);
+    }
+    return false;
+}
+
+static bool field_is_string_or_cleanup(lua_State* const l, int field_type, LDContextBuilder builder, const char* field_name, const char* kind) {
+    if (field_type == LUA_TSTRING) {
+        DEBUG_PRINT("field %s for %s context is a string\n", field_name, kind);
+        return true;
+    } else if (field_type == LUA_TNIL) {
+        DEBUG_PRINT("no %s for %s context\n", field_name, kind);
+    } else {
+        LDContextBuilder_Free(builder);
+        luaL_error(l, "context kind %s: %s must be a string", kind, field_name);
     }
     return false;
 }
@@ -1248,12 +1288,47 @@ LuaLDContextCanonicalKey(lua_State *const l)
 }
 
 /**
+Returns the value of a context attribute.
+
+@class function
+@name getAttribute
+@tparam context context An opaque context object from @{makeUser} or @{makeContext}
+@tparam string kind The kind of the context.
+@tparam string attribute_reference An attribute reference naming the attribute to get.
+@treturn
+*/
+static int
+LuaLDContextGetAttribute(lua_State *const l)
+{
+    if (lua_gettop(l) != 3) {
+        return luaL_error(l, "expecting exactly 3 arguments");
+    }
+
+    LDContext *context = luaL_checkudata(l, 1, "LaunchDarklyContext");
+    const char *const kind = luaL_checkstring(l, 2);
+    const char *const attribute_reference = luaL_checkstring(l, 3);
+
+    LDValue val = LDContext_Get(*context, kind, attribute_reference);
+
+    if (val == NULL) {
+        lua_pushnil(l);
+        return 1;
+    }
+
+    LuaPushJSON(l, val);
+
+    /* Don't need to free the value as it's owned by the context. */
+    return 1;
+}
+
+/**
 Returns the private attribute references associated with a particular
 context kind.
 
 @class function
 @name privateAttributes
 @tparam context context An opaque context object from @{makeUser} or @{makeContext}
+@tparam string kind The kind of the context.
 @treturn Array of private attribute references, or nil if the kind isn't present in
 the context.
 */
@@ -1794,6 +1869,7 @@ static const struct luaL_Reg launchdarkly_context_methods[] = {
     { "errors", LuaLDContextErrors },
     { "canonicalKey", LuaLDContextCanonicalKey },
     { "privateAttributes", LuaLDContextPrivateAttributes },
+    { "getAttribute", LuaLDContextGetAttribute },
     { "__gc", LuaLDContextFree },
     { NULL,   NULL          }
 };
