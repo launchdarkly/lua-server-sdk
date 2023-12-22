@@ -393,6 +393,10 @@ LuaLDUserNew(lua_State *const l)
 }
 
 
+static void parse_private_attrs_or_cleanup(lua_State *const l, LDContextBuilder builder, const char* kind);
+static void parse_attrs_or_cleanup(lua_State *const l, LDContextBuilder builder, const char* kind);
+static bool field_is_table_or_cleanup(lua_State* const l, int field_type, LDContextBuilder builder, const char* field_name, const char* kind);
+
 static int
 LuaLDContextNew(lua_State *const l) {
 
@@ -438,38 +442,23 @@ LuaLDContextNew(lua_State *const l) {
 
         if (key == NULL) {
             LDContextBuilder_Free(builder);
-            luaL_error(l, "context kind %s must contain a key", kind);
+            luaL_error(l, "context kind %s: must contain key", kind);
         }
 
         LDContextBuilder_AddKind(builder, kind, key);
 
         lua_getfield(l, -2, "attributes");
-        int attributes_type = lua_type(l, -1);
-        if (attributes_type == LUA_TTABLE) {
-            /* TODO: add each attribute */
-
-        } else if (attributes_type == LUA_TNIL) {
-            DEBUG_PRINT("no attributes for %s context\n", kind);
-        } else {
-            LDContextBuilder_Free(builder);
-            luaL_error(l, "context kind %s attributes must be a table", kind);
+        if (field_is_table_or_cleanup(l, lua_type(l, -1), builder, "attributes", kind)) {
+            parse_attrs_or_cleanup(l, builder, kind);
         }
         lua_pop(l, 1);
 
 
         lua_getfield(l, -2, "privateAttributes");
-        int private_attributes_type = lua_type(l, -1);
-        if (private_attributes_type == LUA_TTABLE) {
-            /* TODO: add each private attribute */
-
-        } else if (private_attributes_type == LUA_TNIL) {
-            DEBUG_PRINT("no private attributes for %s context\n", kind);
-        } else {
-            LDContextBuilder_Free(builder);
-            luaL_error(l, "context kind %s privateAttributes must be a table", kind);
+        if (field_is_table_or_cleanup(l, lua_type(l, -1), builder, "privateAttributes", kind)) {
+            parse_private_attrs_or_cleanup(l, builder, kind);
         }
         lua_pop(l, 1);
-
 
         lua_pop(l, 2);
     }
@@ -486,6 +475,60 @@ LuaLDContextNew(lua_State *const l) {
     luaL_getmetatable(l, "LaunchDarklyContext");
     lua_setmetatable(l, -2);
     return 1;
+}
+
+static bool field_is_table_or_cleanup(lua_State* const l, int field_type, LDContextBuilder builder, const char* field_name, const char* kind) {
+    if (field_type == LUA_TTABLE) {
+        DEBUG_PRINT("field %s for %s context is a table\n", field_name, kind);
+        return true;
+    } else if (field_type == LUA_TNIL) {
+        DEBUG_PRINT("no %s for %s context\n", field_name, kind);
+    } else {
+        LDContextBuilder_Free(builder);
+        luaL_error(l, "context kind %s: %s must be a table", kind, field_name);
+    }
+    return false;
+}
+
+
+static void parse_attrs_or_cleanup(lua_State *const l, LDContextBuilder builder, const char* kind) {
+    lua_pushnil(l);
+    while (lua_next(l, -2) != 0) {
+        lua_pushvalue(l, -2);
+
+        int key_type = lua_type(l, -1);
+        if (key_type != LUA_TSTRING) {
+            LDContextBuilder_Free(builder);
+            luaL_error(l, "context kind %s: top-level attribute keys must be strings", kind);
+        }
+
+        const char* key = lua_tostring(l, -1);
+
+        DEBUG_PRINT("context kind %s: parsing attribute %s\n", kind, key);
+
+        LDValue value = LuaValueToJSON(l, -2);
+
+        LDContextBuilder_Attributes_Set(builder, kind, key, value);
+
+        lua_pop(l, 2);
+    }
+}
+
+
+static void parse_private_attrs_or_cleanup(lua_State *const l, LDContextBuilder builder, const char* kind) {
+    int n = lua_tablelen(l, -1);
+    for (int i = 1; i <= n; i++) {
+        lua_rawgeti(l, -1, i);
+
+        if (lua_isstring(l, -1)) {
+            LDContextBuilder_Attributes_AddPrivateAttribute(builder, kind, luaL_checkstring(l, -1));
+        } else {
+            LDContextBuilder_Free(builder);
+            luaL_error(l, "context kind %s: privateAttributes must be a table of strings", kind);
+        }
+
+        lua_pop(l, 1);
+    }
 }
 
 
@@ -1070,6 +1113,37 @@ LuaPushDetails(lua_State *const l, LDEvalDetail details,
     LDValue_Free(value);
 }
 
+static int
+LuaLDContextValid(lua_State *const l)
+{
+
+    LDContext *context = luaL_checkudata(l, 1, "LaunchDarklyContext");
+
+    lua_pushboolean(l, LDContext_Valid(*context));
+
+    return 1;
+}
+
+static int
+LuaLDContextErrors(lua_State *const l)
+{
+    if (lua_gettop(l) != 1) {
+        return luaL_error(l, "expecting exactly 1 argument");
+    }
+
+    LDContext *context = luaL_checkudata(l, 1, "LaunchDarklyContext");
+
+    const char* error = LDContext_Errors(*context);
+
+    if (error) {
+        lua_pushstring(l, error);
+    } else {
+        lua_pushnil(l);
+    }
+
+    return 1;
+}
+
 /**
 Evaluate a boolean flag
 @class function
@@ -1570,6 +1644,8 @@ static const struct luaL_Reg launchdarkly_client_methods[] = {
 };
 
 static const struct luaL_Reg launchdarkly_context_methods[] = {
+    { "valid",  LuaLDContextValid  },
+    { "errors", LuaLDContextErrors },
     { "__gc", LuaLDContextFree },
     { NULL,   NULL          }
 };

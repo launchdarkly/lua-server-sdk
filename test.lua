@@ -70,8 +70,7 @@ function TestAll:testUserContext()
             }
         }
     })
-    u.assertEquals(c.kinds, {"user"})
-    u.assertEquals(c.canonicalKey, "bob")
+    u.assertIsTrue(c:valid())
 end
 
 
@@ -93,20 +92,32 @@ function TestAll:testMultiKindContext()
             }
         }
     })
-    u.assertEquals(c.kinds, {"user", "vehicle"})
-    u.assertEquals(c.canonicalKey, "user:bob:vehicle:tractor")
+    u.assertIsTrue(c:valid())
 end
 
-function TestAll:testInvalidContexts()
+function TestAll:testInvalidContextFormats()
     u.assertErrorMsgContains("must be context kinds", l.makeContext, {"foo", "bar"})
     u.assertErrorMsgContains("must be tables", l.makeContext, {foo = 3})
     u.assertErrorMsgContains("expecting exactly", l.makeContext, "foo", "bar")
     u.assertErrorMsgContains("table expected", l.makeContext, 3)
     u.assertErrorMsgContains("table expected", l.makeContext, "foo")
-    u.assertErrorMsgContains("device attributes must be a table", l.makeContext, {device = {key = "foo", attributes = 3}})
-    u.assertErrorMsgContains("device privateAttributes must be a table", l.makeContext, {device = {key = "foo", privateAttributes = 3}})
-    u.assertErrorMsgContains("must contain a key", l.makeContext, {device = {}})
+    u.assertErrorMsgContains("device: attributes must be a table", l.makeContext, {device = {key = "foo", attributes = 3}})
+    u.assertErrorMsgContains("device: privateAttributes must be a table", l.makeContext, {device = {key = "foo", privateAttributes = 3}})
+    u.assertErrorMsgContains("device: must contain key", l.makeContext, {device = {}})
+end
 
+function TestAll:testInvalidContexts()
+    local empty_key = l.makeContext({user = {key = ""}})
+    local no_kinds = l.makeContext({})
+    local invalid_kind_name_multi = l.makeContext({multi = {key = "foo"}})
+    local invalid_kind_name_kind = l.makeContext({kind = {key = "foo"}})
+    local invalid_kind_chars = l.makeContext({['invalid chars !'] = {key = "foo"}})
+
+    local invalid_contexts = {empty_key, no_kinds, invalid_kind_name_multi, invalid_kind_name_kind, invalid_kind_chars}
+    for _, context in ipairs(invalid_contexts) do
+        u.assertIsFalse(context:valid())
+        u.assertNotIsNil(context:errors())
+    end
 
 end
 
