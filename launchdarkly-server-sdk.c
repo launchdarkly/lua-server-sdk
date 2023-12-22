@@ -19,7 +19,6 @@ Server-side SDK for LaunchDarkly.
 #include <launchdarkly/bindings/c/array_builder.h>
 #include <launchdarkly/bindings/c/object_builder.h>
 
-#define DEBUG 1
 #ifdef DEBUG
 #define DEBUG_PRINT(fmt, ...) printf(fmt, __VA_ARGS__)
 #else
@@ -254,17 +253,21 @@ LuaPushJSON(lua_State *const l, LDValue j)
 
 /***
 
+This function is deprecated and provided as a convenience. Please transition
+to using @{makeContext} instead.
+
 Create a new opaque context object of kind 'user'. This method
-has changed from the previous Lua SDK v1.x makeUser, as users are no longer
+has changed from the previous Lua SDK v1.x `makeUser`, as users are no longer
 supported.
 
 Specifically:
-- 'secondary' is no longer supported.
-- 'privateAttributeNames' is now called 'privateAttributes' and supports
-attribute references (similar to JSON pointer syntax, e.g. /foo/bar).
-- all fields under 'custom' become top-level context attributes, rather than
-being nested under an attribute named 'custom'. For example, { custom = { foo = "bar" } }
-would result in a context with attribute 'foo' equal to 'bar'.
+1. 'secondary' attribute is no longer supported.
+2. 'privateAttributeNames' is now called 'privateAttributes' and supports
+attribute references (similar to JSON pointer syntax, e.g. `/foo/bar`).
+3. all fields under 'custom' become top-level context attributes, rather than
+being nested under an attribute named 'custom'.
+
+For example, `{ custom = { foo = "bar" } }` would result in a context with attribute 'foo' equal to 'bar'.
 
 @function makeUser
 @tparam table fields list of user fields.
@@ -397,6 +400,64 @@ static void parse_private_attrs_or_cleanup(lua_State *const l, LDContextBuilder 
 static void parse_attrs_or_cleanup(lua_State *const l, LDContextBuilder builder, const char* kind);
 static bool field_is_table_or_cleanup(lua_State* const l, int field_type, LDContextBuilder builder, const char* field_name, const char* kind);
 
+
+/**
+
+Create a new opaque context object. This method can be used to create single
+or multi-kind contexts. The context's kind must always be specified, even if
+it is a user.
+
+For example, to create a context with a single user kind:
+```
+local context = ld.makeContext({
+    user = {
+        key = "alice-123",
+        attributes = {
+            name = "alice",
+            age = 52,
+            contact = {
+                email = "alice@mail.com",
+                phone = "555-555-5555"
+            }
+        },
+        privateAttributes = { "age", "/contact/phone" }
+    }
+})
+```
+
+A multi-kind context can be useful when targeting based on multiple kinds of data.
+For example, to associate a device context with a user:
+
+```
+local context = ld.makeContext({
+    user = {
+        key = "alice-123",
+        attributes = {
+            name = "alice"
+        }
+    },
+    device {
+        key = "device-123",
+        attributes = {
+           manufacturer = "bigcorp"
+        }
+    }
+})
+```
+
+SDK methods will automatically check for context validity. You may check manually
+by calling @{valid} to detect errors earlier.
+
+@function makeContext
+@tparam table A table of context kinds, where the table keys are the kind names
+and the values are tables containing context's information.
+@tparam string [kind.key] The context's key, which is required.
+@tparam[opt] [kind.attributes] A table of arbitrary attributes to associate with the context.
+@tparam[opt] [kind.privateAttributes] An array of attribute references, indicating which
+attributes should be marked private. Attribute references may be simple attribute names
+(like 'age'), or may use a JSON-pointer-like syntax (like '/contact/phone').
+@treturn A fresh context.
+*/
 static int
 LuaLDContextNew(lua_State *const l) {
 
@@ -411,7 +472,6 @@ LuaLDContextNew(lua_State *const l) {
     luaL_checktype(l, 1, LUA_TTABLE);
 
     LDContextBuilder builder = LDContextBuilder_New();
-
 
     lua_pushnil(l);
     while (lua_next(l, -2) != 0) {
@@ -489,7 +549,6 @@ static bool field_is_table_or_cleanup(lua_State* const l, int field_type, LDCont
     }
     return false;
 }
-
 
 static void parse_attrs_or_cleanup(lua_State *const l, LDContextBuilder builder, const char* kind) {
     lua_pushnil(l);
@@ -1113,6 +1172,14 @@ LuaPushDetails(lua_State *const l, LDEvalDetail details,
     LDValue_Free(value);
 }
 
+/**
+Returns true if the context is valid.
+
+@class function
+@name valid
+@tparam context context An opaque context object from @{makeUser} or @{makeContext}
+@treturn True if valid, otherwise false.
+*/
 static int
 LuaLDContextValid(lua_State *const l)
 {
@@ -1124,6 +1191,14 @@ LuaLDContextValid(lua_State *const l)
     return 1;
 }
 
+/**
+Returns an error string if the context is invalid.
+
+@class function
+@name errors
+@tparam context context An opaque context object from @{makeUser} or @{makeContext}
+@treturn Error string if valid, otherwise nil.
+*/
 static int
 LuaLDContextErrors(lua_State *const l)
 {
