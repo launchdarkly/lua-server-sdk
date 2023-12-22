@@ -1248,6 +1248,49 @@ LuaLDContextCanonicalKey(lua_State *const l)
 }
 
 /**
+Returns the private attribute references associated with a particular
+context kind.
+
+@class function
+@name privateAttributes
+@tparam context context An opaque context object from @{makeUser} or @{makeContext}
+@treturn Array of private attribute references, or nil if the kind isn't present in
+the context.
+*/
+static int
+LuaLDContextPrivateAttributes(lua_State *const l)
+{
+    if (lua_gettop(l) != 2) {
+        return luaL_error(l, "expecting exactly 2 arguments");
+    }
+
+    LDContext *context = luaL_checkudata(l, 1, "LaunchDarklyContext");
+
+    const char* kind = luaL_checkstring(l, 2);
+
+    LDContext_PrivateAttributesIter iter = LDContext_PrivateAttributesIter_New(*context, kind);
+    if (iter == NULL) {
+        lua_pushnil(l);
+        return 1;
+    }
+
+    lua_newtable(l);
+    int count = 1;
+    while (!LDContext_PrivateAttributesIter_End(iter)) {
+        const char* attr = LDContext_PrivateAttributesIter_Value(iter);
+        lua_pushstring(l, attr);
+        lua_rawseti(l, -2, count);
+        LDContext_PrivateAttributesIter_Next(iter);
+        count++;
+    }
+
+    LDContext_PrivateAttributesIter_Free(iter);
+
+    return 1;
+}
+
+
+/**
 Evaluate a boolean flag
 @class function
 @name boolVariation
@@ -1750,6 +1793,7 @@ static const struct luaL_Reg launchdarkly_context_methods[] = {
     { "valid",  LuaLDContextValid  },
     { "errors", LuaLDContextErrors },
     { "canonicalKey", LuaLDContextCanonicalKey },
+    { "privateAttributes", LuaLDContextPrivateAttributes },
     { "__gc", LuaLDContextFree },
     { NULL,   NULL          }
 };

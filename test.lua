@@ -72,6 +72,7 @@ function TestAll:testUserContext()
     })
     u.assertIsTrue(c:valid())
     u.assertEquals(c:canonicalKey(), "bob")
+    u.assertItemsEquals(c:privateAttributes("user"), {"/helmet/type"})
 end
 
 
@@ -95,6 +96,9 @@ function TestAll:testMultiKindContext()
     })
     u.assertIsTrue(c:valid())
     u.assertEquals(c:canonicalKey(), "user:bob:vehicle:tractor")
+    u.assertItemsEquals(c:privateAttributes("user"), {"/age"})
+    u.assertItemsEquals(c:privateAttributes("vehicle"), {})
+    u.assertIsNil(c:privateAttributes("foo"))
 end
 
 function TestAll:testInvalidContextFormats()

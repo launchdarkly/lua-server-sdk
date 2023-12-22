@@ -23,7 +23,7 @@ runs:
     - name: Install CPP SDK
       uses: ./.github/actions/install-cpp-sdk-redis
       with:
-          version: redis-source-v1.1.0
+          version: launchdarkly-cpp-server-redis-source-v2.0.0
           path: cpp-sdk
 
     - name: Build Lua Server-side SDK
