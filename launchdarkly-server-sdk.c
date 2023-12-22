@@ -1210,8 +1210,36 @@ LuaLDContextErrors(lua_State *const l)
 
     const char* error = LDContext_Errors(*context);
 
-    if (error) {
+    if (error && strlen(error) > 0) {
         lua_pushstring(l, error);
+    } else {
+        lua_pushnil(l);
+    }
+
+    return 1;
+}
+
+/**
+Returns the canonical key of the context.
+
+@class function
+@name canonicalKey
+@tparam context context An opaque context object from @{makeUser} or @{makeContext}
+@treturn Canonical key of the context, or nil if the context isn't valid.
+*/
+static int
+LuaLDContextCanonicalKey(lua_State *const l)
+{
+    if (lua_gettop(l) != 1) {
+        return luaL_error(l, "expecting exactly 1 argument");
+    }
+
+    LDContext *context = luaL_checkudata(l, 1, "LaunchDarklyContext");
+
+    const char* key = LDContext_CanonicalKey(*context);
+
+    if (key && strlen(key) > 0) {
+        lua_pushstring(l, key);
     } else {
         lua_pushnil(l);
     }
@@ -1721,6 +1749,7 @@ static const struct luaL_Reg launchdarkly_client_methods[] = {
 static const struct luaL_Reg launchdarkly_context_methods[] = {
     { "valid",  LuaLDContextValid  },
     { "errors", LuaLDContextErrors },
+    { "canonicalKey", LuaLDContextCanonicalKey },
     { "__gc", LuaLDContextFree },
     { NULL,   NULL          }
 };

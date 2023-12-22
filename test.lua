@@ -71,6 +71,7 @@ function TestAll:testUserContext()
         }
     })
     u.assertIsTrue(c:valid())
+    u.assertEquals(c:canonicalKey(), "bob")
 end
 
 
@@ -93,6 +94,7 @@ function TestAll:testMultiKindContext()
         }
     })
     u.assertIsTrue(c:valid())
+    u.assertEquals(c:canonicalKey(), "user:bob:vehicle:tractor")
 end
 
 function TestAll:testInvalidContextFormats()
@@ -117,8 +119,8 @@ function TestAll:testInvalidContexts()
     for _, context in ipairs(invalid_contexts) do
         u.assertIsFalse(context:valid())
         u.assertNotIsNil(context:errors())
+        u.assertIsNil(context:canonicalKey())
     end
-
 end
 
 function TestAll:testBoolVariation()
