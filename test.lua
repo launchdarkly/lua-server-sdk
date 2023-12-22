@@ -21,6 +21,12 @@ local user = l.makeUser({
     key = "alice"
 })
 
+local context = l.makeContext({
+    user = {
+        key = "alice"
+    }
+})
+
 function TestAll:tearDown()
     collectgarbage("collect")
 end
@@ -130,6 +136,7 @@ end
 function TestAll:testBoolVariation()
     local e = false
     u.assertEquals(makeTestClient():boolVariation(user, "test", e), e)
+    u.assertEquals(makeTestClient():boolVariation(context, "test", e), e)
 end
 
 function TestAll:testBoolVariationDetail()
@@ -142,11 +149,13 @@ function TestAll:testBoolVariationDetail()
         }
     }
     u.assertEquals(makeTestClient():boolVariationDetail(user, "test", true), e)
+    u.assertEquals(makeTestClient():boolVariationDetail(context, "test", true), e)
 end
 
 function TestAll:testIntVariation()
     local e = 3
     u.assertEquals(makeTestClient():intVariation(user, "test", e), e)
+    u.assertEquals(makeTestClient():intVariation(context, "test", e), e)
 end
 
 function TestAll:testIntVariationDetail()
@@ -159,11 +168,13 @@ function TestAll:testIntVariationDetail()
         }
     }
     u.assertEquals(makeTestClient():intVariationDetail(user, "test", 5), e)
+    u.assertEquals(makeTestClient():intVariationDetail(context, "test", 5), e)
 end
 
 function TestAll:testDoubleVariation()
     local e = 12.5
     u.assertEquals(makeTestClient():doubleVariation(user, "test", e), e)
+    u.assertEquals(makeTestClient():doubleVariation(context, "test", e), e)
 end
 
 function TestAll:testDoubleVariationDetail()
@@ -176,11 +187,13 @@ function TestAll:testDoubleVariationDetail()
         }
     }
     u.assertEquals( makeTestClient():doubleVariationDetail(user, "test", 6.2), e)
+    u.assertEquals( makeTestClient():doubleVariationDetail(context, "test", 6.2), e)
 end
 
 function TestAll:testStringVariation()
     local e = "a"
     u.assertEquals(makeTestClient():stringVariation(user, "test", e), e)
+    u.assertEquals(makeTestClient():stringVariation(context, "test", e), e)
 end
 
 function TestAll:testStringVariationDetail()
@@ -193,11 +206,13 @@ function TestAll:testStringVariationDetail()
         }
     }
     u.assertEquals(makeTestClient():stringVariationDetail(user, "test", "f"), e)
+    u.assertEquals(makeTestClient():stringVariationDetail(context, "test", "f"), e)
 end
 
 function TestAll:testJSONVariation()
     local e = { ["a"] = "b" }
     u.assertEquals(makeTestClient():jsonVariation(user, "test", e), e)
+    u.assertEquals(makeTestClient():jsonVariation(context, "test", e), e)
 end
 
 function TestAll:testJSONVariationDetail()
@@ -210,10 +225,12 @@ function TestAll:testJSONVariationDetail()
         }
     }
     u.assertEquals(makeTestClient():jsonVariationDetail(user, "test", { a = "b" }), e)
+    u.assertEquals(makeTestClient():jsonVariationDetail(context, "test", { a = "b" }), e)
 end
 
 function TestAll:testIdentify()
     makeTestClient():identify(user)
+    makeTestClient():identify(context)
 end
 
 function TestAll:testVersion()

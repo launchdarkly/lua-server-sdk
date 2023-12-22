@@ -26,8 +26,10 @@ function makeTestClient()
     })
 end
 
-local user = l.makeUser({
-    key = "alice"
+local context = l.makeContext({
+    user = {
+        key = "alice"
+    }
 })
 
 function TestAll:tearDown()
@@ -40,7 +42,7 @@ end
 
 function TestAll:testVariationWithRedisSource()
     local e = false
-    u.assertEquals(e, makeTestClient():boolVariation(user, "test", e))
+    u.assertEquals(e, makeTestClient():boolVariation(context, "test", e))
 end
 
 function TestAll:testVariationDetailWithRedisSource()
@@ -52,7 +54,7 @@ function TestAll:testVariationDetailWithRedisSource()
             inExperiment = false
         }
     }
-    u.assertEquals(makeTestClient():boolVariationDetail(user, "test", true), e)
+    u.assertEquals(makeTestClient():boolVariationDetail(context, "test", true), e)
 end
 
 local runner = u.LuaUnit.new()

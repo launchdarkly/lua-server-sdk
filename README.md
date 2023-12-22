@@ -22,7 +22,7 @@ Supported C server-side SDK versions
 This version of the Lua server-side SDK depends on the C++ server-side SDK C bindings, as well as the 
 C++ server-side SDK's Redis source integration.
 
-The minimum required version is `1.0.0` for the Redis source.
+The minimum required version is `2.0.0` for the Redis source.
 
 
 

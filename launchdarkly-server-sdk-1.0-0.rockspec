@@ -2,8 +2,6 @@ package = "launchdarkly-server-sdk"
 
 rockspec_format = "3.0"
 
--- supported_platforms = {"linux"}
-
 version = "1.0-0"
 
 source = {
