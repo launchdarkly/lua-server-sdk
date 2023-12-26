@@ -257,6 +257,12 @@ function TestAll:testIdentify()
     makeTestClient():identify(context)
 end
 
+
+function TestAll:testAllFlags()
+    u.assertEquals(makeTestClient():allFlags(user), {})
+    u.assertEquals(makeTestClient():allFlags(context), {})
+end
+
 function TestAll:testVersion()
     local version = l.version()
     u.assertNotIsNil(version)

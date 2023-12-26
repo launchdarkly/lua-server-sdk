@@ -1822,15 +1822,12 @@ LuaLDClientAllFlags(lua_State *const l)
 
     LDAllFlagsState state = LDServerSDK_AllFlagsState(*client, *context, LD_ALLFLAGSSTATE_DEFAULT);
 
-    char* serialized = LDAllFlagsState_SerializeJSON(state);
+	LDValue owned_map = LDAllFlagsState_Map(state);
 
-    /** TODO: Need to add a C binding to expose this as an LDValue, or have an iterator specific to it. **/
-    LDMemory_FreeString(serialized);
+	LuaPushJSON(l, owned_map);
 
+	LDValue_Free(owned_map);
     LDAllFlagsState_Free(state);
-
-    /* For now, return an empty table. */
-    lua_newtable(l);
 
     return 1;
 }

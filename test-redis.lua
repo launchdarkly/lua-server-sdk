@@ -22,6 +22,9 @@ function makeTestClient()
                 cacheRefreshMilliseconds = 1000,
                 source = r.makeRedisSource('redis://localhost:1234', 'test-prefix')
             },
+        },
+        events = {
+            enabled = false
         }
     })
 end
@@ -55,6 +58,10 @@ function TestAll:testVariationDetailWithRedisSource()
         }
     }
     u.assertEquals(makeTestClient():boolVariationDetail(context, "test", true), e)
+end
+
+function TestAll:testAllFlags()
+    u.assertEquals(makeTestClient():allFlags(context), {})
 end
 
 local runner = u.LuaUnit.new()
