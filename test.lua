@@ -1,20 +1,23 @@
 local u = require('luaunit')
 local l = require("launchdarkly_server_sdk")
 
-function logWrite(level, line)
-    print("[" .. level .. "]" .. " " .. line)
-end
-
-function logEnabled(level)
-    return level == "warn" or level == "error"
-end
-
-l.registerLogger(logWrite, logEnabled)
-
 TestAll = {}
 
 function makeTestClient()
-    return l.clientInit("sdk-test", 0, { offline = true })
+    return l.clientInit("sdk-test", 0, -- nonblocking
+            {
+                offline = true,
+                logging = {
+                    custom = l.makeLogBackend(
+                            function(level)
+                                -- log everything
+                                return true end,
+                            function(level, line)
+                                print(string.format("[%s] %s",  level, line))
+                            end
+                    ),
+                }
+            })
 end
 
 local user = l.makeUser({
@@ -34,6 +37,7 @@ end
 function TestAll:testSetNoConfigFields()
     u.assertNotIsNil(l.clientInit("sdk-test", 0, {}))
 end
+
 
 function TestAll:testSetAllConfigFields()
     local c = l.clientInit("sdk-test", 0, {
@@ -64,8 +68,12 @@ function TestAll:testSetAllConfigFields()
             privateAttributes = {"/foo", "/bar"}
         },
         logging = {
-            level = "debug",
-            tag = "LaunchDarklyLuaTest"
+            -- These two are mutually exclusive, but we're testing that both can be parsed.
+            custom = l.makeLogBackend(function(_) return true end, function(_, _) end),
+            basic = {
+                level = "debug",
+                tag = "LaunchDarklyLuaTest"
+            }
         }
     })
 end

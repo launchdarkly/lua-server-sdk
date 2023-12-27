@@ -39,11 +39,6 @@ LuaArrayToJSON(lua_State *const l, const int i);
 static void
 LuaPushJSON(lua_State *const l, LDValue j);
 
-static int globalLogEnabledCallback = LUA_NOREF;
-static int globalLogWriteCallback = LUA_NOREF;
-
-static lua_State *globalLuaState;
-
 static int lua_tablelen(lua_State *L, int index)
 {
     #if LUA_VERSION_NUM >= 502
@@ -53,50 +48,88 @@ static int lua_tablelen(lua_State *L, int index)
     #endif
 }
 
+/**
+* The custom log backend struct (LDLogBackend) contains a void* userdata pointer, and two function pointers
+* (enabled and write). This allows C users to avoid global logging functions.
 
-bool logEnabled(enum LDLogLevel level, void *user_data /* ignored */) {
-	lua_rawgeti(globalLuaState, LUA_REGISTRYINDEX, globalLogEnabledCallback);
-
-    lua_pushstring(globalLuaState, LDLogLevel_Name(level, "unknown"));
-
-    lua_call(globalLuaState, 1, 1); // one argument (level, string), one result (enable, boolean).
-
-	return lua_toboolean(globalLuaState, -1);
-}
-
-void logWrite(enum LDLogLevel level, const char* msg, void *user_data /* ignored */) {
-	lua_rawgeti(globalLuaState, LUA_REGISTRYINDEX, globalLogWriteCallback);
-
-    lua_pushstring(globalLuaState, LDLogLevel_Name(level, "unknown"));
-    lua_pushstring(globalLuaState, msg);
-
-    lua_call(globalLuaState, 2, 0); // two args (level, string + msg, string), no results.
-}
-
-
-/***
-Set the global logger for all SDK operations. This function is not thread
-safe, and if used should be done so before other operations.
-@function registerLogger
-@tparam function writeCb The logging write handler. Callback must be of the form
-"function (logLevel, logLine) ... end".
-@tparam function enabledCb The log level enabled handler. Callback must be of the form
-"function (logLevel) -> bool ... end". Return true if the given log level is enabled. The
-available log levels are 'debug', 'info', 'warn', and 'error'.
+* This doesn't quite match up with Lua's expectations, since:
+* 1) The user-defined functions will be stored in the Lua registry
+* 2) We need to keep around a lua_State pointer for accessing the registry when we need to invoke the callbacks
+*
+* This struct is therefore the equivalent of the C LDLogBackend struct, but with registry references and a lua_State pointer.
+* We allocate a new Lua userdata and then wire up some global callbacks (lua_log_backend_enabled, lua_log_backend_write)
+* to cast the void* to a lua_log_backend*, grab the function references, and forward the arguments.
 */
-static int
-LuaLDRegisterLogger(lua_State *const l)
-{
-    if (lua_gettop(l) != 2) {
+struct lua_log_backend {
+    lua_State *l;
+	int enabled_ref;
+	int write_ref;
+};
+
+/**
+* Creates a new custom log backend. The functions provided must be thread safe as the SDK
+* does not perform any locking.
+* @function makeLogBackend
+* @tparam function enabled A function that returns true if the specified log level is enabled. The signature
+should be (level: string) -> boolean, where the known level strings are 'debug', 'info', 'warn', and 'error'.
+* @tparam function write A function that writes a log message at a specified level. The signature should be
+* (level: string, message: string) -> void.
+* @treturn A new custom log backend, suitable for use in SDK `logging` configuration.
+*/
+static int LuaLDLogBackendNew(lua_State *l) {
+
+ 	if (lua_gettop(l) != 2) {
         return luaL_error(l, "expecting exactly 2 arguments");
     }
 
-    globalLuaState        = l;
-	globalLogEnabledCallback = luaL_ref(l, LUA_REGISTRYINDEX);
-    globalLogWriteCallback = luaL_ref(l, LUA_REGISTRYINDEX);
+	luaL_checktype(l, 1, LUA_TFUNCTION);
+	luaL_checktype(l, 2, LUA_TFUNCTION);
 
-    return 0;
+	int write_ref = luaL_ref(l, LUA_REGISTRYINDEX);
+	int enabled_ref = luaL_ref(l, LUA_REGISTRYINDEX);
+
+    struct lua_log_backend* backend = lua_newuserdata(l, sizeof(struct lua_log_backend));
+    luaL_getmetatable(l, "LaunchDarklyLogBackend");
+    lua_setmetatable(l, -2);
+
+    backend->l = l;
+	backend->write_ref = write_ref;
+	backend->enabled_ref = enabled_ref;
+
+    return 1;
 }
+
+static struct lua_log_backend* check_log_backend(lua_State *l, int i) {
+	void *ud = luaL_checkudata(l, i, "LaunchDarklyLogBackend");
+	luaL_argcheck(l, ud != NULL, i, "`LaunchDarklyLogBackend' expected");
+	return ud;
+}
+
+bool lua_log_backend_enabled(enum LDLogLevel level, void *user_data) {
+    struct lua_log_backend* backend = user_data;
+    lua_State *l = backend->l;
+
+    lua_rawgeti(l, LUA_REGISTRYINDEX, backend->enabled_ref);
+
+    lua_pushstring(l, LDLogLevel_Name(level, "unknown"));
+
+    lua_call(l, 1, 1); // one argument (level - string), one result (enabled - boolean).
+
+    return lua_toboolean(l, -1);
+}
+
+void lua_log_backend_write(enum LDLogLevel level, const char* msg, void *user_data) {
+    struct lua_log_backend* backend = user_data;
+    lua_State *l = backend->l;
+
+    lua_rawgeti(l, LUA_REGISTRYINDEX, backend->write_ref);
+
+    lua_pushstring(l, LDLogLevel_Name(level, "unknown"));
+    lua_pushstring(l, msg);
+
+    lua_call(l, 2, 0); // two args (level - string, msg - string), no results.
+}
+
 
 static bool
 isArray(lua_State *const l, const int i)
@@ -250,6 +283,7 @@ LuaPushJSON(lua_State *const l, LDValue j)
 
     return;
 }
+
 
 /***
 
@@ -790,6 +824,23 @@ static void parse_lazyload_source(lua_State *const l, int i, void* builder, void
     source_setter(builder, *source);
 }
 
+
+static void parse_log_backend(lua_State *const l, int i, void* builder, void* setter) {
+	struct LDLogBackend backend;
+	LDLogBackend_Init(&backend);
+
+	struct lua_log_backend* lua_backend = check_log_backend(l, i);
+	backend.UserData = lua_backend;
+	backend.Enabled = lua_log_backend_enabled;
+	backend.Write = lua_log_backend_write;
+
+	LDLoggingCustomBuilder custom_logging = LDLoggingCustomBuilder_New();
+	LDLoggingCustomBuilder_Backend(custom_logging, backend);
+
+   	void (*backend_setter)(void*, LDLoggingCustomBuilder) = setter;
+    backend_setter(builder, custom_logging);
+}
+
 // Function that returns a new child builder. This is used to allocate builders
 // which are necessary for building a child config. This is needed when the C++ SDK's
 // API requires a builder to be allocated and passed in to the top-level builder, e.g.
@@ -923,19 +974,27 @@ struct field_validator appinfo_fields[] = {
 
 DEFINE_CONFIG(appinfo_config, "appInfo", appinfo_fields);
 
-
-struct field_validator logging_fields[] = {
+struct field_validator basic_logging_fields[] = {
 	FIELD("level", LUA_TSTRING, parse_log_level, LDLoggingBasicBuilder_Level),
 	FIELD("tag", LUA_TSTRING, parse_string, LDLoggingBasicBuilder_Tag)
 };
 
 DEFINE_SUB_CONFIG(
-	logging_config,
-	"logging",
-	logging_fields,
+	basic_logging_config,
+	"logging.basic",
+	basic_logging_fields,
 	LDLoggingBasicBuilder_New,
 	LDServerConfigBuilder_Logging_Basic
 );
+
+
+struct field_validator logging_fields[] = {
+	/* These are mutually exclusive */
+	FIELD("basic", LUA_TTABLE, parse_table, &basic_logging_config),
+	FIELD("custom", LUA_TUSERDATA, parse_log_backend, LDServerConfigBuilder_Logging_Custom)
+};
+
+DEFINE_CONFIG(logging_config, "logging", logging_fields);
 
 struct field_validator top_level_fields[] = {
     FIELD("appInfo", LUA_TTABLE, parse_table, &appinfo_config),
@@ -1012,24 +1071,6 @@ makeConfig(lua_State *const l, const char *const sdk_key)
     // as we go along.
     traverse_config(l, builder, &top_level_config);
 
-    bool logging_callbacks_set =
-            globalLogEnabledCallback != LUA_NOREF &&
-            globalLogWriteCallback != LUA_NOREF;
-
-    DEBUG_PRINT("logging callbacks set? %s\n", logging_callbacks_set ? "true" : "false");
-
-	if (logging_callbacks_set) {
-		struct LDLogBackend backend;
-		LDLogBackend_Init(&backend);
-
-		backend.Write = logWrite;
-		backend.Enabled = logEnabled;
-
-	    LDLoggingCustomBuilder custom_logging = LDLoggingCustomBuilder_New();
-		LDLoggingCustomBuilder_Backend(custom_logging, backend);
-		LDServerConfigBuilder_Logging_Custom(builder, custom_logging);
-	}
-
     LDServerConfigBuilder_HttpProperties_WrapperName(builder, "lua-server-sdk");
     LDServerConfigBuilder_HttpProperties_WrapperVersion(builder, SDKVersion);
 
@@ -1058,10 +1099,14 @@ immediately without waiting (note that the client will continue initializing in 
 An offline client will not make any network connections to LaunchDarkly or
 a data source like Redis, nor send any events, and will return application-defined
 default values for all feature flags.
-@tparam[opt] table config.logging Options related to the SDK's logging facilities.
-@tparam[opt] string config.logging.tag A tag to include in log messages, for example 'launchdarkly'.
-@tparam[opt] string config.logging.level The minimum level of log messages to include. Known options include
+@tparam[opt] table config.logging Options related to the SDK's logging facilities. The `basic` and `custom` configs
+are mutually exclusive. If you only need to change logging verbosity or the log tag, use `basic`. If you need to
+replace the log verbosity logic & printing entirely, use `custom`.
+@tparam[opt] table config.logging.basic Modify the SDK's default logger.
+@tparam[opt] string config.logging.basic.tag A tag to include in log messages, for example 'launchdarkly'.
+@tparam[opt] string config.logging.basic.level The minimum level of log messages to include. Known options include
 'debug', 'info', 'warn', or 'error'.
+@tparam[opt] userdata config.logging.custom A custom log backend, created with @{newLogBackend}.
 @tparam[opt] table config.serviceEndpoints If you set one custom service endpoint URL,
 you must set all of them. You probably don't need to set this unless instructed by
 LaunchDarkly.
@@ -1873,8 +1918,8 @@ static const struct luaL_Reg launchdarkly_functions[] = {
     { "clientInit",     LuaLDClientInit     },
     { "makeUser",       LuaLDUserNew        },
     { "makeContext",    LuaLDContextNew     },
-    { "registerLogger", LuaLDRegisterLogger },
     { "version",        LuaLDVersion        },
+	{ "makeLogBackend", LuaLDLogBackendNew  },
     { NULL,             NULL                }
 };
 
@@ -1909,6 +1954,10 @@ static const struct luaL_Reg launchdarkly_context_methods[] = {
 };
 
 static const struct luaL_Reg launchdarkly_source_methods[] = {
+    { NULL, NULL }
+};
+
+static const struct luaL_Reg launchdarkly_log_backend_methods[] = {
     { NULL, NULL }
 };
 
@@ -1949,6 +1998,11 @@ luaopen_launchdarkly_server_sdk(lua_State *const l)
     lua_pushvalue(l, -1);
     lua_setfield(l, -2, "__index");
     ld_luaL_setfuncs(l, launchdarkly_source_methods, 0);
+
+	luaL_newmetatable(l, "LaunchDarklyLogBackend");
+    lua_pushvalue(l, -1);
+    lua_setfield(l, -2, "__index");
+    ld_luaL_setfuncs(l, launchdarkly_log_backend_methods, 0);
 
     #if LUA_VERSION_NUM >= 502
         luaL_newlib(l, launchdarkly_functions);
