@@ -703,6 +703,21 @@ static void parse_string(lua_State *const l, int i, void* builder, void* setter)
     string_setter(builder, value);
 }
 
+static void parse_log_level(lua_State *const l, int i, void* builder, void* setter) {
+    const char *const value = lua_tostring(l, i);
+    DEBUG_PRINT("log level = %s\n", value ? value : "NULL");
+    void (*log_level_setter)(void*, enum LDLogLevel) = setter;
+
+	// Issue an error if the log level isn't known. Another option would be
+	// to silently default to a known level, such as LD_LOG_INFO.
+	const int unknown_level_sentinel = 255;
+	enum LDLogLevel level = LDLogLevel_Enum(value, 255);
+	if (level == unknown_level_sentinel) {
+		luaL_error(l, "unknown log level: '%s' (known options include 'debug', 'info', 'warn', and 'error')", value);
+	}
+    log_level_setter(builder, level);
+}
+
 // Parses a bool.
 // The setter must have the signature (void*, bool).
 static void parse_bool(lua_State *const l, int i, void* builder, void* setter) {
@@ -908,12 +923,27 @@ struct field_validator appinfo_fields[] = {
 
 DEFINE_CONFIG(appinfo_config, "appInfo", appinfo_fields);
 
+
+struct field_validator logging_fields[] = {
+	FIELD("level", LUA_TSTRING, parse_log_level, LDLoggingBasicBuilder_Level),
+	FIELD("tag", LUA_TSTRING, parse_string, LDLoggingBasicBuilder_Tag)
+};
+
+DEFINE_SUB_CONFIG(
+	logging_config,
+	"logging",
+	logging_fields,
+	LDLoggingBasicBuilder_New,
+	LDServerConfigBuilder_Logging_Basic
+);
+
 struct field_validator top_level_fields[] = {
     FIELD("appInfo", LUA_TTABLE, parse_table, &appinfo_config),
     FIELD("serviceEndpoints", LUA_TTABLE, parse_table, &endpoint_config),
     FIELD("offline", LUA_TBOOLEAN, parse_bool, LDServerConfigBuilder_Offline),
     FIELD("dataSystem", LUA_TTABLE, parse_table, &datasystem_config),
-    FIELD("events", LUA_TTABLE, parse_table, &event_config)
+    FIELD("events", LUA_TTABLE, parse_table, &event_config),
+    FIELD("logging", LUA_TTABLE, parse_table, &logging_config)
 };
 
 DEFINE_CONFIG(top_level_config, "config", top_level_fields);
@@ -1028,6 +1058,10 @@ immediately without waiting (note that the client will continue initializing in 
 An offline client will not make any network connections to LaunchDarkly or
 a data source like Redis, nor send any events, and will return application-defined
 default values for all feature flags.
+@tparam[opt] table config.logging Options related to the SDK's logging facilities.
+@tparam[opt] string config.logging.tag A tag to include in log messages, for example 'launchdarkly'.
+@tparam[opt] string config.logging.level The minimum level of log messages to include. Known options include
+'debug', 'info', 'warn', or 'error'.
 @tparam[opt] table config.serviceEndpoints If you set one custom service endpoint URL,
 you must set all of them. You probably don't need to set this unless instructed by
 LaunchDarkly.

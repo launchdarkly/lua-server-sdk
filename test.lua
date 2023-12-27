@@ -62,6 +62,10 @@ function TestAll:testSetAllConfigFields()
             flushIntervalMilliseconds = 100,
             allAttributesPrivate = true,
             privateAttributes = {"/foo", "/bar"}
+        },
+        logging = {
+            level = "debug",
+            tag = "LaunchDarklyLuaTest"
         }
     })
 end
