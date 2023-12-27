@@ -30,15 +30,13 @@ runs:
       shell: bash
       run:  |
         luarocks make launchdarkly-server-sdk-1.0-0.rockspec \
-        LD_DIR=./cpp-sdk/build-dynamic/release \
-        BOOST_DIR=${{ steps.install-boost.outputs.BOOST_ROOT }}
+        LD_DIR=./cpp-sdk/build-dynamic/release
 
     - name: Build Lua Server-side SDK with Redis
       shell: bash
       run: |
         luarocks make launchdarkly-server-sdk-redis-1.0-0.rockspec \
-        LDREDIS_DIR=./cpp-sdk/build-dynamic/release \
-        BOOST_DIR=${{ steps.install-boost.outputs.BOOST_ROOT }}
+        LDREDIS_DIR=./cpp-sdk/build-dynamic/release
 
     - name: Run Lua Server-side SDK Tests
       shell: bash

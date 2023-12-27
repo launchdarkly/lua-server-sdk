@@ -18,15 +18,6 @@ external_dependencies = {
         header = "launchdarkly/server_side/bindings/c/sdk.h",
         library = "launchdarkly-cpp-server"
     },
-    platforms = {
-        linux = {
-            BOOST = {
-                -- The library depends on boost_json and boost_url, but we only need to test for the existence
-                -- of one of them since they are both part of the boost distribution.
-                library = "libboost_json-mt-x64.so.1.81.0"
-            }
-        }
-    }
 }
 
 test = {
@@ -39,9 +30,12 @@ build = {
    modules = {
       ["launchdarkly_server_sdk"] = {
           sources = { "launchdarkly-server-sdk.c" },
+          -- Uncomment to compile with debug messages, mainly to help debug parsing configuration/context
+          -- builders.
+          -- defines = {"DEBUG=1"},
           incdirs = {"$(LD_INCDIR)"},
           libdirs = {"$(LD_LIBDIR)"},
-          libraries = {"launchdarkly-cpp-server"}
+          libraries = {"launchdarkly-cpp-server"},
       }
    }
 }
