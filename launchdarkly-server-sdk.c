@@ -39,8 +39,8 @@ LuaArrayToJSON(lua_State *const l, const int i);
 static void
 LuaPushJSON(lua_State *const l, LDValue j);
 
-static int globalLogEnabledCallback;
-static int globalLogWriteCallback;
+static int globalLogEnabledCallback = LUA_NOREF;
+static int globalLogWriteCallback = LUA_NOREF;
 
 static lua_State *globalLuaState;
 
@@ -457,6 +457,9 @@ and the values are tables containing context's information.
 @tparam[opt] [kind.privateAttributes] An array of attribute references, indicating which
 attributes should be marked private. Attribute references may be simple attribute names
 (like 'age'), or may use a JSON-pointer-like syntax (like '/contact/phone').
+@tparam[opt] [kind.name] A name for the context. This is useful for identifying the context
+in the LaunchDarkly dashboard.
+@tparam[opt] [kind.anonymous] A boolean indicating whether the context should be marked as anonymous.
 @treturn A fresh context.
 */
 static int

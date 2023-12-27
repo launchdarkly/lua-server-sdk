@@ -31,6 +31,10 @@ function TestAll:tearDown()
     collectgarbage("collect")
 end
 
+function TestAll:testSetNoConfigFields()
+    u.assertNotIsNil(l.clientInit("sdk-test", 0, {}))
+end
+
 function TestAll:testSetAllConfigFields()
     local c = l.clientInit("sdk-test", 0, {
         offline = true,
