@@ -1078,7 +1078,7 @@ replace the log verbosity logic & printing entirely, use `custom`.
 @tparam[opt] string config.logging.basic.tag A tag to include in log messages, for example 'launchdarkly'.
 @tparam[opt] string config.logging.basic.level The minimum level of log messages to include. Known options include
 'debug', 'info', 'warn', or 'error'.
-@tparam[opt] userdata config.logging.custom A custom log backend, created with @{newLogBackend}.
+@tparam[opt] userdata config.logging.custom A custom log backend, created with @{makeLogBackend}.
 @tparam[opt] table config.serviceEndpoints If you set one custom service endpoint URL,
 you must set all of them. You probably don't need to set this unless instructed by
 LaunchDarkly.
@@ -1347,7 +1347,7 @@ Returns the value of a context attribute.
 @tparam context context An opaque context object from @{makeUser} or @{makeContext}
 @tparam string kind The kind of the context.
 @tparam string attribute_reference An attribute reference naming the attribute to get.
-@treturn
+@treturn Lua value of the attribute, or nil if the attribute isn't present in the context.
 */
 static int
 LuaLDContextGetAttribute(lua_State *const l)
