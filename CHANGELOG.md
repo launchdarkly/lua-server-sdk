@@ -2,6 +2,34 @@
 
 All notable changes to the LaunchDarkly Lua Server-side SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.0.0](https://github.com/launchdarkly/lua-server-sdk/compare/1.2.2...v2.0.0) (2023-12-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* SDK configuration exposes new options and is organized hierarchically
+* remove `inlineUsersInEvents` and `userKeysFlushInterval` config options
+* remove global `registerLogger` function, replace with config option
+* remove `alias` function, replace usage with multi-kind contexts
+* Variation and VariationDetail now take contexts
+* makeUser behavior modified to construct a user-kind context
+* use C++ Server-side SDK 3.0 bindings ([#31](https://github.com/launchdarkly/lua-server-sdk/issues/31))
+
+### Features
+
+* added `makeContext` for constructing single or multi-kind contexts ([95e9718](https://github.com/launchdarkly/lua-server-sdk/commit/95e97188dd2258805734884592b601c7ebfa66c6))
+* use C++ Server-side SDK 3.0 bindings ([#31](https://github.com/launchdarkly/lua-server-sdk/issues/31)) ([95e9718](https://github.com/launchdarkly/lua-server-sdk/commit/95e97188dd2258805734884592b601c7ebfa66c6))
+
+
+### Code Refactoring
+
+* makeUser behavior modified to construct a user-kind context ([95e9718](https://github.com/launchdarkly/lua-server-sdk/commit/95e97188dd2258805734884592b601c7ebfa66c6))
+* remove `alias` function, replace usage with multi-kind contexts ([95e9718](https://github.com/launchdarkly/lua-server-sdk/commit/95e97188dd2258805734884592b601c7ebfa66c6))
+* remove `inlineUsersInEvents` and `userKeysFlushInterval` config options ([95e9718](https://github.com/launchdarkly/lua-server-sdk/commit/95e97188dd2258805734884592b601c7ebfa66c6))
+* remove global `registerLogger` function, replace with config option ([95e9718](https://github.com/launchdarkly/lua-server-sdk/commit/95e97188dd2258805734884592b601c7ebfa66c6))
+* SDK configuration exposes new options and is organized hierarchically ([95e9718](https://github.com/launchdarkly/lua-server-sdk/commit/95e97188dd2258805734884592b601c7ebfa66c6))
+* Variation and VariationDetail now take contexts ([95e9718](https://github.com/launchdarkly/lua-server-sdk/commit/95e97188dd2258805734884592b601c7ebfa66c6))
+
 ## [1.2.2] - 2022-02-08
 ### Fixed:
 - Remove accidental check-in of temporary documentation build files.

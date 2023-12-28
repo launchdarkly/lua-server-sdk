@@ -25,7 +25,7 @@ Server-side SDK for LaunchDarkly.
 #define DEBUG_PRINT(fmt, ...)
 #endif
 
-#define SDKVersion "1.2.2" /* {x-release-please-version} */
+#define SDKVersion "2.0.0" /* {x-release-please-version} */
 
 static LDValue
 LuaValueToJSON(lua_State *const l, const int i);
