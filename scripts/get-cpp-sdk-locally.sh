@@ -13,15 +13,7 @@
 
 set -e
 
-branch="main"
-
-if [ -n "$1" ]
-then
-    branch="$1"
-fi
-
-
-git clone --depth 1 --branch "$branch" https://github.com/launchdarkly/cpp-sdks.git
+git clone --depth 1 --branch "${1:-main}" https://github.com/launchdarkly/cpp-sdks.git
 cd cpp-sdks
 mkdir build
 cd build
