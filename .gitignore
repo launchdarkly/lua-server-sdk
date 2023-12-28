@@ -1,1 +1,4 @@
 .idea
+cpp-sdks
+*.o
+*.so

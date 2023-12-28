@@ -14,17 +14,56 @@ LaunchDarkly overview
 Supported Lua versions
 -----------
 
-This version of the LaunchDarkly SDK is compatible with the Lua 5.1-5.3 interpreter, and LuaJIT.
+This version of the LaunchDarkly SDK is known to be compatible with the Lua 5.1-5.3 interpreter, and LuaJIT 2.0.5.
 
-Supported C server-side SDK versions
+Supported C++ server-side SDK versions
 -----------
 
-This version of the Lua server-side SDK depends on the C server-side SDK. The minimum required version is `2.1.0`, and under `3.0.0`.
+This version of the Lua server-side SDK depends on the LaunchDarkly C++ Server-side SDK.
+
+If Redis support is desired, then it optionally depends on the C++ server-side SDK's Redis Source. 
+
+| Dependency                     | Minimum Version                                                                                            | Notes                                      |
+|--------------------------------|------------------------------------------------------------------------------------------------------------|--------------------------------------------|
+| C++ Server-Side SDK            | [3.3.0](https://github.com/launchdarkly/cpp-sdks/releases/tag/launchdarkly-cpp-server-v3.3.0)              | Required dependency.                       |
+| C++ Server-Side SDK with Redis | [2.1.0](https://github.com/launchdarkly/cpp-sdks/releases/tag/launchdarkly-cpp-server-redis-source-v2.1.0) | Optional, if using Redis as a data source. |
+
+
+3rd Party Dependencies
+------------
+Depending on how the C++ server-side SDK was built, the Lua SDK may require additional runtime dependencies to work properly.
+
+
+| Dependency | If C++ SDK compiled with..   | Notes                                                                  |
+|------------|------------------------------|------------------------------------------------------------------------|
+| OpenSSL    | `LD_DYNAMIC_LINK_OPENSSL=ON` | If linking OpenSSL dynamically, it must be present on target system.   |
+| Boost      | `LD_DYNAMIC_LINK_BOOST=ON`   | If linking Boost dynamically, it must be present on the target system. |
+
+_Note: The CI process builds against the C++ Server-side SDK's Linux shared libraries, which were compiled with `LD_DYNAMIC_LINK_BOOST=ON` so
+Boost is fetched as part of the build process._
+
 
 Getting started
 -----------
 
 Refer to the [SDK documentation](https://docs.launchdarkly.com/sdk/server-side/lua#getting-started) for instructions on getting started with using the SDK.
+
+To compile the LuaRock modules:
+1. Install [LuaRocks](https://github.com/luarocks/luarocks/wiki/Download)
+2. Build the [C++ Server-side SDK](https://github.com/launchdarkly/cpp-sdks) from source using CMake, or obtain pre-built artifacts from the [releases page](https://github.com/launchdarkly/cpp-sdks/releases?q=%22launchdarkly-cpp-server%22)
+3. Run `luarocks make`:
+    ```bash
+    # Base SDK
+    luarocks make launchdarkly-server-sdk-1.0-0.rockspec \
+    LD_DIR=./path-to-installed-cpp-sdk
+
+    # SDK with Redis
+    luarocks make launchdarkly-server-sdk-redis-1.0-0.rockspec \
+    LDREDIS_DIR=./path-to-installed-cpp-sdk
+    ```
+
+Please note that the Lua SDK uses the C++ server-side SDK's C bindings, so if you're using prebuilt artifacts
+then only a C99 compiler is necessary.
 
 Learn more
 -----------

@@ -1,5 +1,7 @@
 package = "launchdarkly-server-sdk"
 
+rockspec_format = "3.0"
+
 version = "1.0-0"
 
 source = {
@@ -13,8 +15,14 @@ dependencies = {
 
 external_dependencies = {
     LD = {
-        header = "launchdarkly/api.h"
-    }
+        header = "launchdarkly/server_side/bindings/c/sdk.h",
+        library = "launchdarkly-cpp-server"
+    },
+}
+
+test = {
+    type = "command",
+    script = "test.lua"
 }
 
 build = {
@@ -22,9 +30,12 @@ build = {
    modules = {
       ["launchdarkly_server_sdk"] = {
           sources = { "launchdarkly-server-sdk.c" },
+          -- Uncomment to compile with debug messages, mainly to help debug parsing configuration/context
+          -- builders.
+          -- defines = {"DEBUG=1"},
           incdirs = {"$(LD_INCDIR)"},
           libdirs = {"$(LD_LIBDIR)"},
-          libraries = {"ldserverapi"}
+          libraries = {"launchdarkly-cpp-server"},
       }
    }
 }

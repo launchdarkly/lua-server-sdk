@@ -1,5 +1,7 @@
 package = "launchdarkly-server-sdk-redis"
 
+rockspec_format = "3.0"
+
 version = "1.0-0"
 
 source = {
@@ -12,8 +14,14 @@ dependencies = {
 
 external_dependencies = {
     LDREDIS = {
-        header = "launchdarkly/store/redis.h"
+        header = "launchdarkly/server_side/bindings/c/integrations/redis/redis_source.h",
+        library = "launchdarkly-cpp-server-redis-source"
     }
+}
+
+test = {
+    type = "command",
+    script = "test-redis.lua"
 }
 
 build = {
@@ -23,7 +31,7 @@ build = {
           sources = { "launchdarkly-server-sdk-redis.c" },
           incdirs = {"$(LDREDIS_INCDIR)"},
           libdirs = {"$(LDREDIS_LIBDIR)"},
-          libraries = {"ldserverapi-redis"}
+          libraries = {"launchdarkly-cpp-server-redis-source"}
       }
    }
 }

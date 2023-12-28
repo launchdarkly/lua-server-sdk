@@ -9,73 +9,51 @@ Server-side SDK for LaunchDarkly Redis store.
 #include <stdbool.h>
 #include <string.h>
 
-#include <launchdarkly/api.h>
-#include <launchdarkly/store/redis.h>
+#include <launchdarkly/server_side/bindings/c/integrations/redis/redis_source.h>
+
+
 
 /***
-Initialize a store backend
-@function makeStore
-@tparam table fields list of configuration options
-@tparam[opt] string fields.host Hostname for Redis.
-@tparam[opt] int fields.port Port for Redis.
-@tparam[opt] string fields.prefix Redis key prefix for SDK values.
-@tparam[opt] int fields.poolSize Number of Redis connections to maintain.
-@return A fresh Redis store backend.
+Create a Redis data source, which can be used instead
+of a LaunchDarkly Streaming or Polling data source. This should be configured
+in the SDK's configuration table, under the dataSystem.lazyLoad.source property.
+@function makeRedisSource
+@tparam string uri Redis URI. Example: 'redis://localhost:6379'.
+@tparam string prefix Prefix to use when reading SDK data from Redis. This is prefixed to all
+Redis keys used by this SDK. Example: 'my-environment'.
+@return A new Redis data source.
 */
 static int
-LuaLDRedisMakeStore(lua_State *const l)
+LuaLDRedisMakeSource(lua_State *const l)
 {
-    struct LDRedisConfig *config;
-    struct LDStoreInterface *storeInterface;
-
-    if (lua_gettop(l) != 1) {
-        return luaL_error(l, "expecting exactly 1 argument");
+    if (lua_gettop(l) != 2) {
+        return luaL_error(l, "expecting exactly 2 arguments");
     }
 
-    luaL_checktype(l, 1, LUA_TTABLE);
 
-    config = LDRedisConfigNew();
+	const char* uri = luaL_checkstring(l, 1);
+	const char* prefix = luaL_checkstring(l, 2);
 
-    lua_getfield(l, 1, "host");
-
-    if (lua_isstring(l, -1)) {
-        LDRedisConfigSetHost(config, luaL_checkstring(l, -1));
+    struct LDServerLazyLoadRedisResult out_result;
+   	bool success = LDServerLazyLoadRedisSource_New(uri, prefix, &out_result);
+    if (!success) {
+        return luaL_error(l, "failed to create Redis source: %s", out_result.error_message);
     }
 
-    lua_getfield(l, 1, "prefix");
+    LDServerLazyLoadRedisSource *i =
+        (LDServerLazyLoadRedisSource *) lua_newuserdata(l, sizeof(out_result.source));
 
-    if (lua_isstring(l, -1)) {
-        LDRedisConfigSetPrefix(config, luaL_checkstring(l, -1));
-    }
+    *i = out_result.source;
 
-    lua_getfield(l, 1, "port");
-
-    if (lua_isnumber(l, -1)) {
-        LDRedisConfigSetPort(config, luaL_checkinteger(l, -1));
-    }
-
-    lua_getfield(l, 1, "poolSize");
-
-    if (lua_isnumber(l, -1)) {
-        LDRedisConfigSetPoolSize(config, luaL_checkinteger(l, -1));
-    }
-
-    storeInterface = LDStoreInterfaceRedisNew(config);
-
-    struct LDStoreInterface **i =
-        (struct LDStoreInterface **)lua_newuserdata(l, sizeof(storeInterface));
-
-    *i = storeInterface;
-
-    luaL_getmetatable(l, "LaunchDarklyStoreInterface");
+    luaL_getmetatable(l, "LaunchDarklySourceInterface");
     lua_setmetatable(l, -2);
 
     return 1;
 }
 
 static const struct luaL_Reg launchdarkly_functions[] = {
-    { "makeStore", LuaLDRedisMakeStore },
-    { NULL,        NULL                }
+    { "makeRedisSource", LuaLDRedisMakeSource },
+    { NULL, NULL}
 };
 
 #if !defined LUA_VERSION_NUM || LUA_VERSION_NUM==501
@@ -99,7 +77,7 @@ static void luaL_setfuncs (lua_State *L, const luaL_Reg *l, int nup) {
 int
 luaopen_launchdarkly_server_sdk_redis(lua_State *const l)
 {
-    #if LUA_VERSION_NUM == 503 || LUA_VERSION_NUM == 502
+    #if LUA_VERSION_NUM >= 502
         luaL_newlib(l, launchdarkly_functions);
     #else
         luaL_register(l, "launchdarkly-server-sdk-redis",
