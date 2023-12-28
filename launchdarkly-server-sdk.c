@@ -445,8 +445,8 @@ For example, to create a context with a single user kind:
 local context = ld.makeContext({
     user = {
         key = "alice-123",
+        name = "alice",
         attributes = {
-            name = "alice",
             age = 52,
             contact = {
                 email = "alice@mail.com",
@@ -465,9 +465,8 @@ For example, to associate a device context with a user:
 local context = ld.makeContext({
     user = {
         key = "alice-123",
-        attributes = {
-            name = "alice"
-        }
+        name = "alice",
+        anonymous = true
     },
     device {
         key = "device-123",
@@ -485,13 +484,13 @@ by calling @{valid} to detect errors earlier.
 @tparam table A table of context kinds, where the table keys are the kind names
 and the values are tables containing context's information.
 @tparam string [kind.key] The context's key, which is required.
+@tparam[opt] [kind.name] A name for the context. This is useful for identifying the context
+in the LaunchDarkly dashboard.
+@tparam[opt] [kind.anonymous] A boolean indicating whether the context should be marked as anonymous.
 @tparam[opt] [kind.attributes] A table of arbitrary attributes to associate with the context.
 @tparam[opt] [kind.privateAttributes] An array of attribute references, indicating which
 attributes should be marked private. Attribute references may be simple attribute names
 (like 'age'), or may use a JSON-pointer-like syntax (like '/contact/phone').
-@tparam[opt] [kind.name] A name for the context. This is useful for identifying the context
-in the LaunchDarkly dashboard.
-@tparam[opt] [kind.anonymous] A boolean indicating whether the context should be marked as anonymous.
 @treturn A fresh context.
 */
 static int
@@ -854,7 +853,7 @@ struct config {
     struct config name = {path, fields, ARR_SIZE(fields), NULL, NULL, NULL}
 
 // Use this macro to define a config table which requires a child builder.
-#define DEFINE_SUB_CONFIG(name, path, fields, new_builder, consume_builder) \
+#define DEFINE_CHILD_CONFIG(name, path, fields, new_builder, consume_builder) \
     struct config name = {path, fields, ARR_SIZE(fields), NULL, (new_child_builder_fn) new_builder, (consume_child_builder_fn) consume_builder}
 
 // Invokes a field's parse method, varying the builder argument depending on if this
@@ -875,7 +874,7 @@ struct field_validator lazyload_fields[] = {
     FIELD("cacheEvictionPolicy", LUA_TNUMBER, parse_unsigned, LDServerLazyLoadBuilder_CachePolicy)
 };
 
-DEFINE_SUB_CONFIG(lazyload_config,
+DEFINE_CHILD_CONFIG(lazyload_config,
     "dataSystem.lazyLoad",
     lazyload_fields,
     LDServerLazyLoadBuilder_New,
@@ -886,7 +885,7 @@ struct field_validator streaming_fields[] = {
     FIELD("initialReconnectDelayMilliseconds", LUA_TNUMBER, parse_unsigned, LDServerDataSourceStreamBuilder_InitialReconnectDelayMs)
 };
 
-DEFINE_SUB_CONFIG(streaming_config,
+DEFINE_CHILD_CONFIG(streaming_config,
     "dataSystem.backgroundSync.streaming",
     streaming_fields,
     LDServerDataSourceStreamBuilder_New,
@@ -897,7 +896,7 @@ struct field_validator polling_fields[] = {
     FIELD("intervalSeconds", LUA_TNUMBER, parse_unsigned, LDServerDataSourcePollBuilder_IntervalS)
 };
 
-DEFINE_SUB_CONFIG(polling_config,
+DEFINE_CHILD_CONFIG(polling_config,
     "dataSystem.backgroundSync.polling",
     polling_fields,
     LDServerDataSourcePollBuilder_New,
@@ -952,7 +951,7 @@ struct field_validator basic_logging_fields[] = {
 	FIELD("tag", LUA_TSTRING, parse_string, LDLoggingBasicBuilder_Tag)
 };
 
-DEFINE_SUB_CONFIG(
+DEFINE_CHILD_CONFIG(
 	basic_logging_config,
 	"logging.basic",
 	basic_logging_fields,
@@ -1040,7 +1039,7 @@ makeConfig(lua_State *const l, const char *const sdk_key)
 {
     LDServerConfigBuilder builder = LDServerConfigBuilder_New(sdk_key);
 
-    // Recursively visit the heirarchical configs, modifying the builder
+    // Recursively visit the hierarchical configs, modifying the builder
     // as we go along.
     traverse_config(l, builder, &top_level_config);
 
