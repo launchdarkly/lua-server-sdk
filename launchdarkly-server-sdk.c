@@ -432,9 +432,7 @@ LuaLDUserNew(lua_State *const l)
 
 static void parse_private_attrs_or_cleanup(lua_State *const l, LDContextBuilder builder, const char* kind);
 static void parse_attrs_or_cleanup(lua_State *const l, LDContextBuilder builder, const char* kind);
-static bool field_is_table_or_cleanup(lua_State* const l, int field_type, LDContextBuilder builder, const char* field_name, const char* kind);
-static bool field_is_string_or_cleanup(lua_State* const l, int field_type, LDContextBuilder builder, const char* field_name, const char* kind);
-static bool field_is_bool_or_cleanup(lua_State* const l, int field_type, LDContextBuilder builder, const char* field_name, const char* kind);
+static bool field_is_type_or_cleanup(lua_State* const l, int actual_field_type, int expected_field_type, LDContextBuilder builder, const char* field_name, const char* kind);
 
 /**
 
@@ -546,26 +544,26 @@ LuaLDContextNew(lua_State *const l) {
         LDContextBuilder_AddKind(builder, kind, key);
 
         lua_getfield(l, -2, "attributes");
-        if (field_is_table_or_cleanup(l, lua_type(l, -1), builder, "attributes", kind)) {
+        if (field_is_type_or_cleanup(l, lua_type(l, -1), LUA_TTABLE, builder, "attributes", kind)) {
             parse_attrs_or_cleanup(l, builder, kind);
         }
         lua_pop(l, 1);
 
 
         lua_getfield(l, -2, "privateAttributes");
-        if (field_is_table_or_cleanup(l, lua_type(l, -1), builder, "privateAttributes", kind)) {
+        if (field_is_type_or_cleanup(l, lua_type(l, -1), LUA_TTABLE, builder, "privateAttributes", kind)) {
             parse_private_attrs_or_cleanup(l, builder, kind);
         }
         lua_pop(l, 1);
 
         lua_getfield(l, -2, "name");
-        if (field_is_string_or_cleanup(l, lua_type(l, -1), builder, "name", kind)) {
+        if (field_is_type_or_cleanup(l, lua_type(l, -1), LUA_TSTRING, builder, "name", kind)) {
             LDContextBuilder_Attributes_SetName(builder, kind, lua_tostring(l, -1));
         }
         lua_pop(l, 1);
 
         lua_getfield(l, -2, "anonymous");
-        if (field_is_bool_or_cleanup(l, lua_type(l, -1), builder, "anonymous", kind)) {
+        if (field_is_type_or_cleanup(l, lua_type(l, -1), LUA_TBOOLEAN, builder, "anonymous", kind)) {
             LDContextBuilder_Attributes_SetAnonymous(builder, kind, lua_toboolean(l, -1));
         }
         lua_pop(l, 1);
@@ -588,41 +586,16 @@ LuaLDContextNew(lua_State *const l) {
     return 1;
 }
 
-static bool field_is_table_or_cleanup(lua_State* const l, int field_type, LDContextBuilder builder, const char* field_name, const char* kind) {
-    if (field_type == LUA_TTABLE) {
-        DEBUG_PRINT("field %s for %s context is a table\n", field_name, kind);
-        return true;
-    } else if (field_type == LUA_TNIL) {
-        DEBUG_PRINT("no %s for %s context\n", field_name, kind);
-    } else {
-        LDContextBuilder_Free(builder);
-        luaL_error(l, "context kind %s: %s must be a table", kind, field_name);
-    }
-    return false;
-}
 
-static bool field_is_bool_or_cleanup(lua_State* const l, int field_type, LDContextBuilder builder, const char* field_name, const char* kind) {
-    if (field_type == LUA_TBOOLEAN) {
-        DEBUG_PRINT("field %s for %s context is a boolean\n", field_name, kind);
+static bool field_is_type_or_cleanup(lua_State* const l, int actual_field_type, int expected_field_type, LDContextBuilder builder, const char* field_name, const char* kind) {
+    if (actual_field_type == expected_field_type) {
+        DEBUG_PRINT("field %s for %s context is a %s\n", field_name, kind, lua_typename(l, actual_field_type));
         return true;
-    } else if (field_type == LUA_TNIL) {
+    } else if (actual_field_type == LUA_TNIL) {
         DEBUG_PRINT("no %s for %s context\n", field_name, kind);
     } else {
         LDContextBuilder_Free(builder);
-        luaL_error(l, "context kind %s: %s must be a boolean", kind, field_name);
-    }
-    return false;
-}
-
-static bool field_is_string_or_cleanup(lua_State* const l, int field_type, LDContextBuilder builder, const char* field_name, const char* kind) {
-    if (field_type == LUA_TSTRING) {
-        DEBUG_PRINT("field %s for %s context is a string\n", field_name, kind);
-        return true;
-    } else if (field_type == LUA_TNIL) {
-        DEBUG_PRINT("no %s for %s context\n", field_name, kind);
-    } else {
-        LDContextBuilder_Free(builder);
-        luaL_error(l, "context kind %s: %s must be a string", kind, field_name);
+        luaL_error(l, "context kind %s: %s must be a %s", kind, field_name, lua_typename(l, expected_field_type));
     }
     return false;
 }
