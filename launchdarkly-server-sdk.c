@@ -1243,8 +1243,6 @@ LuaPushDetails(lua_State *const l, LDEvalDetail details,
     LDValue value)
 {
     lua_newtable(l);
-    /** TODO: C bindings for this? */
-
 
 	LDEvalReason out_reason;
 	if (LDEvalDetail_Reason(details, &out_reason)) {
@@ -1812,8 +1810,6 @@ LuaLDClientTrack(lua_State *const l)
 
     return 0;
 }
-
-// TODO: Document alias was removed, use multi context instead
 
 /***
 Check if a client has been fully initialized. This may be useful if the
