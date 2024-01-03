@@ -26,6 +26,11 @@ jobs:
         with:
           fetch-depth: 0 # If you only need the current version keep this.
 
+      - uses: ./.github/actions/update-rockspec
+        if : ${{ steps.release.outputs.prs_created == 'true' }}
+        with:
+          branch: ${{ fromJSON(steps.release.outputs.prs).headBranchName }}
+
       - name: Build and Test
         if: ${{ steps.release.outputs.releases_created }}
         uses: ./.github/actions/ci
