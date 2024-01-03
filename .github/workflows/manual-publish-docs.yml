@@ -3,7 +3,7 @@ on:
 
 name: Publish Documentation
 jobs:
-  build-publish:
+  build-publish-docs:
     runs-on: ubuntu-latest
     permissions:
       contents: write # Needed to write github pages.

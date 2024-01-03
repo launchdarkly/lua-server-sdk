@@ -65,19 +65,19 @@ for file in "$input_rockspec"-*.rockspec; do
     echo "Renamed $file to $new_file_name"
 
     # Update the 'version' field with the new semver.
-    sed -i .bak "s/version = \".*\"/version = \"$input_version-$rockspec_revision\"/" "$new_file_name"
+    sed -i.bak "s/version = \".*\"/version = \"$input_version-$rockspec_revision\"/" "$new_file_name"
     echo "Bumped version from $semver to $input_version"
 
     # Update the 'tag' field to contain the git tag, which we're hardcoding as 'v' + the version number. This
     # relies on the assumption that our release please config specifies a leading v.
-    sed -i .bak "s/tag = \".*\"/tag = \"v$input_version\"/" "$new_file_name"
+    sed -i.bak "s/tag = \".*\"/tag = \"v$input_version\"/" "$new_file_name"
     echo "Updated source.tag to v$input_version"
 
     rm -f "$new_file_name.bak"
 
     # Update README.md to replace $file with the new filename, which will result in the codesample having the new
     # version number.
-    sed -i .bak "s/$file/$new_file_name/" README.md
+    sed -i.bak "s/$file/$new_file_name/" README.md
     echo "Updated README.md code example"
     rm -f README.md.bak
 
