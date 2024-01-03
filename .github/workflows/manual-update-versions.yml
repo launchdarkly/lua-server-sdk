@@ -1,0 +1,28 @@
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "The semantic version to use (no leading 'v'). Will update versions for base and Redis SDK."
+        required: true
+      branch:
+        description: 'Branch to checkout and push updates to'
+        required: true
+
+name: Update Versions
+jobs:
+  build-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update launchdarkly-server-sdk version
+        uses: ./.github/actions/update-versions
+        with:
+          package: launchdarkly-server-sdk
+          branch: ${{ inputs.branch }}
+          version: ${{ inputs.version }}
+
+      - name: Update launchdarkly-server-sdk-redis version
+        uses: ./.github/actions/update-versions
+        with:
+          package: launchdarkly-server-sdk-redis
+          branch: ${{ inputs.branch }}
+          version: ${{ inputs.version }}

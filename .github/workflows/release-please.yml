@@ -37,20 +37,20 @@ jobs:
           fetch-depth: 0 # If you only need the current version keep this.
 
       - name: Update launchdarkly-server-sdk rockspec
-        uses: ./.github/actions/update-rockspec
+        uses: ./.github/actions/update-versions
         if : ${{ steps.release.outputs.prs_created == 'true' }}
         with:
+          package: launchdarkly-server-sdk
           branch: ${{ fromJSON(steps.release.outputs.prs).headBranchName }}
           version: ${{ steps.determine-version.outputs.semver }}
-          package: launchdarkly-server-sdk
 
       - name: Update launchdarkly-server-sdk-redis rockspec
-        uses: ./.github/actions/update-rockspec
+        uses: ./.github/actions/update-versions
         if: ${{ steps.release.outputs.prs_created == 'true' }}
         with:
+          package: launchdarkly-server-sdk-redis
           branch: ${{ fromJSON(steps.release.outputs.prs).headBranchName }}
           version: ${{ steps.determine-version.outputs.semver }}
-          package: launchdarkly-server-sdk-redis
 
       - name: Build and Test
         if: ${{ steps.release.outputs.releases_created }}

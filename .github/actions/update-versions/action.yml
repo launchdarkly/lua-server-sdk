@@ -1,5 +1,5 @@
-name: Update rockspec file name and version
-description: 'Update rockspec file name and version'
+name: Update Lua package version
+description: 'Update rockspec file name and version, and code example in README.md'
 inputs:
   branch:
     description: 'Branch to checkout and push updates to'
