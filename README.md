@@ -51,7 +51,7 @@ Refer to the [SDK documentation](https://docs.launchdarkly.com/sdk/server-side/l
 To compile the LuaRock modules:
 1. Install [LuaRocks](https://github.com/luarocks/luarocks/wiki/Download)
 2. Build the [C++ Server-side SDK](https://github.com/launchdarkly/cpp-sdks) from source using CMake, or obtain pre-built artifacts from the [releases page](https://github.com/launchdarkly/cpp-sdks/releases?q=%22launchdarkly-cpp-server%22)
-3. Run `luarocks make`:
+3. Run `luarocks make` (replace the version number as necessary):
     ```bash
     # Base SDK
     luarocks make launchdarkly-server-sdk-1.0-0.rockspec \
