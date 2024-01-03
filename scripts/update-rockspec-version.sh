@@ -67,6 +67,12 @@ for file in "$input_rockspec"-*.rockspec; do
     sed -i .bak "s/version = \".*\"/version = \"$input_version-$rockspec_revision\"/" "$new_file_name"
     echo "Bumped version from $semver to $input_version"
 
+    # Update the 'tag' field to contain the git tag, which we're hardcoding as 'v' + the version number. This
+    # relies on the assumption that our release please config specifies a leading v.
+
+    sed -i .bak "s/tag = \".*\"/tag = \"v$input_version\"/" "$new_file_name"
+    echo "Updated source.tag to v$input_version"
+
     rm -f "$new_file_name.bak"
 
     if [ "$(git status --porcelain | wc -l)" -gt 0 ]; then
