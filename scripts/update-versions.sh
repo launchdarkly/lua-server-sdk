@@ -64,16 +64,22 @@ for file in "$input_rockspec"-*.rockspec; do
     git mv "$file" "$new_file_name"
     echo "Renamed $file to $new_file_name"
 
+    # Update the 'version' field with the new semver.
     sed -i .bak "s/version = \".*\"/version = \"$input_version-$rockspec_revision\"/" "$new_file_name"
     echo "Bumped version from $semver to $input_version"
 
     # Update the 'tag' field to contain the git tag, which we're hardcoding as 'v' + the version number. This
     # relies on the assumption that our release please config specifies a leading v.
-
     sed -i .bak "s/tag = \".*\"/tag = \"v$input_version\"/" "$new_file_name"
     echo "Updated source.tag to v$input_version"
 
     rm -f "$new_file_name.bak"
+
+    # Update README.md to replace $file with the new filename, which will result in the codesample having the new
+    # version number.
+    sed -i .bak "s/$file/$new_file_name/" README.md
+    echo "Updated README.md code example"
+    rm -f README.md.bak
 
     if [ "$(git status --porcelain | wc -l)" -gt 0 ]; then
       if [ -n "$git_username" ]; then
@@ -83,8 +89,9 @@ for file in "$input_rockspec"-*.rockspec; do
         git config user.email "$git_email"
       fi
       git add "$new_file_name"
+      git add README.md
       if [ $autocommit ]; then
-        git commit -m "chore: bump $input_rockspec version from $semver to $input_version"
+        git commit -m "chore: bump $input_rockspec version from $semver to $input_version and update README"
         git push
       else
         echo "Changes staged, but not committed. Please commit manually."

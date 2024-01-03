@@ -23,7 +23,7 @@ runs:
     - name: Update rockspec file name and version
       shell: bash
       run: |
-        ./scripts/update-rockspec-version.sh \
+        ./scripts/update-versions.sh \
         ${{ inputs.package}} \
         ${{ inputs.version }} \
         LaunchDarklyReleaseBot \

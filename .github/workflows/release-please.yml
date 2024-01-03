@@ -14,12 +14,22 @@ jobs:
       pull-requests: write
 
     steps:
-      - uses: google-github-actions/release-please-action@v3
+      - uses: google-github-actions/release-please-action@v4
         id: release
         with:
           command: manifest
           token: ${{ secrets.GITHUB_TOKEN }}
           default-branch: main
+
+      # We want to pass the new semantic version to the update-rockspec action, but we don't want the
+      # git tag to be used - just the raw major/minor/patch, since that's what LuaRocks expects.
+      # Instead of using `tag_name`, we'll build the version string from the `major`.`minor`.`patch` outputs.
+      - name: Determine semantic version
+        if: ${{ steps.release.outputs.prs_created == 'true' }}
+        id: determine-version
+        shell: bash
+        run: |
+          echo "semver=${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }}.${{ steps.release.outputs.patch }}" >> $GITHUB_OUTPUT
 
       - uses: actions/checkout@v4
         if: ${{ steps.release.outputs.releases_created }}
@@ -31,7 +41,7 @@ jobs:
         if : ${{ steps.release.outputs.prs_created == 'true' }}
         with:
           branch: ${{ fromJSON(steps.release.outputs.prs).headBranchName }}
-          version: ${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }}.${{ steps.release.outputs.patch }}
+          version: ${{ steps.determine-version.outputs.semver }}
           package: launchdarkly-server-sdk
 
       - name: Update launchdarkly-server-sdk-redis rockspec
@@ -39,7 +49,7 @@ jobs:
         if: ${{ steps.release.outputs.prs_created == 'true' }}
         with:
           branch: ${{ fromJSON(steps.release.outputs.prs).headBranchName }}
-          version: ${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }}.${{ steps.release.outputs.patch }}
+          version: ${{ steps.determine-version.outputs.semver }}
           package: launchdarkly-server-sdk-redis
 
       - name: Build and Test
