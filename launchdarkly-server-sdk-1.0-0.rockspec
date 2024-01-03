@@ -4,13 +4,27 @@ rockspec_format = "3.0"
 
 version = "1.0-0"
 
+description = {
+   summary = "LaunchDarkly Lua Server-Side SDK",
+   detailed = [[
+      The Lua Server-Side SDK provides access to LaunchDarkly's feature flag system and is suitable for
+      server-side application. It is a wrapper around the LaunchDarkly C++ Server-side SDK, making use of its
+      C API.
+   ]],
+   license = "Apache-2.0",
+   homepage = "https://github.com/launchdarkly/lua-server-sdk",
+   issues_url = "https://github.com/launchdarkly/lua-server-sdk/issues/",
+   maintainer = "LaunchDarkly <sdks@launchdarkly.com>",
+   labels = {"launchdarkly", "launchdarkly-sdk", "feature-flags", "feature-toggles"}
+}
+
 source = {
    url = "git+https://github.com/launchdarkly/lua-server-sdk.git",
-   tag = "2.0.0" -- {{ x-release-please-version }}
+   tag = "v2.0.0" -- {{ x-release-please-version }}
 }
 
 dependencies = {
-   "lua >= 5.1, <= 5.4",
+   "lua >= 5.1, <= 5.4"
 }
 
 external_dependencies = {
