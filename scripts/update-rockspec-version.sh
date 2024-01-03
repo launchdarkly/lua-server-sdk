@@ -50,12 +50,14 @@ for file in "$input_rockspec"-*.rockspec; do
     echo "  package version: $semver"
     echo "  rockspec version: $rockspec_version"
 
-    sed -i .bak "s/version = \".*\"/version = \"$input_version-$rockspec_version\"/" "$file"
-    echo "Bumped version from $semver to $input_version"
+
 
     new_file_name="$input_rockspec-$input_version-$rockspec_version.rockspec"
     git mv "$file" "$new_file_name"
     echo "Renamed $file to $new_file_name"
 
-    rm "$file.bak"
+    sed -i .bak "s/version = \".*\"/version = \"$input_version-$rockspec_version\"/" "$new_file_name"
+    echo "Bumped version from $semver to $input_version"
+
+    rm "$new_file_name.bak"
 done
