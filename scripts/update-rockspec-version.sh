@@ -31,7 +31,7 @@ if [ -z "$input_rockspec" ] || [ -z "$input_version" ]; then
     echo "Usage: $0 <rockspec package> <new version> [git username] [git email]"
     echo "Example usage locally: $0 launchdarkly-server-sdk 1.2.0"
     echo "Example usage in CI: $0 launchdarkly-server-sdk 1.2.0 LaunchDarklyReleaseBot LaunchDarklyReleaseBot@launchdarkly.com"
-    echo "Providing a git username and email will automatically commit any changes."
+    echo "Providing a git username and email will automatically commit & push any changes."
     exit 1
 fi
 
@@ -78,7 +78,8 @@ for file in "$input_rockspec"-*.rockspec; do
       fi
       git add "$new_file_name"
       if [ $autocommit ]; then
-        git commit -m "chore: bump package version from $semver to $input_version"
+        git commit -m "chore: bump $input_rockspec version from $semver to $input_version"
+        git push
       else
         echo "Changes staged, but not committed. Please commit manually."
       fi

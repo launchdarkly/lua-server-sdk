@@ -7,6 +7,9 @@ inputs:
   version:
     description: 'The semantic version to use'
     required: true
+  package:
+    description: 'The rockspec package to update'
+    required: true
 
 runs:
   using: composite
@@ -20,5 +23,8 @@ runs:
     - name: Update rockspec file name and version
       shell: bash
       run: |
-        sed -i "s/1.0-0/${{ inputs.version }}-0/" launchdarkly-server-sdk-1.0-0.rockspec
-        sed -i "s/1.0-0/${{ inputs.version }}-0/" launchdarkly-server-sdk-redis-1.0-0.rockspec
+        ./scripts/update-rockspec-version.sh \
+        ${{ inputs.package}} \
+        ${{ inputs.version }} \
+        LaunchDarklyReleaseBot \
+        LaunchDarklyReleaseBot@launchdarkly.com
