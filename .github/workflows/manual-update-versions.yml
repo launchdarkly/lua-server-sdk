@@ -10,7 +10,7 @@ on:
 
 name: Update Versions
 jobs:
-  build-publish:
+  update-versions:
     runs-on: ubuntu-latest
     steps:
       - name: Update launchdarkly-server-sdk version
