@@ -1,0 +1,30 @@
+name: Update Lua package version
+description: 'Update rockspec file name and version, and code example in README.md'
+inputs:
+  branch:
+    description: 'Branch to checkout and push updates to'
+    required: true
+  version:
+    description: 'The semantic version to use'
+    required: true
+  package:
+    description: 'The rockspec package to update'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.branch }}
+        fetch-depth: 0
+
+    - name: Update rockspec file name and version
+      shell: bash
+      run: |
+        ./scripts/update-versions.sh \
+        ${{ inputs.package}} \
+        ${{ inputs.version }} \
+        LaunchDarklyReleaseBot \
+        LaunchDarklyReleaseBot@launchdarkly.com

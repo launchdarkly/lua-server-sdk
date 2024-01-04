@@ -19,7 +19,7 @@ description = {
 
 source = {
    url = "git+https://github.com/launchdarkly/lua-server-sdk.git",
-   tag = "v2.0.0" -- {{ x-release-please-version }}
+   tag = "v2.0.0"
 }
 
 dependencies = {
