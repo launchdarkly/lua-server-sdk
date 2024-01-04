@@ -59,6 +59,11 @@ for file in "$input_rockspec"-*.rockspec; do
     echo "  package version: $semver"
     echo "  rockspec revision: $rockspec_revision"
 
+    # If the found version is what we're requesting, then we're done.
+    if [[ "$semver" == "$input_version" ]]; then
+        echo "$file is already at version $input_version"
+        exit 0
+    fi
 
     new_file_name="$input_rockspec-$input_version-$rockspec_revision.rockspec"
     git mv "$file" "$new_file_name"
