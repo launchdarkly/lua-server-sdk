@@ -14,7 +14,7 @@ jobs:
       pull-requests: write
 
     steps:
-      - uses: google-github-actions/release-please-action@v3
+      - uses: google-github-actions/release-please-action@v4
         id: release
         with:
           command: manifest
@@ -23,8 +23,30 @@ jobs:
 
       - uses: actions/checkout@v4
         if: ${{ steps.release.outputs.releases_created }}
+
+      - name: Determine semantic version and PR branch from release-please output
+        if: ${{ steps.release.outputs.prs_created == 'true' }}
+        id: determine-version-and-branch
+        shell: bash
+        run: |
+          echo "semver=${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }}.${{ steps.release.outputs.patch }}" >> $GITHUB_OUTPUT
+          echo "branch=${{ fromJSON(steps.release.outputs.prs).headBranchName }}" >> $GITHUB_OUTPUT
+
+      - name: Update launchdarkly-server-sdk rockspec
+        uses: ./.github/actions/update-versions
+        if: ${{ steps.determine-version.outcome == 'success' }}
         with:
-          fetch-depth: 0 # If you only need the current version keep this.
+          package: launchdarkly-server-sdk
+          branch: ${{ steps.determine-version-and-branch.outputs.branch }}
+          version: ${{ steps.determine-version-and-branch.outputs.semver }}
+
+      - name: Update launchdarkly-server-sdk-redis rockspec
+        uses: ./.github/actions/update-versions
+        if: ${{ steps.determine-version.outcome == 'success' }}
+        with:
+          package: launchdarkly-server-sdk-redis
+          branch: ${{ steps.determine-version-and-branch.outputs.branch }}
+          version: ${{ steps.determine-version.outputs.semver }}
 
       - name: Build and Test
         if: ${{ steps.release.outputs.releases_created }}
