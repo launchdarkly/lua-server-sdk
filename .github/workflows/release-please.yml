@@ -1,6 +1,7 @@
 name: Run Release Please
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -17,9 +18,7 @@ jobs:
       - uses: google-github-actions/release-please-action@v4
         id: release
         with:
-          command: manifest
           token: ${{ secrets.GITHUB_TOKEN }}
-          default-branch: main
 
       - uses: actions/checkout@v4
         if: ${{ steps.release.outputs.releases_created }}
@@ -30,7 +29,7 @@ jobs:
         shell: bash
         run: |
           echo "semver=${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }}.${{ steps.release.outputs.patch }}" >> $GITHUB_OUTPUT
-          echo "branch=${{ fromJSON(steps.release.outputs.prs).headBranchName }}" >> $GITHUB_OUTPUT
+          echo "branch=${{ fromJSON(steps.release.outputs.pr).headBranchName }}" >> $GITHUB_OUTPUT
 
       - name: Update launchdarkly-server-sdk rockspec
         uses: ./.github/actions/update-versions
@@ -49,16 +48,16 @@ jobs:
           version: ${{ steps.release-metadata.outputs.semver }}
 
       - name: Build and Test
-        if: ${{ steps.release.outputs.releases_created }}
+        if: ${{ steps.release.outputs.release_created }}
         uses: ./.github/actions/ci
         with:
           lua-version: "5.3"
 
       - name: Build documentation
-        if: ${{ steps.release.outputs.releases_created }}
+        if: ${{ steps.release.outputs.release_created }}
         uses: ./.github/actions/build-docs
 
       - uses: ./.github/actions/publish-docs
-        if: ${{ steps.release.outputs.releases_created }}
+        if: ${{ steps.release.outputs.release_created }}
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
