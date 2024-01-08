@@ -94,7 +94,7 @@ for file in "$input_rockspec"-*.rockspec; do
       git add "$new_file_name"
       git add README.md
       if [ $autocommit ]; then
-        git commit -m "chore: rename $input_rockspec version from $semver to $input_version"
+        git commit -m "chore: bump $input_rockspec version from $semver to $input_version"
         git push
       else
         echo "Changes staged, but not committed. Please commit manually."
