@@ -6,7 +6,8 @@
       "versioning": "default",
       "extra-files": [
         "launchdarkly-server-sdk.c",
-        ".github/actions/ci/action.yml"
+        ".github/actions/ci/action.yml",
+        "README.md"
       ]
     }
   }
