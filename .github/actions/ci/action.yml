@@ -8,11 +8,11 @@ inputs:
   lua-server-version:
     description: 'Version of the Lua Server-side SDK to use for building and testing.'
     required: false
-    default: "2.0.0" # {x-release-please-version}
+    default: "2.0.1" # {x-release-please-version}
   lua-server-redis-version:
     description: 'Version of the Lua Server-side SDK with Redis to use for building and testing.'
     required: false
-    default: "2.0.0" # {x-release-please-version}
+    default: "2.0.1" # {x-release-please-version}
   cpp-sdk-version:
     description: 'Version of the C++ Server-side SDK to use for building and testing.'
     required: false
