@@ -18,8 +18,7 @@ input_version=$2
 git_username=$3
 git_email=$4
 
-# If input_version isn't set, then hardcode it (updated by release-please in CI)
-if [ -z "$input_version" ]; then
+if [ "$input_version" == "auto" ]; then
     input_version="2.0.0" # { x-release-please-version }
 fi
 
@@ -28,10 +27,10 @@ if [ -n "$git_username" ] || [ -n "$git_email" ]; then
     autocommit=1
 fi
 
-if [ -z "$input_rockspec" ]; then
-    echo "Usage: $0 <rockspec package> <new version> [git username] [git email]"
+if [ -z "$input_rockspec" ] || [ -z "$input_version" ]; then
+    echo "Usage: $0 <rockspec package> <new version|auto> [git username] [git email]"
     echo "Example usage locally: $0 launchdarkly-server-sdk 1.2.0"
-    echo "Example usage in CI: $0 launchdarkly-server-sdk 1.2.0 LaunchDarklyReleaseBot LaunchDarklyReleaseBot@launchdarkly.com"
+    echo "Example usage in CI: $0 launchdarkly-server-sdk auto LaunchDarklyReleaseBot LaunchDarklyReleaseBot@launchdarkly.com"
     echo "Providing a git username and email will automatically commit & push any changes."
     exit 1
 fi
