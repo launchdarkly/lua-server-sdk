@@ -48,19 +48,15 @@ runs:
 
     - name: Build Lua Server-side SDK
       shell: bash
-      # {x-release-please-start-version}
       run:  |
         luarocks make ${{ steps.rockspec-pkg-name.outputs.server }} \
         LD_DIR=./cpp-sdk/build-dynamic/release
-      # {x-release-please-end}
 
     - name: Build Lua Server-side SDK with Redis
       shell: bash
-      # {x-release-please-start-version}
       run: |
         luarocks make ${{ steps.rockspec-pkg-name.outputs.server_redis }} \
         LDREDIS_DIR=./cpp-sdk/build-dynamic/release
-      # {x-release-please-end}
 
     - name: Run Lua Server-side SDK Tests
       shell: bash
