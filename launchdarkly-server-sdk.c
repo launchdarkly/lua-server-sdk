@@ -1061,9 +1061,9 @@ makeConfig(lua_State *const l, const char *const sdk_key)
 Initialize a new client, and connect to LaunchDarkly.
 Applications should instantiate a single instance for the lifetime of their application.
 
-@function initClient
+@function clientInit
 @param string Environment SDK key
-@param int Initialization timeout in milliseconds. initClient will
+@param int Initialization timeout in milliseconds. clientInit will
 block for this long before returning a non-fully initialized client. Pass 0 to return
 immediately without waiting (note that the client will continue initializing in the background.)
 @tparam table config list of configuration options
