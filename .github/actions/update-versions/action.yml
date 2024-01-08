@@ -6,7 +6,8 @@ inputs:
     required: true
   version:
     description: 'The semantic version to use'
-    required: true
+    required: false
+    default: 'auto'
   package:
     description: 'The rockspec package to update'
     required: true
