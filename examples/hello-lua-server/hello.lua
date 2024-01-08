@@ -1,7 +1,7 @@
 local ld = require("launchdarkly_server_sdk")
 
 -- Allows the LaunchDarkly SDK key to be specified as an environment variable (LD_SDK_KEY)
--- or locally in this example code.
+-- or locally in this example code (YOUR_SDK_KEY).
 function get_key_from_env_or(existing_key)
     if existing_key ~= "" then
         return existing_key
