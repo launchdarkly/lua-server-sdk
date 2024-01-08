@@ -2,7 +2,11 @@
 
 set -e
 
-# This script renames a rockspec file containing one semantic version to another.
+# This script has two responsibilities:
+# 1. Update the package version in the rockspec file. This is necessary because release-please can't update
+# a file that changes names.
+# 2. Update the actual filename of the rockspec file.
+
 # This script doesn't update the rockspec version - the part after the package version, but before the .rockspec
 # suffix. That should be done manually if the rockspec itself has changed but not the package contents.
 #
@@ -68,6 +72,16 @@ for file in "$input_rockspec"-*.rockspec; do
     new_file_name="$input_rockspec-$input_version-$rockspec_revision.rockspec"
     git mv "$file" "$new_file_name"
     echo "Renamed $file to $new_file_name"
+
+    # Update the 'version' field with the new semver.
+    sed -i.bak "s/version = \".*\"/version = \"$input_version-$rockspec_revision\"/" "$new_file_name"
+    echo "Bumped version from $semver to $input_version"
+
+    # Update the 'tag' field to contain the git tag, which we're hardcoding as 'v' + the version number. This
+    # relies on the assumption that our release please config specifies a leading v.
+    sed -i.bak "s/tag = \".*\"/tag = \"v$input_version\"/" "$new_file_name"
+    echo "Updated source.tag to v$input_version"
+
     rm -f "$new_file_name.bak"
 
     if [ "$(git status --porcelain | wc -l)" -gt 0 ]; then

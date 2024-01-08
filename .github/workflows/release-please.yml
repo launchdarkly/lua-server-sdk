@@ -21,31 +21,31 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/checkout@v4
-        if: ${{ steps.release.outputs.releases_created }}
+        if: ${{ steps.release.outputs.prs_created == 'true' }}
 
       - name: Update launchdarkly-server-sdk rockspec
         uses: ./.github/actions/update-versions
-        if: ${{ steps.release-metadata.outcome == 'success' }}
+        if: ${{ steps.release.outputs.prs_created == 'true' }}
         with:
           package: launchdarkly-server-sdk
           branch: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
 
       - name: Update launchdarkly-server-sdk-redis rockspec
         uses: ./.github/actions/update-versions
-        if: ${{ steps.release-metadata.outcome == 'success' }}
+        if: ${{ steps.release.outputs.prs_created == 'true' }}
         with:
           package: launchdarkly-server-sdk-redis
           branch: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
 
       - name: Build and Test
-        if: ${{ steps.release.outputs.release_created }}
+        if: ${{ steps.release.outputs.release_created == 'true' }}
         uses: ./.github/actions/ci
 
       - name: Build documentation
-        if: ${{ steps.release.outputs.release_created }}
+        if: ${{ steps.release.outputs.release_created == 'true' }}
         uses: ./.github/actions/build-docs
 
       - uses: ./.github/actions/publish-docs
-        if: ${{ steps.release.outputs.release_created }}
+        if: ${{ steps.release.outputs.release_created == 'true' }}
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
