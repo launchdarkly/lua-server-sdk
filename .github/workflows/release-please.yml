@@ -23,29 +23,19 @@ jobs:
       - uses: actions/checkout@v4
         if: ${{ steps.release.outputs.releases_created }}
 
-      - name: Determine semantic version and PR branch from release-please output
-        if: ${{ steps.release.outputs.prs_created == 'true' }}
-        id: release-metadata
-        shell: bash
-        run: |
-          echo "semver=${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }}.${{ steps.release.outputs.patch }}" >> $GITHUB_OUTPUT
-          echo "branch=${{ fromJSON(steps.release.outputs.pr).headBranchName }}" >> $GITHUB_OUTPUT
-
       - name: Update launchdarkly-server-sdk rockspec
         uses: ./.github/actions/update-versions
         if: ${{ steps.release-metadata.outcome == 'success' }}
         with:
           package: launchdarkly-server-sdk
-          branch: ${{ steps.release-metadata.outputs.branch }}
-          version: ${{ steps.release-metadata.outputs.semver }}
+          branch: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
 
       - name: Update launchdarkly-server-sdk-redis rockspec
         uses: ./.github/actions/update-versions
         if: ${{ steps.release-metadata.outcome == 'success' }}
         with:
           package: launchdarkly-server-sdk-redis
-          branch: ${{ steps.release-metadata.outputs.branch }}
-          version: ${{ steps.release-metadata.outputs.semver }}
+          branch: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
 
       - name: Build and Test
         if: ${{ steps.release.outputs.release_created }}
