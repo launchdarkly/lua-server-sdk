@@ -1084,9 +1084,9 @@ you must set all of them. You probably don't need to set this unless instructed 
 LaunchDarkly.
 @tparam[opt] string config.serviceEndpoints.streamingBaseURL Set the streaming URL
 for connecting to LaunchDarkly.
-@tparam[opt] string config.serviceEndpoints.eventsURL Set the events URL for
+@tparam[opt] string config.serviceEndpoints.eventsBaseURL Set the events URL for
 connecting to LaunchDarkly.
-@tparam[opt] string config.serviceEndpoints.pollingURL Set the polling URL for
+@tparam[opt] string config.serviceEndpoints.pollingBaseURL Set the polling URL for
 connecting to LaunchDarkly.
 @tparam[opt] table config.events Options related to event generation and
 delivery.
