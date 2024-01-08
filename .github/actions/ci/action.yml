@@ -97,8 +97,24 @@ runs:
         LD_LIBRARY_PATH: ${{ steps.install-boost.outputs.BOOST_ROOT }}/lib;./cpp-sdk/build-dynamic/release/lib
 
     - name: Run hello-lua-server example
+      if: ${{ ! contains(inputs.lua-version, 'jit') }}
       shell: bash
       env:
         LD_SDK_KEY: "fake-sdk-key"
+        # Needed because boost isn't installed in default system paths, which is
+        # what the C++ Server-side SDK shared object expects.
+        LD_LIBRARY_PATH: ${{ steps.install-boost.outputs.BOOST_ROOT }}/lib
       run: |
         lua ./examples/hello-lua-server/hello.lua
+        
+
+    - name: Run hello-lua-server example (JIT)
+      if: ${{ contains(inputs.lua-version, 'jit') }}
+      shell: bash
+      env:
+        LD_SDK_KEY: "fake-sdk-key"
+        # Needed because boost isn't installed in default system paths, which is
+        # what the C++ Server-side SDK shared object expects.
+        LD_LIBRARY_PATH: ${{ steps.install-boost.outputs.BOOST_ROOT }}/lib
+      run: |
+        luajit ./examples/hello-lua-server/hello.lua
