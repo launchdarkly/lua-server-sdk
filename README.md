@@ -52,7 +52,6 @@ To compile the LuaRock modules:
 1. Install [LuaRocks](https://github.com/luarocks/luarocks/wiki/Download)
 2. Build the [C++ Server-side SDK](https://github.com/launchdarkly/cpp-sdks) from source using CMake, or obtain pre-built artifacts from the [releases page](https://github.com/launchdarkly/cpp-sdks/releases?q=%22launchdarkly-cpp-server%22)
 3. Run `luarocks make` (replace the version number as necessary):
-    <!-- x-release-please-start-version -->
     ```bash
     # Base SDK
     luarocks make launchdarkly-server-sdk-2.0.0-0.rockspec \
@@ -62,7 +61,6 @@ To compile the LuaRock modules:
     luarocks make launchdarkly-server-sdk-redis-2.0.0-0.rockspec \
     LDREDIS_DIR=./path-to-installed-cpp-sdk
     ```
-    <!-- x-release-please-end -->
 
 Please note that the Lua SDK uses the C++ server-side SDK's C bindings, so if you're using prebuilt artifacts
 then only a C99 compiler is necessary.
