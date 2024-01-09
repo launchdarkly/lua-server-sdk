@@ -54,11 +54,11 @@ To compile the LuaRock modules:
 3. Run `luarocks make` (replace the version number as necessary):
     ```bash
     # Base SDK
-    luarocks make launchdarkly-server-sdk-2.0.0-0.rockspec \
+    luarocks make launchdarkly-server-sdk-2.0.1-0.rockspec \
     LD_DIR=./path-to-installed-cpp-sdk
 
     # SDK with Redis
-    luarocks make launchdarkly-server-sdk-redis-2.0.0-0.rockspec \
+    luarocks make launchdarkly-server-sdk-redis-2.0.1-0.rockspec \
     LDREDIS_DIR=./path-to-installed-cpp-sdk
     ```
 

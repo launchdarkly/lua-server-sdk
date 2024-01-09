@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly Lua Server-side SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.0.1](https://github.com/launchdarkly/lua-server-sdk/compare/v2.0.0...v2.0.1) (2024-01-09)
+
+
+### Bug Fixes
+
+* add hello-lua-server example ([#41](https://github.com/launchdarkly/lua-server-sdk/issues/41)) ([462a3f3](https://github.com/launchdarkly/lua-server-sdk/commit/462a3f32f4e9d785fb1656cf6274513ca246740c))
+
 ## [2.0.0](https://github.com/launchdarkly/lua-server-sdk/compare/1.2.2...v2.0.0) (2023-12-28)
 
 
