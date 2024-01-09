@@ -17,6 +17,11 @@ git clone --depth 1 --branch "${1:-main}" https://github.com/launchdarkly/cpp-sd
 cd cpp-sdks
 mkdir build
 cd build
+
+# If you don't need Redis support, then:
+# Set LD_BUILD_REDIS_SUPPORT=OFF
+# Change the build target to launchdarkly-cpp-server
+
 cmake -GNinja -D LD_BUILD_SHARED_LIBS=ON \
       -D BUILD_TESTING=OFF \
       -D LD_BUILD_EXAMPLES=OFF \
