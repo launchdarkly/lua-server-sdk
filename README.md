@@ -58,7 +58,7 @@ To compile the LuaRock modules:
     LD_DIR=./path-to-installed-cpp-sdk
 
     # SDK with Redis
-    luarocks make launchdarkly-server-sdk-redis-2.0.0-0.rockspec \
+    luarocks make launchdarkly-server-sdk-redis-2.0.1-0.rockspec \
     LDREDIS_DIR=./path-to-installed-cpp-sdk
     ```
 
