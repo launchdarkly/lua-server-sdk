@@ -21,7 +21,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/checkout@v4
-        if: ${{ steps.release.outputs.prs_created == 'true' }}
 
       - name: Update launchdarkly-server-sdk rockspec
         uses: ./.github/actions/update-versions
