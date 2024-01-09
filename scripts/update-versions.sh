@@ -84,6 +84,13 @@ for file in "$input_rockspec"-*.rockspec; do
 
     rm -f "$new_file_name.bak"
 
+    # Update README.md to replace $file with the new filename, which will result in the codesample having the new
+    # version number.
+    sed -i.bak "s/$file/$new_file_name/" README.md
+    echo "Updated README.md code example"
+    rm -f README.md.bak
+
+
     if [ "$(git status --porcelain | wc -l)" -gt 0 ]; then
       if [ -n "$git_username" ]; then
         git config user.name "$git_username"
