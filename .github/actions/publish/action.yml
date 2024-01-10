@@ -1,0 +1,24 @@
+name: Publish Package
+description: 'Publish the package to LuaRocks'
+inputs:
+  dry_run:
+    description: "Whether to perform a dry run. If true, the package won't be published."
+    required: false
+    default: 'false'
+  rockspec:
+    description: "The name of the rockspec file to publish."
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Pack rock
+      shell: bash
+      run: luarocks pack ${{ inputs.rockspec }}
+    - name: Upload rock
+      if: ${{ inputs.dry_run == 'false' }}
+      shell: bash
+      env:
+        API_TOKEN: ${{ env.LUAROCKS_API_TOKEN }}
+      run: |
+        luarocks upload ${{ inputs.rockspec }} --api-key "$API_TOKEN"
