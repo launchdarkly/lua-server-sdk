@@ -18,7 +18,5 @@ runs:
     - name: Upload rock
       if: ${{ inputs.dry_run == 'false' }}
       shell: bash
-      env:
-        API_TOKEN: ${{ env.LUAROCKS_API_TOKEN }}
       run: |
-        luarocks upload ${{ inputs.rockspec }} --api-key "$API_TOKEN"
+        luarocks upload ${{ inputs.rockspec }} --api-key "$LUAROCKS_API_TOKEN"

@@ -1,17 +1,17 @@
 name: Get Rockspec Names
-description: 'Generates proper rockspec package names for base and redis variants of the server SDK.'
+description: 'Generates proper rockspec package names for SDK and redis integration'
 outputs:
   server:
-    description: "The name of the base server rockspec package."
+    description: "The name of the server rockspec package."
     value: ${{ steps.pkg-name.outputs.server }}
   server_redis:
-    description: "The name of the redis server rockspec package."
+    description: "The name of the redis rockspec package."
     value: ${{ steps.pkg-name.outputs.server_redis }}
 
 runs:
   using: composite
   steps:
-    - name: Construct rockspec package name
+    - name: Construct rockspec package names
       id: pkg-name
       shell: bash
       env:
@@ -19,4 +19,4 @@ runs:
         LUA_SERVER_REDIS_VERSION: "2.0.2" # {x-release-please-version}
       run: |
         echo "server=launchdarkly-server-sdk-${{ env.LUA_SERVER_VERSION }}-0.rockspec" >> $GITHUB_OUTPUT
-        echo "server_redis=launchdarkly-server-sdk-redis-${{ inputs.LUA_SERVER_REDIS_VERSION }}-0.rockspec" >> $GITHUB_OUTPUT
+        echo "server_redis=launchdarkly-server-sdk-redis-${{ env.LUA_SERVER_REDIS_VERSION }}-0.rockspec" >> $GITHUB_OUTPUT
