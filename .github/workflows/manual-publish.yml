@@ -44,7 +44,7 @@ jobs:
 
       - uses: ./.github/actions/ci
 
-      - uses: ./.github/rockspec-names
+      - uses: ./.github/actions/rockspec-names
         id: rockspecs
 
       - uses: ./.github/actions/publish
