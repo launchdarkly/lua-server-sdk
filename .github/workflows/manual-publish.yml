@@ -9,11 +9,21 @@ on:
         default: true
       rockspec:
         type: choice
-        description: 'Whether to publish the server SDK or redis integration'
+        description: 'Whether to publish the server SDK or redis integration (or both)'
         options:
           - server
           - redis
-
+          - both
+      skip_pack:
+        description: "Whether the uploaded package should contain only the rockspec file, or source as well."
+        required: false
+        type: boolean
+        default: false
+      force:
+        description: "Whether to force the upload of the package, even if it already exists."
+        type: boolean
+        required: false
+        default: false
 
 jobs:
   build-publish:
@@ -39,14 +49,18 @@ jobs:
 
       - uses: ./.github/actions/publish
         name: "Publish Lua Server SDK"
-        if: ${{ inputs.rockspec == 'server' }}
+        if: ${{ inputs.rockspec == 'server' || inputs.rockspec == 'both' }}
         with:
           dry_run: ${{ inputs.dry_run }}
           rockspec: ${{ steps.rockspecs.outputs.server }}
+          skip_pack: ${{ inputs.skip_pack }}
+          force: ${{ inputs.force }}
 
       - uses: ./.github/actions/publish
         name: "Publish Lua Server SDK's Redis Integration"
-        if: ${{ inputs.rockspec == 'redis' }}
+        if: ${{ inputs.rockspec == 'redis' || inputs.rockspec == 'both'}}
         with:
           dry_run: ${{ inputs.dry_run }}
           rockspec: ${{ steps.rockspecs.outputs.server_redis }}
+          skip_pack: ${{ inputs.skip_pack }}
+          force: ${{ inputs.force }}
