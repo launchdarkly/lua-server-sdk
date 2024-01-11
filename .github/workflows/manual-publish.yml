@@ -1,0 +1,66 @@
+name: Publish Package
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Whether to perform a dry run. If true, the package won't be published."
+        type: boolean
+        required: false
+        default: true
+      rockspec:
+        type: choice
+        description: 'Whether to publish the server SDK or redis integration (or both)'
+        options:
+          - server
+          - redis
+          - both
+      skip_pack:
+        description: "Whether the uploaded package should contain only the rockspec file, or source as well."
+        required: false
+        type: boolean
+        default: false
+      force:
+        description: "Whether to force the upload of the package, even if it already exists."
+        type: boolean
+        required: false
+        default: false
+
+jobs:
+  build-publish:
+    runs-on: ubuntu-latest
+
+    # Needed for AWS SSM access.
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.0.0
+        name: 'Get LuaRocks token'
+        with:
+          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+          ssm_parameter_pairs: '/production/common/releasing/luarocks/token = LUAROCKS_API_TOKEN'
+
+      - uses: ./.github/actions/ci
+
+      - uses: ./.github/rockspec-names
+        id: rockspecs
+
+      - uses: ./.github/actions/publish
+        name: "Publish Lua Server SDK"
+        if: ${{ inputs.rockspec == 'server' || inputs.rockspec == 'both' }}
+        with:
+          dry_run: ${{ inputs.dry_run }}
+          rockspec: ${{ steps.rockspecs.outputs.server }}
+          skip_pack: ${{ inputs.skip_pack }}
+          force: ${{ inputs.force }}
+
+      - uses: ./.github/actions/publish
+        name: "Publish Lua Server SDK's Redis Integration"
+        if: ${{ inputs.rockspec == 'redis' || inputs.rockspec == 'both'}}
+        with:
+          dry_run: ${{ inputs.dry_run }}
+          rockspec: ${{ steps.rockspecs.outputs.server_redis }}
+          skip_pack: ${{ inputs.skip_pack }}
+          force: ${{ inputs.force }}
