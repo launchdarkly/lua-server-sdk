@@ -21,6 +21,9 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Install lua-cjson
+      shell: bash
+      run: luarocks install lua-cjson # needed for 'luarocks upload' command
     - name: Pack rock
       shell: bash
       run: luarocks pack ${{ inputs.rockspec }}
