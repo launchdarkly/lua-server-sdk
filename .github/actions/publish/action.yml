@@ -8,6 +8,15 @@ inputs:
   rockspec:
     description: "The name of the rockspec file to publish."
     required: true
+  skip_pack:
+    description: "Whether the uploaded package should contain only the rockspec file, or source as well."
+    required: false
+    default: 'false'
+  force:
+    description: "Whether to force the upload of the package, even if it already exists."
+    required: false
+    default: 'false'
+
 
 runs:
   using: composite
@@ -19,4 +28,11 @@ runs:
       if: ${{ inputs.dry_run == 'false' }}
       shell: bash
       run: |
-        luarocks upload ${{ inputs.rockspec }} --api-key "$LUAROCKS_API_TOKEN"
+        command="luarocks upload ${{ inputs.rockspec }} --api-key $LUAROCKS_API_TOKEN"
+        if [ "${{ inputs.force }}" == "true" ] ; then
+          command="$command --force"
+        fi
+        if [ "${{ inputs.skip_pack }}" == "true" ] ; then
+          command="$command --skip_pack"
+        fi
+        eval "$command"
