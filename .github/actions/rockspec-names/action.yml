@@ -7,6 +7,12 @@ outputs:
   server_redis:
     description: "The name of the redis rockspec package."
     value: ${{ steps.pkg-name.outputs.server_redis }}
+  server_version:
+    description: "The version of the server rockspec package."
+    value: ${{ steps.pkg-name.outputs.server_version }}
+  server_redis_version:
+    description: "The version of the redis rockspec package."
+    value: ${{ steps.pkg-name.outputs.server_redis_version }}
 
 runs:
   using: composite
@@ -20,3 +26,5 @@ runs:
       run: |
         echo "server=launchdarkly-server-sdk-${{ env.LUA_SERVER_VERSION }}-0.rockspec" >> $GITHUB_OUTPUT
         echo "server_redis=launchdarkly-server-sdk-redis-${{ env.LUA_SERVER_REDIS_VERSION }}-0.rockspec" >> $GITHUB_OUTPUT
+        echo "server_version=${{ env.LUA_SERVER_VERSION }}" >> $GITHUB_OUTPUT
+        echo "server_redis_version=${{ env.LUA_SERVER_REDIS_VERSION }}" >> $GITHUB_OUTPUT
