@@ -23,24 +23,43 @@ on:
           - '5.1'
           - '5.2'
           - '5.3'
-          - '5.4'
           - 'luajit-2.0.5'
-        default: '5.4'
+        default: '5.3'
       cpp-sdk-version:
-        description: "Version of the C++ Server-side SDK to use for building and testing."
+        description: "Version of the C++ Server-side SDK."
         required: false
         type: string
         default: 'launchdarkly-cpp-server-redis-source-v2.1.0'
+  workflow_call:
+    inputs:
+      package:
+        required: false
+        type: string
+      version:
+        required: false
+        type: string
+      lua-version:
+        required: false
+        type: string
+      cpp-sdk-version:
+        required: false
+        type: string
 
+env:
+  PACKAGE: ${{ inputs.package == null && 'launchdarkly-server-sdk' || inputs.package }}
+  VERSION: ${{ inputs.version == null && '' || inputs.version }}
+  LUA_VERSION: ${{ inputs.lua-version == null && '5.3' || inputs.lua-version }}
+  CPP_SDK_VERSION: ${{ inputs.cpp-sdk-version == null && 'launchdarkly-cpp-server-redis-source-v2.1.0' || inputs.cpp-sdk-version }}
 jobs:
   install:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Install Lua
         uses: leafo/gh-actions-lua@35bcb06abec04ec87df82e08caa84d545348536e
         with:
-          luaVersion: ${{ inputs.lua-version }}
+          luaVersion: ${{ env.LUA_VERSION }}
 
       - name: Install LuaRocks
         uses: leafo/gh-actions-luarocks@e65774a6386cb4f24e293dca7fc4ff89165b64c5
@@ -55,18 +74,18 @@ jobs:
       - name: Install CPP SDK
         uses: ./.github/actions/install-cpp-sdk-redis
         with:
-          version: ${{ inputs.cpp-sdk-version }}
+          version: ${{ env.CPP_SDK_VERSION }}
           path: cpp-sdk
 
       - name: Install Package
         shell: bash
         env:
-          CPP_PATH: $GITHUB_WORKSPACE/cpp-sdk/build-dynamic/release
+          CPP_PATH: ${{ github.workspace }}/cpp-sdk/build-dynamic/release
         run: |
-          luarocks install ${{ inputs.package }} ${{ inputs.version }} \
+          luarocks install ${{ env.PACKAGE }} ${{ env.VERSION }} \
           LD_DIR=$CPP_PATH \
           LDREDIS_DIR=$CPP_PATH
 
       - name: Remove Package
         shell: bash
-        run: luarocks remove ${{ inputs.package }}
+        run: luarocks remove ${{ env.PACKAGE }}
