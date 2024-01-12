@@ -46,24 +46,54 @@ Boost is fetched as part of the build process._
 Getting started
 -----------
 
-Refer to the [SDK documentation](https://docs.launchdarkly.com/sdk/server-side/lua#getting-started) for instructions on getting started with using the SDK.
+Refer to the [SDK documentation](https://docs.launchdarkly.com/sdk/server-side/lua#getting-started) for instructions on 
+getting started with using the SDK.
 
-To compile the LuaRock modules:
-1. Install [LuaRocks](https://github.com/luarocks/luarocks/wiki/Download)
-2. Build the [C++ Server-side SDK](https://github.com/launchdarkly/cpp-sdks) from source using CMake, or obtain pre-built artifacts from the [releases page](https://github.com/launchdarkly/cpp-sdks/releases?q=%22launchdarkly-cpp-server%22)
-3. Run `luarocks make` (replace the version number as necessary):
-    ```bash
-    # Base SDK
-    luarocks make launchdarkly-server-sdk-2.0.2-0.rockspec \
-    LD_DIR=./path-to-installed-cpp-sdk
+There are two paths to installing the SDK. In both cases, you must first install the native 
+[LaunchDarkly C++ Server-side SDK](https://github.com/launchdarkly/cpp-sdks).
 
-    # SDK with Redis
-    luarocks make launchdarkly-server-sdk-redis-2.0.2-0.rockspec \
-    LDREDIS_DIR=./path-to-installed-cpp-sdk
-    ```
+You may build the C++ SDK from source using [CMake](https://cmake.org/), or obtain pre-built artifacts from the 
+[releases page](https://github.com/launchdarkly/cpp-sdks/releases?q=%22launchdarkly-cpp-server%22). Ensure you install
+the correct variant (with or without Redis support) as necessary.
 
 Please note that the Lua SDK uses the C++ server-side SDK's C bindings, so if you're using prebuilt artifacts
-then only a C99 compiler is necessary.
+then only a C99 compiler is necessary. See the [Build Requirements](https://github.com/launchdarkly/cpp-sdks#build-requirements).
+
+
+Then, install the [LuaRocks](https://github.com/luarocks/luarocks/wiki/Download) package manager.
+
+### Install via `luarocks install`
+
+The [LuaRocks project](https://luarocks.org) maintains a registry of Lua modules. You may install the SDK from 
+the registry using `luarocks install`.
+
+**Install the base SDK only**
+```bash
+luarocks install launchdarkly-server-sdk \
+LD_DIR=./path-to-cpp-sdk-installation
+```
+
+**Install the base SDK with Redis support**
+```bash
+luarocks install launchdarkly-server-sdk-redis \
+LDREDIS_DIR=./path-to-cpp-sdk-with-redis-support-installation
+```
+
+### Install via `luarocks make`
+
+If you don't want to install from LuaRocks, it's possible to compile the modules locally using `luarocks make`.
+
+**Install the base SDK only**
+```bash
+luarocks make launchdarkly-server-sdk-2.0.2-0.rockspec \
+LD_DIR=./path-to-installed-cpp-sdk
+```
+**Install the base SDK with Redis support**
+```bash
+luarocks make launchdarkly-server-sdk-redis-2.0.2-0.rockspec \
+LDREDIS_DIR=./path-to-cpp-sdk-with-redis-support-installation
+```
+
 
 Learn more
 -----------
