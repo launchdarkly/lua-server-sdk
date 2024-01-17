@@ -13,18 +13,30 @@ jobs:
   rockspec-info:
     uses: ./.github/workflows/rockspec-info.yml
 
-  linux-build:
+  rockspecs:
     needs: rockspec-info
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - id: set-matrix
+        run: |
+          data=$(echo ${{ needs.rockspec-info.outputs.info }} | jq -c 'to_entries | map(.value.rockspec)')
+          echo "matrix=$data" >> $GITHUB_OUTPUT
+
+  linux-build:
+    needs: rockspecs
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false
       matrix:
         version: ["5.1", "5.2", "5.3", "luajit-2.0.5"]
+        package: ${{ fromJSON(needs.rockspecs.outputs.matrix) }}
 
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/ci
         with:
           lua-version: ${{ matrix.version }}
-          server-rockspec: ${{ needs.rockspec-info.outputs.server }}
-          redis-rockspec: ${{ needs.rockspec-info.outputs.server_redis }}
+          rockspec: ${{ matrix.package }}
