@@ -10,7 +10,11 @@ on:
       - '**.md'
 
 jobs:
+  rockspec-info:
+    uses: ./.github/workflows/rockspec-info.yml
+
   linux-build:
+    needs: rockspec-info
     runs-on: ubuntu-latest
 
     strategy:
@@ -19,10 +23,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/workflows/rockspec-info.yml
-        id: rockspecs
       - uses: ./.github/actions/ci
         with:
           lua-version: ${{ matrix.version }}
-          server-rockspec: ${{ steps.rockspecs.outputs.server }}
-          redis-rockspec: ${{ steps.rockspecs.outputs.server_redis }}
+          server-rockspec: ${{ needs.rockspec-info.outputs.server }}
+          redis-rockspec: ${{ needs.rockspec-info.outputs.server_redis }}
