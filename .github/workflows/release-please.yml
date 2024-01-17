@@ -48,3 +48,11 @@ jobs:
         if: ${{ steps.release.outputs.release_created == 'true' }}
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: ./.github/workflows/manual-publish.yml
+        if: ${{ steps.release.outputs.release_created == 'true' }}
+        with:
+          dry_run: false
+          skip_pack: false
+          force: false
+          rockspec: 'both'

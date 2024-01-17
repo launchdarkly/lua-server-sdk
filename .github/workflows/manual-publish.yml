@@ -24,7 +24,26 @@ on:
         type: boolean
         required: false
         default: false
+  workflow_call:
+    inputs:
+      rockspec:
+        required: false
+        type: string
+      dry_run:
+        required: false
+        type: boolean
+      skip_pack:
+        required: false
+        type: boolean
+      force:
+        required: false
+        type: boolean
 
+env:
+  ROCKSPEC: ${{ inputs.rockspec == null && 'both' || inputs.rockspec }}
+  DRY_RUN: ${{ inputs.dry_run == null && 'true' || inputs.dry_run }}
+  SKIP_PACK: ${{ inputs.skip_pack == null && 'false' || inputs.skip_pack }}
+  FORCE: ${{ inputs.force == null && 'false' || inputs.force }}
 jobs:
   rockspecs:
     uses: ./.github/workflows/rockspec-info.yml
@@ -53,26 +72,26 @@ jobs:
 
       - uses: ./.github/actions/publish
         name: ${{ format('Publish launchdarkly-server-sdk @ {0}', needs.rockspecs.outputs.server_version) }}
-        if: ${{ inputs.rockspec == 'server' || inputs.rockspec == 'both' }}
+        if: ${{ env.ROCKSPEC == 'server' || env.ROCKSPEC == 'both' }}
         with:
-          dry_run: ${{ inputs.dry_run }}
+          dry_run: ${{ env.DRY_RUN }}
           rockspec: ${{ needs.rockspecs.outputs.server }}
-          skip_pack: ${{ inputs.skip_pack }}
-          force: ${{ inputs.force }}
+          skip_pack: ${{ env.SKIP_PACK }}
+          force: ${{ env.FORCE }}
 
       - uses: ./.github/actions/publish
         name: ${{ format('Publish launchdarkly-server-sdk-redis @ {0}', needs.rockspecs.outputs.server_redis_version) }}
-        if: ${{ inputs.rockspec == 'redis' || inputs.rockspec == 'both'}}
+        if: ${{ env.ROCKSPEC == 'redis' || env.ROCKSPEC == 'both'}}
         with:
-          dry_run: ${{ inputs.dry_run }}
+          dry_run: ${{ env.DRY_RUN }}
           rockspec: ${{ needs.rockspecs.outputs.server_redis }}
-          skip_pack: ${{ inputs.skip_pack }}
-          force: ${{ inputs.force }}
+          skip_pack: ${{ env.SKIP_PACK }}
+          force: ${{ env.FORCE }}
 
   install-server-sdk:
     name: ${{ format('Install launchdarkly-server-sdk @ {0}', needs.rockspecs.outputs.server_version) }}
     needs: [rockspecs, build-publish]
-    if: ${{ inputs.rockspec == 'server' || inputs.rockspec == 'both' }}
+    if: ${{ env.ROCKSPEC == 'server' || env.ROCKSPEC == 'both' }}
     uses: ./.github/workflows/install-lua-sdk.yml
     with:
       package: launchdarkly-server-sdk
@@ -82,7 +101,7 @@ jobs:
   install-server-redis:
     name: ${{ format('Install launchdarkly-server-sdk-redis @ {0}', needs.rockspecs.outputs.server_redis_version) }}
     needs: [rockspecs, build-publish]
-    if: ${{ inputs.rockspec == 'redis' || inputs.rockspec == 'both' }}
+    if: ${{ env.ROCKSPEC == 'redis' || env.ROCKSPEC == 'both' }}
     uses: ./.github/workflows/install-lua-sdk.yml
     with:
       package: launchdarkly-server-sdk-redis
