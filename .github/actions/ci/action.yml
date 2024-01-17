@@ -36,10 +36,12 @@ runs:
 
     - name: Build Package
       shell: bash
+      env:
+        CPP_PATH: ${{ github.workspace }}/cpp-sdk/build-dynamic/release
       run:  |
         luarocks make ${{ inputs.rockspec }} \
-        LD_DIR=./cpp-sdk/build-dynamic/release \
-        LDREDIS_DIR=./cpp-sdk/build-dynamic/release
+        LD_DIR=$CPP_PATH \
+        LDREDIS_DIR=$CPP_PATH
 
     - name: Run Tests
       shell: bash
