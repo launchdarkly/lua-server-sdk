@@ -27,10 +27,7 @@ on:
 
 jobs:
   rockspecs:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/rockspec-names
+    uses: ./.github/workflows/rockspec-info.yml
 
   build-publish:
     needs: rockspecs
@@ -50,6 +47,10 @@ jobs:
           ssm_parameter_pairs: '/production/common/releasing/luarocks/token = LUAROCKS_API_TOKEN'
 
       - uses: ./.github/actions/ci
+        with:
+          server-rockspec: ${{ needs.rockspecs.outputs.server }}
+          redis-rockspec: ${{ needs.rockspecs.outputs.server_redis }}
+
       - uses: ./.github/actions/publish
         name: ${{ format('Publish launchdarkly-server-sdk @ {0}', needs.rockspecs.outputs.server_version) }}
         if: ${{ inputs.rockspec == 'server' || inputs.rockspec == 'both' }}

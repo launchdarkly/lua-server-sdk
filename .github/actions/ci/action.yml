@@ -9,6 +9,13 @@ inputs:
     description: 'Version of the C++ Server-side SDK to use for building and testing.'
     required: false
     default: 'launchdarkly-cpp-server-redis-source-v2.1.0'
+  server-rockspec:
+    description: 'The rockspec file for the server-side SDK.'
+    required: true
+  redis-rockspec:
+    description: 'The rockspec file for the Redis integration'
+    required: true
+
 
 
 runs:
@@ -32,25 +39,22 @@ runs:
           version: ${{ inputs.cpp-sdk-version }}
           path: cpp-sdk
 
-    - uses: ./.github/actions/rockspec-names
-      id: rockspecs
-
     - name: Build Lua Server-side SDK
       shell: bash
       run:  |
-        luarocks make ${{ steps.rockspecs.outputs.server }} \
+        luarocks make ${{ inputs.server-rockspec }} \
         LD_DIR=./cpp-sdk/build-dynamic/release
 
     - name: Build Lua Server-side SDK with Redis
       shell: bash
       run: |
-        luarocks make ${{ steps.rockspecs.outputs.server_redis }} \
+        luarocks make ${{ inputs.redis-rockspec }} \
         LDREDIS_DIR=./cpp-sdk/build-dynamic/release
 
     - name: Run Lua Server-side SDK Tests
       shell: bash
       if: ${{ ! contains(inputs.lua-version, 'jit') }}
-      run: luarocks test ${{ steps.rockspecs.outputs.server }}
+      run: luarocks test ${{ inputs.server-rockspec }}
       env:
         # Needed because boost isn't installed in default system paths, which is
         # what the C++ Server-side SDK shared object expects.
@@ -68,7 +72,7 @@ runs:
     - name: Run Lua Server-side SDK with Redis Tests
       shell: bash
       if: ${{ ! contains(inputs.lua-version, 'jit') }}
-      run: luarocks test ${{ steps.rockspecs.outputs.server_redis }}
+      run: luarocks test ${{ inputs.redis-rockspec }}
       env:
         # Needed because boost isn't installed in default system paths, which is
         # what the C++ Server-side SDK shared object expects. Same for hiredis which is bundled
