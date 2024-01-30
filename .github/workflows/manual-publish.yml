@@ -52,22 +52,20 @@ jobs:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
           ssm_parameter_pairs: '/production/common/releasing/luarocks/token = LUAROCKS_API_TOKEN'
 
-      - name: Sanity check
+      - name: Get package name
+        id: pkg-info
         run: |
-            echo "Matrix value is ${{ matrix.package }}"
-            echo "brackets is ${{ fromJSON(needs.rockspec-info.outputs.info)[matrix.package].version }}"
-            echo "Dot literal is ${{ fromJSON(needs.rockspec-info.outputs.info).server.version }}"
-            echo "Baz is ${{ fromJSON(needs.rockspec-info.outputs.info)['server'].version }}"
-            
+            rockspec=$(echo ${{ needs.rockspec-info.outputs.info }} | jq '.${{ matrix.package }}.rockspec')
+            echo "package=$rockspec" >> $GITHUB_OUTPUT
 
       - uses: ./.github/actions/ci
         with:
-          rockspec: ${{ env.PKG_ROCKSPEC }}
+          rockspec: ${{ steps.pkg-info.outputs.package }}
 
       - uses: ./.github/actions/publish
-        name: ${{ format('Publish {0}', env.PKG_ROCKSPEC) }}
+        name: ${{ format('Publish {0}', steps.pkg-info.outputs.package) }}
         with:
           dry_run: ${{ inputs.dry_run }}
-          rockspec: ${{ env.PKG_ROCKSPEC }}
+          rockspec: ${{ steps.pkg-info.outputs.package }}
           skip_pack: ${{ inputs.skip_pack }}
           force: ${{ inputs.force }}
