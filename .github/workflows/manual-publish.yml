@@ -6,9 +6,9 @@ on:
         type: choice
         description: 'What to publish?'
         options:
+          - '["server","redis"]'
           - '["server"]'
           - '["redis"]'
-          - '["server","redis"]'
       dry_run:
         description: "Dry run? If checked, don't publish."
         type: boolean
@@ -51,6 +51,14 @@ jobs:
         with:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
           ssm_parameter_pairs: '/production/common/releasing/luarocks/token = LUAROCKS_API_TOKEN'
+
+      - name: Sanity check
+        run: |
+            echo "Matrix value is ${{ matrix.package }}"
+            echo "brackets is ${{ fromJSON(needs.rockspec-info.outputs.info)[matrix.package].version }}"
+            echo "Dot literal is ${{ fromJSON(needs.rockspec-info.outputs.info).server.version }}"
+            echo "Baz is ${{ fromJSON(needs.rockspec-info.outputs.info)['server'].version }}"
+            
 
       - uses: ./.github/actions/ci
         with:
