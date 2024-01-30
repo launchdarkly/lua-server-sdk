@@ -9,7 +9,9 @@ inputs:
     description: 'Version of the C++ Server-side SDK to use for building and testing.'
     required: false
     default: 'launchdarkly-cpp-server-redis-source-v2.1.0'
-
+  rockspec:
+    description: 'The rockspec file for the server-side SDK.'
+    required: true
 
 runs:
   using: composite
@@ -32,78 +34,31 @@ runs:
           version: ${{ inputs.cpp-sdk-version }}
           path: cpp-sdk
 
-    - uses: ./.github/actions/rockspec-names
-      id: rockspecs
-
-    - name: Build Lua Server-side SDK
+    - name: Build Package
       shell: bash
+      env:
+        CPP_PATH: ${{ github.workspace }}/cpp-sdk/build-dynamic/release
       run:  |
-        luarocks make ${{ steps.rockspecs.outputs.server }} \
-        LD_DIR=./cpp-sdk/build-dynamic/release
+        luarocks make ${{ inputs.rockspec }} \
+        LD_DIR=$CPP_PATH \
+        LDREDIS_DIR=$CPP_PATH
 
-    - name: Build Lua Server-side SDK with Redis
+    - name: Run Tests
       shell: bash
-      run: |
-        luarocks make ${{ steps.rockspecs.outputs.server_redis }} \
-        LDREDIS_DIR=./cpp-sdk/build-dynamic/release
-
-    - name: Run Lua Server-side SDK Tests
-      shell: bash
-      if: ${{ ! contains(inputs.lua-version, 'jit') }}
-      run: luarocks test ${{ steps.rockspecs.outputs.server }}
+      run: luarocks test ${{ inputs.rockspec }}
       env:
         # Needed because boost isn't installed in default system paths, which is
         # what the C++ Server-side SDK shared object expects.
-        LD_LIBRARY_PATH: ${{ steps.install-boost.outputs.BOOST_ROOT }}/lib
-
-    - name: Run Lua Server-side SDK Tests (JIT)
-      shell: bash
-      if: ${{ contains(inputs.lua-version, 'jit') }}
-      run: luajit test.lua
-      env:
-        # Needed because boost isn't installed in default system paths, which is
-        # what the C++ Server-side SDK shared object expects.
-        LD_LIBRARY_PATH: ${{ steps.install-boost.outputs.BOOST_ROOT }}/lib
-
-    - name: Run Lua Server-side SDK with Redis Tests
-      shell: bash
-      if: ${{ ! contains(inputs.lua-version, 'jit') }}
-      run: luarocks test ${{ steps.rockspecs.outputs.server_redis }}
-      env:
-        # Needed because boost isn't installed in default system paths, which is
-        # what the C++ Server-side SDK shared object expects. Same for hiredis which is bundled
-        # with the SDK release.
         LD_LIBRARY_PATH: ${{ steps.install-boost.outputs.BOOST_ROOT }}/lib;./cpp-sdk/build-dynamic/release/lib
-
-    - name: Run Lua Server-side SDK with Redis Tests (JIT)
-      shell: bash
-      if: ${{ contains(inputs.lua-version, 'jit') }}
-      run: luajit test-redis.lua
-      env:
-        # Needed because boost isn't installed in default system paths, which is
-        # what the C++ Server-side SDK shared object expects. Same for hiredis which is bundled
-        # with the SDK release.
-        LD_LIBRARY_PATH: ${{ steps.install-boost.outputs.BOOST_ROOT }}/lib;./cpp-sdk/build-dynamic/release/lib
+        LUA_INTERPRETER: ${{ contains(inputs.lua-version, 'jit') && 'luajit' || 'lua' }}
 
     - name: Run hello-lua-server example
       if: ${{ !contains(inputs.lua-version, 'jit') }}
       shell: bash
+      run: ./scripts/interpreter.sh ./examples/hello-lua-server/hello.lua
       env:
         LD_SDK_KEY: "fake-sdk-key"
         # Needed because boost isn't installed in default system paths, which is
         # what the C++ Server-side SDK shared object expects.
         LD_LIBRARY_PATH: ${{ steps.install-boost.outputs.BOOST_ROOT }}/lib
-      run: |
-        lua ./examples/hello-lua-server/hello.lua
-        
-
-    - name: Run hello-lua-server example (JIT)
-      if: ${{ contains(inputs.lua-version, 'jit') }}
-      shell: bash
-      env:
-        LD_SDK_KEY: "fake-sdk-key"
-        # Needed because boost isn't installed in default system paths, which is
-        # what the C++ Server-side SDK shared object expects.
-        LD_LIBRARY_PATH: ${{ steps.install-boost.outputs.BOOST_ROOT }}/lib
-      run: |
-        luajit ./examples/hello-lua-server/hello.lua
+        LUA_INTERPRETER: ${{ contains(inputs.lua-version, 'jit') && 'luajit' || 'lua' }}

@@ -1,0 +1,29 @@
+name: Get Rockspec Info
+on:
+  workflow_call:
+    outputs:
+      info:
+        description: "JSON object with rockspec info"
+        value: ${{ jobs.rockspec-info.outputs.info }}
+
+env:
+  LUA_SERVER_VERSION: "2.0.2"  # {x-release-please-version}
+  LUA_SERVER_REDIS_VERSION: "2.0.2" # {x-release-please-version}
+
+
+jobs:
+  rockspec-info:
+    runs-on: ubuntu-latest
+    outputs:
+      info: ${{ steps.pkg-info.outputs.info }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Construct rockspec package names
+        id: pkg-info
+        run: |
+          echo 'info<<EOF' >> $GITHUB_OUTPUT
+          echo '"{' >> $GITHUB_OUTPUT
+          echo '\"server\":{\"version\":\"${{ env.LUA_SERVER_VERSION}}\",\"rockspec\":\"launchdarkly-server-sdk-${{ env.LUA_SERVER_VERSION }}-0.rockspec\"},' >> $GITHUB_OUTPUT
+          echo '\"redis\":{\"version\":\"${{ env.LUA_SERVER_REDIS_VERSION}}\",\"rockspec\":\"launchdarkly-server-sdk-redis-${{ env.LUA_SERVER_REDIS_VERSION }}-0.rockspec\"}' >> $GITHUB_OUTPUT
+          echo '}"' >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
