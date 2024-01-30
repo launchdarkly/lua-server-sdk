@@ -37,13 +37,11 @@ jobs:
       fail-fast: true
       matrix:
         package: ${{ fromJSON(inputs.package) }}
-    # Needed for AWS SSM access.
+    # Needed for AWS SSM access to get the LuaRocks token.
     permissions:
       id-token: write
       contents: read
-    env:
-      PKG_VERSION: ${{ fromJSON(needs.rockspec-info.outputs.info)[matrix.package].version }}
-      PKG_ROCKSPEC: ${{ fromJSON(needs.rockspec-info.outputs.info)[matrix.package].rockspec }}
+
     steps:
       - uses: actions/checkout@v4
       - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.0.0
