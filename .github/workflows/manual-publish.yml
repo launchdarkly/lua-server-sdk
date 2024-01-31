@@ -2,13 +2,13 @@ name: Publish Package
 on:
   workflow_dispatch:
     inputs:
-      rockspec:
+      package:
         type: choice
         description: 'What to publish?'
         options:
-          - server
-          - redis
-          - both
+          - '["server","redis"]'
+          - '["server"]'
+          - '["redis"]'
       dry_run:
         description: "Dry run? If checked, don't publish."
         type: boolean
@@ -26,14 +26,18 @@ on:
         default: false
 
 jobs:
-  rockspecs:
+  rockspec-info:
     uses: ./.github/workflows/rockspec-info.yml
 
   build-publish:
-    needs: rockspecs
+    needs: rockspec-info
     runs-on: ubuntu-latest
 
-    # Needed for AWS SSM access.
+    strategy:
+      fail-fast: true
+      matrix:
+        package: ${{ fromJSON(inputs.package) }}
+    # Needed for AWS SSM access to get the LuaRocks token.
     permissions:
       id-token: write
       contents: read
@@ -46,44 +50,20 @@ jobs:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
           ssm_parameter_pairs: '/production/common/releasing/luarocks/token = LUAROCKS_API_TOKEN'
 
+      - name: Get package name
+        id: pkg-info
+        run: |
+            rockspec=$(echo ${{ needs.rockspec-info.outputs.info }} | jq '.${{ matrix.package }}.rockspec')
+            echo "package=$rockspec" >> $GITHUB_OUTPUT
+
       - uses: ./.github/actions/ci
         with:
-          server-rockspec: ${{ needs.rockspecs.outputs.server }}
-          redis-rockspec: ${{ needs.rockspecs.outputs.server_redis }}
+          rockspec: ${{ steps.pkg-info.outputs.package }}
 
       - uses: ./.github/actions/publish
-        name: ${{ format('Publish launchdarkly-server-sdk @ {0}', needs.rockspecs.outputs.server_version) }}
-        if: ${{ inputs.rockspec == 'server' || inputs.rockspec == 'both' }}
+        name: ${{ format('Publish {0}', steps.pkg-info.outputs.package) }}
         with:
           dry_run: ${{ inputs.dry_run }}
-          rockspec: ${{ needs.rockspecs.outputs.server }}
+          rockspec: ${{ steps.pkg-info.outputs.package }}
           skip_pack: ${{ inputs.skip_pack }}
           force: ${{ inputs.force }}
-
-      - uses: ./.github/actions/publish
-        name: ${{ format('Publish launchdarkly-server-sdk-redis @ {0}', needs.rockspecs.outputs.server_redis_version) }}
-        if: ${{ inputs.rockspec == 'redis' || inputs.rockspec == 'both'}}
-        with:
-          dry_run: ${{ inputs.dry_run }}
-          rockspec: ${{ needs.rockspecs.outputs.server_redis }}
-          skip_pack: ${{ inputs.skip_pack }}
-          force: ${{ inputs.force }}
-
-  install-server-sdk:
-    name: ${{ format('Install launchdarkly-server-sdk @ {0}', needs.rockspecs.outputs.server_version) }}
-    needs: [rockspecs, build-publish]
-    if: ${{ inputs.rockspec == 'server' || inputs.rockspec == 'both' }}
-    uses: ./.github/workflows/install-lua-sdk.yml
-    with:
-      package: launchdarkly-server-sdk
-      version: ${{ needs.rockspecs.outputs.server_version }}
-
-
-  install-server-redis:
-    name: ${{ format('Install launchdarkly-server-sdk-redis @ {0}', needs.rockspecs.outputs.server_redis_version) }}
-    needs: [rockspecs, build-publish]
-    if: ${{ inputs.rockspec == 'redis' || inputs.rockspec == 'both' }}
-    uses: ./.github/workflows/install-lua-sdk.yml
-    with:
-      package: launchdarkly-server-sdk-redis
-      version: ${{ needs.rockspecs.outputs.server_redis_version }}
