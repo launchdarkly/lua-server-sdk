@@ -44,7 +44,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.0.0
+      - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.0.2
         name: 'Get LuaRocks token'
         with:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
