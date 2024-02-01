@@ -49,6 +49,14 @@ Getting started
 Refer to the [SDK documentation](https://docs.launchdarkly.com/sdk/server-side/lua#getting-started) for instructions on 
 getting started with using the SDK.
 
+Runnable examples in this repo are available:
+
+| Example                                         | Purpose                                                                                       |
+|-------------------------------------------------|-----------------------------------------------------------------------------------------------|
+| [hello-lua-server](./examples/hello-lua-server) | Demonstrates basic example of Lua SDK usage from the command line.                            |
+| [hello-haproxy](./examples/hello-haproxy)       | Demonstrates usage of the Lua SDK as a [HAproxy](https://www.haproxy.org/) module via Docker. |
+
+
 There are two paths to installing the SDK. In both cases, you must first install the native 
 [LaunchDarkly C++ Server-side SDK](https://github.com/launchdarkly/cpp-sdks).
 
