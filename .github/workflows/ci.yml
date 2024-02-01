@@ -52,13 +52,11 @@ jobs:
         run: |
           docker build -t launchdarkly:hello-haproxy -f ./examples/hello-haproxy/Dockerfile .
       - name: Run hello-haproxy container in background
-        # The sleep is to give haproxy some time to start-up.
         run: |
           docker run -dit --rm --name hello-haproxy -p 8123:8123 --env LD_SDK_KEY="$LD_SDK_KEY" launchdarkly:hello-haproxy
-          sleep 5
       - name: Evaluate feature flag
         run: |
-          curl -s -v http://localhost:8123 | tee response.txt
+          curl --retry 5 --retry-all-errors --retry-delay 1 -s -v http://localhost:8123 | tee response.txt
           grep -F "Feature flag is false for this user" response.txt || (echo "Expected false evaluation!" && exit 1)
       - name: Stop hello-haproxy container
         run: |

@@ -49,7 +49,8 @@ Getting started
 Refer to the [SDK documentation](https://docs.launchdarkly.com/sdk/server-side/lua#getting-started) for instructions on 
 getting started with using the SDK.
 
-Runnable examples in this repo are available:
+The following examples are available in addition to the usage guide linked above:
+
 
 | Example                                         | Purpose                                                                                       |
 |-------------------------------------------------|-----------------------------------------------------------------------------------------------|
@@ -57,18 +58,20 @@ Runnable examples in this repo are available:
 | [hello-haproxy](./examples/hello-haproxy)       | Demonstrates usage of the Lua SDK as a [HAproxy](https://www.haproxy.org/) module via Docker. |
 
 
+Before you start using the SDK, you'll need to install it.
+
 There are two paths to installing the SDK. In both cases, you must first install the native 
 [LaunchDarkly C++ Server-side SDK](https://github.com/launchdarkly/cpp-sdks).
 
 You may build the C++ SDK from source using [CMake](https://cmake.org/), or obtain pre-built artifacts from the 
 [releases page](https://github.com/launchdarkly/cpp-sdks/releases?q=%22launchdarkly-cpp-server%22). Ensure you install
-the correct variant (with or without Redis support) as necessary.
+the correct variant (with or without Redis support) as defined by your requirements.
 
 Please note that the Lua SDK uses the C++ server-side SDK's C bindings, so if you're using prebuilt artifacts
 then only a C99 compiler is necessary. See the [Build Requirements](https://github.com/launchdarkly/cpp-sdks#build-requirements).
 
 
-Then, install the [LuaRocks](https://github.com/luarocks/luarocks/wiki/Download) package manager.
+Once the C++ SDK is available, install the [LuaRocks](https://github.com/luarocks/luarocks/wiki/Download) package manager.
 
 ### Install via `luarocks install`
 
@@ -89,7 +92,7 @@ LDREDIS_DIR=./path-to-cpp-sdk-with-redis-support-installation
 
 ### Install via `luarocks make`
 
-If you don't want to install from LuaRocks, it's possible to compile the modules locally using `luarocks make`.
+If you don't want to install from LuaRocks, it's possible to compile the modules locally in this git repo by using `luarocks make`.
 
 **Install the base SDK only**
 ```bash
@@ -111,7 +114,7 @@ Read our [documentation](https://docs.launchdarkly.com) for in-depth instruction
 Testing
 -------
 
-We run integration tests for all our SDKs using a centralized test harness. This approach gives us the ability to test for consistency across SDKs, as well as test networking behavior in a long-running application. These tests cover each method in the SDK, and verify that event sending, flag evaluation, stream reconnection, and other aspects of the SDK all behave correctly.
+We run integration tests for all our SDKs using a centralized test harness. This approach gives us the ability to test for consistency across SDKs. These tests cover each method in the SDK, and verify that event sending, flag evaluation, stream reconnection, and other aspects of the SDK all behave correctly.
 
 Contributing
 ------------
