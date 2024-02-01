@@ -40,3 +40,23 @@ jobs:
         with:
           lua-version: ${{ matrix.version }}
           rockspec: ${{ matrix.package }}
+
+
+  hello-haproxy:
+    runs-on: ubuntu-latest
+    env:
+      LD_SDK_KEY: "foo"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build hello-haproxy image
+        run: |
+          docker build -t launchdarkly:hello-haproxy -f ./examples/hello-haproxy/Dockerfile .
+      - name: Run hello-haproxy container in background
+        run: |
+          docker run -dit --rm --name hello-haproxy -p 8123:8123 --env LD_SDK_KEY="$LD_SDK_KEY" launchdarkly:hello-haproxy
+      - name: Evaluate feature flag
+        run: |
+          curl -s http://localhost:8123
+      - name: Stop hello-haproxy container
+        run: |
+          docker stop hello-haproxy
