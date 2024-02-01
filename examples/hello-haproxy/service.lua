@@ -45,6 +45,6 @@ core.register_service("launchdarkly", "http", function(applet)
     if client:boolVariation(user, get_key_from_env_or("FLAG_KEY", YOUR_FEATURE_KEY), false) then
         applet:send("<p>Feature flag is true for this user</p>")
     else
-        applet:send("<p>Feature flag is false for this user</p>")
+        applet:send("<p>Feature flag is blah blah for this user</p>")
     end
 end)
