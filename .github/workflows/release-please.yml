@@ -26,6 +26,7 @@ jobs:
         id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          target-branch: ${{ github.ref_name }}
 
   update-release-pr:
     needs: release-please
