@@ -6,15 +6,17 @@ on:
     branches:
       - main
 
+permissions:
+  pull-requests: write # Needed to create the release PR
+  contents: write # Needed to generate the release
+
+
 jobs:
   rockspec-info:
     uses: ./.github/workflows/rockspec-info.yml
 
   release-please:
     runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write # Needed to create the release PR
-      contents: write # Needed to generate the release
 
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
