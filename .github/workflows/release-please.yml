@@ -13,9 +13,7 @@ jobs:
 
   release-please:
     runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write # Needed to create the release PR
-      contents: write # Needed to generate the release
+    permissions: write-all
 
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}

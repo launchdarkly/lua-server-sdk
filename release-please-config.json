@@ -3,7 +3,14 @@
     ".": {
       "release-type": "simple",
       "bump-minor-pre-major": true,
-      "versioning": "default"
+      "versioning": "default",
+      "extra-files": [
+        "launchdarkly-server-sdk.c",
+        ".github/workflows/rockspec-info.yml",
+        "README.md",
+        "scripts/update-versions.sh",
+        "scripts/compile.sh"
+      ]
     }
   }
 }
