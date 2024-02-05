@@ -7,13 +7,15 @@ on:
       - main
 
 
+permissions: write-all
+
 jobs:
   rockspec-info:
     uses: ./.github/workflows/rockspec-info.yml
 
   release-please:
     runs-on: ubuntu-latest
-    permissions: write-all
+
 
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
