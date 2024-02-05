@@ -20,7 +20,7 @@ jobs:
       prs_created: ${{ steps.release.outputs.prs_created }}
       pr_branch_name: ${{ steps.release.outputs.prs_created == 'true' && fromJSON(steps.release.outputs.pr).headBranchName || '' }}
     steps:
-      - uses: google-github-actions/release-please-action@v4
+      - uses: cwaldren-ld/release-please-action@abc94317b0567221f719cd278b2a2a597a2069fe
         id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
