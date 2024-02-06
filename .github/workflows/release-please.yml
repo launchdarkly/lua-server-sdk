@@ -1,7 +1,6 @@
 name: Run Release Please
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
