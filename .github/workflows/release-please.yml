@@ -10,5 +10,5 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
-      - uses: cwaldren-ld/release-please-action@eac2b02ccd6fb51842de42218cd3f7568421d2db
+      - uses: cwaldren-ld/release-please-action@ab8a11107d3502767d424835d5084ab324b1095c
         id: release
