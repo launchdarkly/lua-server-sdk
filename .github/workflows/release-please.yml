@@ -12,5 +12,3 @@ jobs:
     steps:
       - uses: cwaldren-ld/release-please-action@c20bc7716919838e71934160b59925db0b3e59af
         id: release
-        with:
-          token: ${{ github.token }}
