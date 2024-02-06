@@ -13,4 +13,4 @@ jobs:
       - uses: cwaldren-ld/release-please-action@ab8a11107d3502767d424835d5084ab324b1095c
         id: release
         with:
-          token: bogus
+          token: ${{ secrets.GITHUB_TOKEN }}
