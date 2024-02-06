@@ -8,8 +8,7 @@ on:
 
 
 jobs:
-  rockspec-info:
-    uses: ./.github/workflows/rockspec-info.yml
+
 
   release-please:
     runs-on: ubuntu-latest
@@ -28,12 +27,14 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           target-branch: ${{ github.ref_name }}
 
+  rockspec-info:
+    needs: release-please
+    uses: ./.github/workflows/rockspec-info.yml
+
   update-release-pr:
     needs: release-please
     if: ${{ needs.release-please.outputs.prs_created == 'true' }}
     runs-on: ubuntu-latest
-    permissions:
-      workflows: write
     steps:
       - uses: actions/checkout@v4
       - name: Update launchdarkly-server-sdk rockspec
