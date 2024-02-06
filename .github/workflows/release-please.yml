@@ -1,6 +1,7 @@
 name: Run Release Please
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -9,9 +10,7 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
-      - uses: google-github-actions/release-please-action@v3
+      - uses: cwaldren-ld/release-please-action@c20bc7716919838e71934160b59925db0b3e59af
         id: release
         with:
-          command: manifest
           token: ${{ secrets.GITHUB_TOKEN }}
-          default-branch: main
