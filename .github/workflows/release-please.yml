@@ -6,97 +6,33 @@ on:
     branches:
       - main
 
-
-permissions: write-all
-
 jobs:
-  rockspec-info:
-    uses: ./.github/workflows/rockspec-info.yml
-
   release-please:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
 
 
-    outputs:
-      release_created: ${{ steps.release.outputs.release_created }}
-      prs_created: ${{ steps.release.outputs.prs_created }}
-      pr_branch_name: ${{ steps.release.outputs.prs_created == 'true' && fromJSON(steps.release.outputs.pr).headBranchName || '' }}
     steps:
-      - uses: cwaldren-ld/release-please-action@abc94317b0567221f719cd278b2a2a597a2069fe
+      - uses: google-github-actions/release-please-action@v4
         id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          target-branch: main
 
-  update-release-pr:
-    needs: release-please
-    if: ${{ needs.release-please.outputs.prs_created == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
       - uses: actions/checkout@v4
+        if: ${{ steps.release.outputs.prs_created == 'true' }}
+
       - name: Update launchdarkly-server-sdk rockspec
         uses: ./.github/actions/update-versions
+        if: ${{ steps.release.outputs.prs_created == 'true' }}
         with:
           package: launchdarkly-server-sdk
-          branch: ${{ needs.release-please.outputs.pr_branch_name }}
+          branch: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
 
       - name: Update launchdarkly-server-sdk-redis rockspec
         uses: ./.github/actions/update-versions
+        if: ${{ steps.release.outputs.prs_created == 'true' }}
         with:
           package: launchdarkly-server-sdk-redis
-          branch: ${{ needs.release-please.outputs.pr_branch_name }}
-
-  publish-docs:
-    permissions:
-      contents: write # Needed to publish to Github Pages
-    needs: release-please
-    if: ${{ needs.release-please.outputs.release_created == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build documentation
-        uses: ./.github/actions/build-docs
-
-      - name: Publish docs
-        uses: ./.github/actions/publish-docs
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-  publish-server:
-    permissions: # Needed for access to the LuaRocks token
-      id-token: write
-      contents: read
-    needs: [release-please, rockspec-info]
-    if: ${{ needs.release-please.outputs.release_created == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.0.2
-      name: 'Get LuaRocks token'
-      with:
-        aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
-        ssm_parameter_pairs: '/production/common/releasing/luarocks/token = LUAROCKS_API_TOKEN'
-    - uses: ./.github/actions/publish
-      name: Publish server package
-      with:
-        dry_run: 'false'
-        rockspec: ${{ fromJSON(needs.rockspec-info.outputs.info).server }}
-
-  publish-redis:
-    permissions: # Needed for access to the LuaRocks token
-      id-token: write
-      contents: read
-    needs: [ publish-server, rockspec-info ]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.0.2
-        name: 'Get LuaRocks token'
-        with:
-          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
-          ssm_parameter_pairs: '/production/common/releasing/luarocks/token = LUAROCKS_API_TOKEN'
-      - uses: ./.github/actions/publish
-        name: Publish redis package
-        with:
-          dry_run: 'false'
-          rockspec: ${{ fromJSON(needs.rockspec-info.outputs.info).redis }}
+          branch: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
