@@ -32,6 +32,8 @@ jobs:
     needs: release-please
     if: ${{ needs.release-please.outputs.prs_created == 'true' }}
     runs-on: ubuntu-latest
+    permissions:
+      workflows: write
     steps:
       - uses: actions/checkout@v4
       - name: Update launchdarkly-server-sdk rockspec
