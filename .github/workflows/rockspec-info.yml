@@ -6,11 +6,6 @@ on:
         description: "JSON object with rockspec info"
         value: ${{ jobs.rockspec-info.outputs.info }}
 
-env:
-  LUA_SERVER_VERSION: "2.0.2"  # {x-release-please-version}
-  LUA_SERVER_REDIS_VERSION: "2.0.2" # {x-release-please-version}
-
-
 jobs:
   rockspec-info:
     runs-on: ubuntu-latest
@@ -18,12 +13,17 @@ jobs:
       info: ${{ steps.pkg-info.outputs.info }}
     steps:
       - uses: actions/checkout@v4
+      - name: Fetch release please manifest
+        id: manifest
+        run: |
+            version=$(jq '."."' < .release-please-manifest.json)
+            echo "version=$version" >> $GITHUB_OUTPUT
       - name: Construct rockspec package names
         id: pkg-info
         run: |
           echo 'info<<EOF' >> $GITHUB_OUTPUT
           echo '"{' >> $GITHUB_OUTPUT
-          echo '\"server\":{\"version\":\"${{ env.LUA_SERVER_VERSION}}\",\"rockspec\":\"launchdarkly-server-sdk-${{ env.LUA_SERVER_VERSION }}-0.rockspec\"},' >> $GITHUB_OUTPUT
-          echo '\"redis\":{\"version\":\"${{ env.LUA_SERVER_REDIS_VERSION}}\",\"rockspec\":\"launchdarkly-server-sdk-redis-${{ env.LUA_SERVER_REDIS_VERSION }}-0.rockspec\"}' >> $GITHUB_OUTPUT
+          echo '\"server\":{\"version\":\"${{ steps.manifest.outputs.version }}\",\"rockspec\":\"launchdarkly-server-sdk-${{ steps.manifest.outputs.version }}-0.rockspec\"},' >> $GITHUB_OUTPUT
+          echo '\"redis\":{\"version\":\"${{ steps.manifest.outputs.version }}\",\"rockspec\":\"launchdarkly-server-sdk-redis-${{ steps.manifest.outputs.version }}-0.rockspec\"}' >> $GITHUB_OUTPUT
           echo '}"' >> $GITHUB_OUTPUT
           echo 'EOF' >> $GITHUB_OUTPUT
