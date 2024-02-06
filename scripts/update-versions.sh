@@ -90,10 +90,6 @@ for file in "$input_rockspec"-*.rockspec; do
     echo "Updated README.md code example"
     rm -f README.md.bak
 
-    sed -i.bak "s/LUA_SERVER_VERSION: \".*\"/LUA_SERVER_VERSION: \"$input_version\"/" .github/workflows/rockspec-info.yml
-    sed -i.bak "s/LUA_SERVER_REDIS_VERSION: \".*\"/LUA_SERVER_REDIS_VERSION: \"$input_version\"/" .github/workflows/rockspec-info.yml
-    echo "Updated versions in rockspec-info.yml"
-    rm -rf .github/workflows/rockspec-info.yml.bak
 
     if [ "$(git status --porcelain | wc -l)" -gt 0 ]; then
       if [ -n "$git_username" ]; then
@@ -104,7 +100,6 @@ for file in "$input_rockspec"-*.rockspec; do
       fi
       git add "$new_file_name"
       git add README.md
-      git add .github/workflows/rockspec-info.yml
       if [ $autocommit ]; then
         git commit -m "chore: bump $input_rockspec version from $semver to $input_version"
         git push
