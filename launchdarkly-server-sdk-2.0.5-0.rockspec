@@ -2,7 +2,7 @@ package = "launchdarkly-server-sdk"
 
 rockspec_format = "3.0"
 
-version = "2.0.4-0"
+version = "2.0.5-0"
 
 description = {
    summary = "LaunchDarkly SDK for server-side applications.",
@@ -20,7 +20,7 @@ description = {
 
 source = {
    url = "git+https://github.com/launchdarkly/lua-server-sdk.git",
-   tag = "v2.0.4"
+   tag = "v2.0.5"
 }
 
 dependencies = {
