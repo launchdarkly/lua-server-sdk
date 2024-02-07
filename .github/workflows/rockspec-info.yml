@@ -20,10 +20,11 @@ jobs:
             echo "version=$version" >> $GITHUB_OUTPUT
       - name: Construct rockspec package names
         id: pkg-info
+        env:
+          V: ${{ steps.manifest.outputs.version }}
         run: |
-          echo 'info<<EOF' >> $GITHUB_OUTPUT
-          echo '"{' >> $GITHUB_OUTPUT
-          echo '\"server\":{\"version\":\"${{ steps.manifest.outputs.version }}\",\"rockspec\":\"launchdarkly-server-sdk-${{ steps.manifest.outputs.version }}-0.rockspec\"},' >> $GITHUB_OUTPUT
-          echo '\"redis\":{\"version\":\"${{ steps.manifest.outputs.version }}\",\"rockspec\":\"launchdarkly-server-sdk-redis-${{ steps.manifest.outputs.version }}-0.rockspec\"}' >> $GITHUB_OUTPUT
-          echo '}"' >> $GITHUB_OUTPUT
-          echo 'EOF' >> $GITHUB_OUTPUT
+          json=$(echo 'null' | jq -c '{
+          "server":{"version":"${{ env.V }}","rockspec":"launchdarkly-server-sdk-${{ env.V }}-0.rockspec"},
+          "redis":{"version":"${{ env.V }}","rockspec":"launchdarkly-server-sdk-redis-${{ env.V }}-0.rockspec"}
+          }')
+          echo "info=$json" >> $GITHUB_OUTPUT 
