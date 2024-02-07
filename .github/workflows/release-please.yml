@@ -78,12 +78,12 @@ jobs:
           ssm_parameter_pairs: '/production/common/releasing/luarocks/token = LUAROCKS_API_TOKEN'
       - uses: ./.github/actions/ci
         with:
-          rockspec: ${{ fromJSON(needs.rockspec-info.outputs.info).server }}
+          rockspec: ${{ fromJSON(needs.rockspec-info.outputs.info).server.rockspec }}
       - uses: ./.github/actions/publish
         name: Publish server package
         with:
           dry_run: 'false'
-          rockspec: ${{ fromJSON(needs.rockspec-info.outputs.info).server }}
+          rockspec: ${{ fromJSON(needs.rockspec-info.outputs.info).server.rockspec }}
 
   publish-redis:
     permissions: # Needed for access to the LuaRocks token
@@ -100,9 +100,9 @@ jobs:
           ssm_parameter_pairs: '/production/common/releasing/luarocks/token = LUAROCKS_API_TOKEN'
       - uses: ./.github/actions/ci
         with:
-          rockspec: ${{ fromJSON(needs.rockspec-info.outputs.info).redis }}
+          rockspec: ${{ fromJSON(needs.rockspec-info.outputs.info).redis.rockspec }}
       - uses: ./.github/actions/publish
         name: Publish redis package
         with:
           dry_run: 'false'
-          rockspec: ${{ fromJSON(needs.rockspec-info.outputs.info).redis }}
+          rockspec: ${{ fromJSON(needs.rockspec-info.outputs.info).redis.rockspec }}
