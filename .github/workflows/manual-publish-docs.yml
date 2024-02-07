@@ -11,9 +11,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build and Test
-        uses: ./.github/actions/ci
-
       - name: Build documentation
         uses: ./.github/actions/build-docs
 

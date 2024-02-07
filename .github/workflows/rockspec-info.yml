@@ -16,7 +16,7 @@ jobs:
       - name: Fetch release please manifest
         id: manifest
         run: |
-            version=$(jq '."."' < .release-please-manifest.json)
+            version=$(jq --raw-output '."."' < .release-please-manifest.json)
             echo "version=$version" >> $GITHUB_OUTPUT
       - name: Construct rockspec package names
         id: pkg-info
