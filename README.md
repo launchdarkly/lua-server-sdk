@@ -96,12 +96,12 @@ If you don't want to install from LuaRocks, it's possible to compile the modules
 
 **Install the base SDK only**
 ```bash
-luarocks make launchdarkly-server-sdk-2.0.3-0.rockspec \
+luarocks make launchdarkly-server-sdk-2.0.4-0.rockspec \
 LD_DIR=./path-to-installed-cpp-sdk
 ```
 **Install the base SDK with Redis support**
 ```bash
-luarocks make launchdarkly-server-sdk-redis-2.0.3-0.rockspec \
+luarocks make launchdarkly-server-sdk-redis-2.0.4-0.rockspec \
 LDREDIS_DIR=./path-to-cpp-sdk-with-redis-support-installation
 ```
 
