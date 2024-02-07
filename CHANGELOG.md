@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly Lua Server-side SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.0.6](https://github.com/launchdarkly/lua-server-sdk/compare/v2.0.5...v2.0.6) (2024-02-07)
+
+
+### Bug Fixes
+
+* rockspec info JSON was generated incorrectly ([#88](https://github.com/launchdarkly/lua-server-sdk/issues/88)) ([8488c38](https://github.com/launchdarkly/lua-server-sdk/commit/8488c38e3680e4aad163c95928869c539d3bc854))
+
 ## [2.0.5](https://github.com/launchdarkly/lua-server-sdk/compare/v2.0.4...v2.0.5) (2024-02-07)
 
 
