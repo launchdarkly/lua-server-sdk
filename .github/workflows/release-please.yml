@@ -76,6 +76,9 @@ jobs:
         with:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
           ssm_parameter_pairs: '/production/common/releasing/luarocks/token = LUAROCKS_API_TOKEN'
+      - uses: ./.github/actions/ci
+        with:
+          rockspec: ${{ fromJSON(needs.rockspec-info.outputs.info).server }}
       - uses: ./.github/actions/publish
         name: Publish server package
         with:
@@ -95,6 +98,9 @@ jobs:
         with:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
           ssm_parameter_pairs: '/production/common/releasing/luarocks/token = LUAROCKS_API_TOKEN'
+      - uses: ./.github/actions/ci
+        with:
+          rockspec: ${{ fromJSON(needs.rockspec-info.outputs.info).redis }}
       - uses: ./.github/actions/publish
         name: Publish redis package
         with:

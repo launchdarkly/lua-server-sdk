@@ -1,5 +1,9 @@
 FROM ubuntu:22.04
 
+# {{ x-release-please-start-version }}
+ARG VERSION=2.0.3
+# {{ x-release-please-end }}
+
 RUN apt-get update && apt-get install -y \
     curl luarocks lua5.3 lua5.3-dev \
     haproxy apt-transport-https ca-certificates \
@@ -15,11 +19,12 @@ RUN curl https://github.com/launchdarkly/cpp-sdks/releases/download/launchdarkly
     rm /tmp/sdk.zip
 
 COPY . .
-
-RUN luarocks make launchdarkly-server-sdk-2.0.2-0.rockspec LD_DIR=./cpp-sdk/build-dynamic/release
-
 COPY ./examples/hello-haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg
 COPY ./examples/hello-haproxy/service.lua /service.lua
+
+RUN luarocks make launchdarkly-server-sdk-"${VERSION}"-0.rockspec LD_DIR=./cpp-sdk/build-dynamic/release
+
+
 
 # The strategy for this Docker example is to download the C++ SDK release artifacts and use those instead of compiling
 # from source. This is for example/CI purposes only; generally it's better to build from source to ensure all libraries
