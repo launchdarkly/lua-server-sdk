@@ -1,5 +1,9 @@
 FROM ubuntu:22.04
 
+# {{ x-release-please-start-version }}
+ENV version=2.0.3
+# {{ x-release-please-end }}
+
 RUN apt-get update && apt-get install -y \
     curl luarocks lua5.3 lua5.3-dev \
     haproxy apt-transport-https ca-certificates \
@@ -14,10 +18,9 @@ RUN curl https://github.com/launchdarkly/cpp-sdks/releases/download/launchdarkly
     unzip /tmp/sdk.zip -d ./cpp-sdk && \
     rm /tmp/sdk.zip
 
-COPY launchdarkly-server-sdk-2*.rockspec .
-COPY launchdarkly-server-sdk.c .
+COPY . .
 
-RUN luarocks make LD_DIR=./cpp-sdk/build-dynamic/release
+RUN luarocks make launchdarkly-server-sdk-$version-0.rockspec LD_DIR=./cpp-sdk/build-dynamic/release
 
 COPY ./examples/hello-haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg
 COPY ./examples/hello-haproxy/service.lua /service.lua
