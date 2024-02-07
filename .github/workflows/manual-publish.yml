@@ -53,7 +53,7 @@ jobs:
       - name: Get package name
         id: pkg-info
         run: |
-            rockspec=$(echo ${{ needs.rockspec-info.outputs.info }} | jq '.${{ matrix.package }}.rockspec')
+            rockspec=$(echo '${{ needs.rockspec-info.outputs.info }}' | jq -r '.${{ matrix.package }}.rockspec')
             echo "package=$rockspec" >> $GITHUB_OUTPUT
 
       - uses: ./.github/actions/ci

@@ -21,7 +21,7 @@ jobs:
     steps:
       - id: set-matrix
         run: |
-          data=$(echo ${{ needs.rockspec-info.outputs.info }} | jq -c 'to_entries | map(.value.rockspec)')
+          data=$(echo '${{ needs.rockspec-info.outputs.info }}' | jq -c 'to_entries | map(.value.rockspec)')
           echo "matrix=$data" >> $GITHUB_OUTPUT
 
   linux-build:
