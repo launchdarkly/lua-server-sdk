@@ -61,3 +61,23 @@ jobs:
       - name: Stop hello-haproxy container
         run: |
           docker stop hello-haproxy
+
+  hello-nginx:
+    runs-on: ubuntu-latest
+    env:
+      LD_SDK_KEY: "foo"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build hello-nginx image
+        run: |
+          docker build -t launchdarkly:hello-nginx -f ./examples/hello-nginx/Dockerfile .
+      - name: Run hello-nginx container in background
+        run: |
+          docker run -dit --rm --name hello-nginx -p 8123:80 --env LD_SDK_KEY="$LD_SDK_KEY" launchdarkly:hello-nginx
+      - name: Evaluate feature flag
+        run: |
+          curl --retry 5 --retry-all-errors --retry-delay 1 -s -v http://localhost:8123 | tee response.txt
+          grep -F "Feature flag is false for this user" response.txt || (echo "Expected false evaluation!" && exit 1)
+      - name: Stop hello-nginx container
+        run: |
+          docker stop hello-nginx
