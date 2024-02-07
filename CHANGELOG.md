@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly Lua Server-side SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.0.4](https://github.com/launchdarkly/lua-server-sdk/compare/v2.0.3...v2.0.4) (2024-02-07)
+
+
+### Bug Fixes
+
+* hello-haproxy Dockerfile is now updated by release-please ([d0522a5](https://github.com/launchdarkly/lua-server-sdk/commit/d0522a532b91f938caf1808f724077e7c199b6a3))
+
 ## [2.0.3](https://github.com/launchdarkly/lua-server-sdk/compare/v2.0.2...v2.0.3) (2024-02-07)
 
 
