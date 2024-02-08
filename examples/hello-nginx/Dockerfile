@@ -32,7 +32,6 @@ RUN mkdir -p /usr/local/openresty/nginx/scripts
 COPY . .
 COPY ./examples/hello-nginx/nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
 COPY ./examples/hello-nginx/shared.lua /usr/local/openresty/nginx/scripts/
-COPY ./examples/hello-nginx/get_key_from_env_or.lua /usr/local/openresty/nginx/scripts/
 COPY ./examples/env-helper/get_from_env_or_default.lua /usr/local/openresty/nginx/scripts/
 
 

@@ -57,7 +57,7 @@ jobs:
       - name: Evaluate feature flag
         run: |
           curl --retry 5 --retry-all-errors --retry-delay 1 -s -v http://localhost:8123 | tee response.txt
-          grep -F "Feature flag is false for this user" response.txt || (echo "Expected false evaluation!" && exit 1)
+          grep -F "is false for this user" response.txt || (echo "Expected false evaluation!" && exit 1)
       - name: Stop hello-haproxy container
         run: |
           docker stop hello-haproxy
@@ -77,7 +77,7 @@ jobs:
       - name: Evaluate feature flag
         run: |
           curl --retry 5 --retry-all-errors --retry-delay 1 -s -v http://localhost:8123 | tee response.txt
-          grep -F "Feature flag is false for this user" response.txt || (echo "Expected false evaluation!" && exit 1)
+          grep -F "is false for this user" response.txt || (echo "Expected false evaluation!" && exit 1)
       - name: Stop hello-nginx container
         run: |
           docker stop hello-nginx
