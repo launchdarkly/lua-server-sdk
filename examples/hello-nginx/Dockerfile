@@ -5,25 +5,39 @@ ARG VERSION=2.0.6
 # {{ x-release-please-end }}
 
 RUN apt-get update && apt-get install -y \
-    curl apt-transport-https ca-certificates \
-    software-properties-common
+    git netbase curl libssl-dev openssl libssl3 openssl apt-transport-https ca-certificates \
+    software-properties-common \
+    cmake ninja-build
 
 RUN add-apt-repository ppa:mhier/libboost-latest && \
      apt-get update && \
      apt-get install -y boost1.81
 
-RUN curl https://github.com/launchdarkly/cpp-sdks/releases/download/launchdarkly-cpp-server-v3.3.1/linux-gcc-x64-dynamic.zip -L -o /tmp/sdk.zip && \
-    mkdir ./cpp-sdk && \
-    unzip /tmp/sdk.zip -d ./cpp-sdk && \
-    rm /tmp/sdk.zip
+# RUN curl https://github.com/launchdarkly/cpp-sdks/releases/download/launchdarkly-cpp-server-v3.3.1/linux-gcc-x64-dynamic.zip -L -o /tmp/sdk.zip && \
+#     mkdir ./cpp-sdk && \
+#     unzip /tmp/sdk.zip -d ./cpp-sdk && \
+#     rm /tmp/sdk.zip
+
+
+RUN mkdir INSTALL
+RUN git clone https://github.com/launchdarkly/cpp-sdks.git && \
+    cd cpp-sdks && \
+    git checkout launchdarkly-cpp-server-v3.3.1 && \
+    mkdir build-dynamic && \
+    cd build-dynamic && \
+    cmake -GNinja -DLD_BUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DLD_BUILD_SHARED_LIBS=ON -DLD_DYNAMIC_LINK_OPENSSL=ON .. && \
+    cmake --build . && \
+    cmake --install . --prefix=../../INSTALL
 
 RUN mkdir -p /usr/local/openresty/nginx/scripts
 
 COPY . .
 COPY ./examples/hello-nginx/nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
 COPY ./examples/hello-nginx/shared.lua /usr/local/openresty/nginx/scripts/
+COPY ./examples/hello-nginx/get_key_from_env_or.lua /usr/local/openresty/nginx/scripts/
 
-RUN luarocks make launchdarkly-server-sdk-"${VERSION}"-0.rockspec LD_DIR=./cpp-sdk/build-dynamic/release && \
+
+RUN luarocks make launchdarkly-server-sdk-"${VERSION}"-0.rockspec LD_DIR=./INSTALL && \
     cp launchdarkly_server_sdk.so /usr/local/openresty/lualib/
 
 # The strategy for this Docker example is to download the C++ SDK release artifacts and use those instead of compiling
