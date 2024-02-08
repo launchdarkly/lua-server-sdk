@@ -45,6 +45,7 @@ jobs:
   examples:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         name: ["hello-haproxy", "hello-nginx"]
     env:
