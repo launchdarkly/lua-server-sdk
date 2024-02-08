@@ -21,6 +21,7 @@ RUN curl https://github.com/launchdarkly/cpp-sdks/releases/download/launchdarkly
 COPY . .
 COPY ./examples/hello-haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg
 COPY ./examples/hello-haproxy/service.lua /service.lua
+COPY ./examples/env-helper/get_from_env_or_default.lua /get_from_env_or_default.lua
 
 RUN luarocks make launchdarkly-server-sdk-"${VERSION}"-0.rockspec LD_DIR=./cpp-sdk/build-dynamic/release
 

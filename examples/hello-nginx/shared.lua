@@ -1,10 +1,11 @@
 local ld = require("launchdarkly_server_sdk")
 local os = require("os")
-local get_key_from_env_or = require("get_key_from_env_or")
+local get_from_env_or_default = require("get_from_env_or_default")
 
--- Set YOUR_SDK_KEY to your LaunchDarkly SDK key.
-local YOUR_SDK_KEY = ""
+-- Set MY_SDK_KEY to your LaunchDarkly SDK key. To specify the SDK key as an environment variable instead,
+-- set LD_SDK_KEY using '--env LD_SDK_KEY=my-sdk-key' as a 'docker run' argument.
+local MY_SDK_KEY = ""
 
 local config = {}
 
-return ld.clientInit(get_key_from_env_or("SDK_KEY", YOUR_SDK_KEY), 1000, config)
+return ld.clientInit(get_from_env_or_default("LD_SDK_KEY", MY_SDK_KEY), 1000, config)
