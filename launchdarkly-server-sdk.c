@@ -1452,13 +1452,6 @@ LuaLDClientBoolVariation(lua_State *const l)
     return 1;
 }
 
-/**
-@table EvaluationDetail
-@tfield table reason
-@tfield int variationIndex
-@tfield value value The variation value.
-*/
-
 /***
 Evaluate a boolean flag and return an explanation
 @class function
@@ -1466,7 +1459,7 @@ Evaluate a boolean flag and return an explanation
 @tparam context context An opaque context object from @{makeUser} or @{makeContext}
 @tparam string key The key of the flag to evaluate.
 @tparam boolean fallback The value to return on error
-@treturn @EvaluationDetail
+@treturn table The evaluation explanation
 */
 static int
 LuaLDClientBoolVariationDetail(lua_State *const l)
