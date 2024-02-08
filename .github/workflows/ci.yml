@@ -42,42 +42,25 @@ jobs:
           rockspec: ${{ matrix.package }}
 
 
-  hello-haproxy:
+  examples:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        name: ["hello-haproxy", "hello-nginx"]
     env:
-      LD_SDK_KEY: "foo"
+      LD_SDK_KEY: foo
     steps:
       - uses: actions/checkout@v4
-      - name: Build hello-haproxy image
+      - name: Build ${{ matrix.name }} image
         run: |
-          docker build -t launchdarkly:hello-haproxy -f ./examples/hello-haproxy/Dockerfile .
-      - name: Run hello-haproxy container in background
+          docker build -t launchdarkly:${{ matrix.name }} -f ./examples/${{ matrix.name }}/Dockerfile .
+      - name: Run ${{ matrix.name }} container in background
         run: |
-          docker run -dit --rm --name hello-haproxy -p 8123:8123 --env LD_SDK_KEY="$LD_SDK_KEY" launchdarkly:hello-haproxy
+          docker run -dit --rm --name ${{ matrix.name }} -p 8123:80 --env LD_SDK_KEY="$LD_SDK_KEY" launchdarkly:${{ matrix.name }}
       - name: Evaluate feature flag
         run: |
           curl --retry 5 --retry-all-errors --retry-delay 1 -s -v http://localhost:8123 | tee response.txt
           grep -F "is false for this user" response.txt || (echo "Expected false evaluation!" && exit 1)
-      - name: Stop hello-haproxy container
+      - name: Stop ${{ matrix.name }} container
         run: |
-          docker stop hello-haproxy
-
-  hello-nginx:
-    runs-on: ubuntu-latest
-    env:
-      LD_SDK_KEY: "foo"
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build hello-nginx image
-        run: |
-          docker build -t launchdarkly:hello-nginx -f ./examples/hello-nginx/Dockerfile .
-      - name: Run hello-nginx container in background
-        run: |
-          docker run -dit --rm --name hello-nginx -p 8123:80 --env LD_SDK_KEY="$LD_SDK_KEY" launchdarkly:hello-nginx
-      - name: Evaluate feature flag
-        run: |
-          curl --retry 5 --retry-all-errors --retry-delay 1 -s -v http://localhost:8123 | tee response.txt
-          grep -F "is false for this user" response.txt || (echo "Expected false evaluation!" && exit 1)
-      - name: Stop hello-nginx container
-        run: |
-          docker stop hello-nginx
+          docker stop ${{ matrix.name }}
