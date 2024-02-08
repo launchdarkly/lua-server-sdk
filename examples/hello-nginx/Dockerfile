@@ -13,21 +13,19 @@ RUN add-apt-repository ppa:mhier/libboost-latest && \
      apt-get update && \
      apt-get install -y boost1.81
 
-# RUN curl https://github.com/launchdarkly/cpp-sdks/releases/download/launchdarkly-cpp-server-v3.3.1/linux-gcc-x64-dynamic.zip -L -o /tmp/sdk.zip && \
-#     mkdir ./cpp-sdk && \
-#     unzip /tmp/sdk.zip -d ./cpp-sdk && \
-#     rm /tmp/sdk.zip
 
-
-RUN mkdir INSTALL
-RUN git clone https://github.com/launchdarkly/cpp-sdks.git && \
+RUN mkdir cpp-sdk-libs
+RUN git clone --branch launchdarkly-cpp-server-v3.3.1 https://github.com/launchdarkly/cpp-sdks.git && \
     cd cpp-sdks && \
-    git checkout launchdarkly-cpp-server-v3.3.1 && \
     mkdir build-dynamic && \
     cd build-dynamic && \
-    cmake -GNinja -DLD_BUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DLD_BUILD_SHARED_LIBS=ON -DLD_DYNAMIC_LINK_OPENSSL=ON .. && \
-    cmake --build . && \
-    cmake --install . --prefix=../../INSTALL
+    cmake -GNinja \
+        -DLD_BUILD_EXAMPLES=OFF \
+        -DBUILD_TESTING=OFF \
+        -DLD_BUILD_SHARED_LIBS=ON \
+        -DLD_DYNAMIC_LINK_OPENSSL=ON .. && \
+    cmake --build . --target launchdarkly-cpp-server && \
+    cmake --install . --prefix=../../cpp-sdk-libs
 
 RUN mkdir -p /usr/local/openresty/nginx/scripts
 
@@ -37,7 +35,7 @@ COPY ./examples/hello-nginx/shared.lua /usr/local/openresty/nginx/scripts/
 COPY ./examples/hello-nginx/get_key_from_env_or.lua /usr/local/openresty/nginx/scripts/
 
 
-RUN luarocks make launchdarkly-server-sdk-"${VERSION}"-0.rockspec LD_DIR=./INSTALL && \
+RUN luarocks make launchdarkly-server-sdk-"${VERSION}"-0.rockspec LD_DIR=./cpp-sdk-libs && \
     cp launchdarkly_server_sdk.so /usr/local/openresty/lualib/
 
 # The strategy for this Docker example is to download the C++ SDK release artifacts and use those instead of compiling
