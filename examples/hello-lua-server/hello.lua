@@ -1,30 +1,17 @@
 local ld = require("launchdarkly_server_sdk")
+local get_from_env_or_default = dofile("../env-helper/get_from_env_or_default.lua")
 
--- Allows the LaunchDarkly SDK key to be specified as an environment variable (LD_SDK_KEY)
--- or locally in this example code (YOUR_SDK_KEY).
-function get_key_from_env_or(existing_key)
-    if existing_key ~= "" then
-        return existing_key
-    end
+-- Set MY_SDK_KEY to your LaunchDarkly SDK key.
+local MY_SDK_KEY = ""
 
-    local env_key = os.getenv("LD_SDK_KEY")
-    if env_key ~= "" then
-        return env_key
-    end
-
-    error("No SDK key specified (use LD_SDK_KEY environment variable or set local YOUR_SDK_KEY)")
-end
-
--- Set YOUR_SDK_KEY to your LaunchDarkly SDK key.
-local YOUR_SDK_KEY = ""
-
--- Set YOUR_FEATURE_KEY to the feature flag key you want to evaluate.
-local YOUR_FEATURE_KEY = "my-boolean-flag"
+-- Set MY_FLAG_KEY to the boolean-type feature flag key you want to evaluate.
+local MY_FLAG_KEY = "my-boolean-flag"
 
 
 local config = {}
 
-local client = ld.clientInit(get_key_from_env_or(YOUR_SDK_KEY), 1000, config)
+local sdk_key = get_from_env_or_default("LD_SDK_KEY", MY_SDK_KEY)
+local client = ld.clientInit(sdk_key, 1000, config)
 
 local user = ld.makeContext({
     user = {
@@ -33,5 +20,6 @@ local user = ld.makeContext({
     }
 })
 
-local value = client:boolVariation(user, YOUR_FEATURE_KEY, false)
-print("feature flag "..YOUR_FEATURE_KEY.." is "..tostring(value).." for this user")
+local flag_key = get_from_env_or_default("LD_FLAG_KEY", MY_FLAG_KEY)
+local value = client:boolVariation(user, flag_key, false)
+print("Feature flag ".. flag_key .." is "..tostring(value).." for this user context")

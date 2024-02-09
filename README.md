@@ -52,10 +52,11 @@ getting started with using the SDK.
 The following examples are available in addition to the usage guide linked above:
 
 
-| Example                                         | Purpose                                                                                       |
-|-------------------------------------------------|-----------------------------------------------------------------------------------------------|
-| [hello-lua-server](./examples/hello-lua-server) | Demonstrates basic example of Lua SDK usage from the command line.                            |
-| [hello-haproxy](./examples/hello-haproxy)       | Demonstrates usage of the Lua SDK as a [HAproxy](https://www.haproxy.org/) module via Docker. |
+| Example                                         | Purpose                                                                                                             |
+|-------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
+| [hello-lua-server](./examples/hello-lua-server) | Demonstrates basic example of Lua SDK usage from the command line.                                                  |
+| [hello-haproxy](./examples/hello-haproxy)       | Demonstrates usage of the Lua SDK as a [HAproxy](https://www.haproxy.org/) module via Docker.                       |
+| [hello-nginx](./examples/hello-nginx)           | Demonstrates usage of the Lua SDK as a [nginx OpenResty](https://github.com/openresty/openresty) module via Docker. |
 
 
 Before you start using the SDK, you'll need to install it.

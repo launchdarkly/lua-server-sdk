@@ -55,7 +55,10 @@ runs:
     - name: Run hello-lua-server example
       if: ${{ !contains(inputs.lua-version, 'jit') }}
       shell: bash
-      run: ./scripts/interpreter.sh ./examples/hello-lua-server/hello.lua
+      run: |
+        cd ./examples/hello-lua-server
+        lua hello.lua | tee output.txt
+        grep -F "is false for this user" output.txt || (echo "Expected false evaluation!" && exit 1)
       env:
         LD_SDK_KEY: "fake-sdk-key"
         # Needed because boost isn't installed in default system paths, which is
