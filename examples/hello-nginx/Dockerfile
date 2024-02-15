@@ -15,7 +15,7 @@ RUN add-apt-repository ppa:mhier/libboost-latest && \
 
 
 RUN mkdir cpp-sdk-libs
-RUN git clone --branch launchdarkly-cpp-server-v3.3.1 https://github.com/launchdarkly/cpp-sdks.git && \
+RUN git clone --branch launchdarkly-cpp-server-v3.3.2 https://github.com/launchdarkly/cpp-sdks.git && \
     cd cpp-sdks && \
     mkdir build-dynamic && \
     cd build-dynamic && \
