@@ -25,8 +25,8 @@ If Redis support is desired, then it optionally depends on the C++ server-side S
 
 | Dependency                     | Minimum Version                                                                                            | Notes                                      |
 |--------------------------------|------------------------------------------------------------------------------------------------------------|--------------------------------------------|
-| C++ Server-Side SDK            | [3.3.0](https://github.com/launchdarkly/cpp-sdks/releases/tag/launchdarkly-cpp-server-v3.3.0)              | Required dependency.                       |
-| C++ Server-Side SDK with Redis | [2.1.0](https://github.com/launchdarkly/cpp-sdks/releases/tag/launchdarkly-cpp-server-redis-source-v2.1.0) | Optional, if using Redis as a data source. |
+| C++ Server-Side SDK            | [3.3.2](https://github.com/launchdarkly/cpp-sdks/releases/tag/launchdarkly-cpp-server-v3.3.2)              | Required dependency.                       |
+| C++ Server-Side SDK with Redis | [2.1.2](https://github.com/launchdarkly/cpp-sdks/releases/tag/launchdarkly-cpp-server-redis-source-v2.1.2) | Optional, if using Redis as a data source. |
 
 
 3rd Party Dependencies
