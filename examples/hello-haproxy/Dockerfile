@@ -13,7 +13,7 @@ RUN add-apt-repository ppa:mhier/libboost-latest && \
      apt-get update && \
      apt-get install -y boost1.81
 
-RUN curl https://github.com/launchdarkly/cpp-sdks/releases/download/launchdarkly-cpp-server-v3.3.1/linux-gcc-x64-dynamic.zip -L -o /tmp/sdk.zip && \
+RUN curl https://github.com/launchdarkly/cpp-sdks/releases/download/launchdarkly-cpp-server-v3.3.2/linux-gcc-x64-dynamic.zip -L -o /tmp/sdk.zip && \
     mkdir ./cpp-sdk && \
     unzip /tmp/sdk.zip -d ./cpp-sdk && \
     rm /tmp/sdk.zip
