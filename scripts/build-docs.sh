@@ -18,4 +18,4 @@ mkdir "$DOCS_BUILD_DIR"
 cp launchdarkly-server-sdk.c "$DOCS_BUILD_DIR"
 cp launchdarkly-server-sdk-redis.c "$DOCS_BUILD_DIR"
 
-ldoc -d "$DOCS_RELEASE_DIR" "$DOCS_BUILD_DIR"
+ldoc -d "$DOCS_RELEASE_DIR" "$DOCS_BUILD_DIR" -p "LaunchDarkly Lua Server SDK"

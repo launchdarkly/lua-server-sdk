@@ -1416,6 +1416,19 @@ LuaLDContextPrivateAttributes(lua_State *const l)
     return 1;
 }
 
+/**
+EvaluationDetail contains extra information related to evaluation of a flag.
+
+@field kind string, one of: "OFF","FALLTHROUGH", "TARGET_MATCH", "RULE_MATCH",
+"PREREQUISITE_FAILED", "ERROR", "UNKNOWN".
+@field errorKind string, only present if 'kind' is "ERROR"; one of: "CLIENT_NOT_READY",
+"FLAG_NOT_FOUND", "USER_NOT_SPECIFIED", "MALFORMED_FLAG", "WRONG_TYPE",
+"MALFORMED_FLAG", "EXCEPTION", "UNKNOWN".
+@field inExperiment bool, whether the flag was part of an experiment.
+@field variationIndex int, only present if the evaluation was successful. The zero-based index of the variation.
+@field value LDJSON, the value of the flag.
+@table EvaluationDetail
+*/
 
 /**
 Evaluate a boolean flag
@@ -1459,7 +1472,7 @@ Evaluate a boolean flag and return an explanation
 @tparam context context An opaque context object from @{makeUser} or @{makeContext}
 @tparam string key The key of the flag to evaluate.
 @tparam boolean fallback The value to return on error
-@treturn table The evaluation explanation
+@return @{EvaluationDetail}
 */
 static int
 LuaLDClientBoolVariationDetail(lua_State *const l)
@@ -1523,7 +1536,7 @@ Evaluate an integer flag and return an explanation
 @tparam context context An opaque context object from @{makeUser} or @{makeContext}
 @tparam string key The key of the flag to evaluate.
 @tparam int fallback The value to return on error
-@treturn table The evaluation explanation
+@return @{EvaluationDetail}
 */
 static int
 LuaLDClientIntVariationDetail(lua_State *const l)
@@ -1587,7 +1600,7 @@ Evaluate a double flag and return an explanation
 @tparam context context An opaque context object from @{makeUser} or @{makeContext}
 @tparam string key The key of the flag to evaluate.
 @tparam number fallback The value to return on error
-@treturn table The evaluation explanation
+@return @{EvaluationDetail}
 */
 static int
 LuaLDClientDoubleVariationDetail(lua_State *const l)
@@ -1654,7 +1667,7 @@ Evaluate a string flag and return an explanation
 @tparam context context An opaque context object from @{makeUser} or @{makeContext}
 @tparam string key The key of the flag to evaluate.
 @tparam string fallback The value to return on error
-@treturn table The evaluation explanation
+@return @{EvaluationDetail}
 */
 static int
 LuaLDClientStringVariationDetail(lua_State *const l)
@@ -1724,7 +1737,7 @@ Evaluate a json flag and return an explanation
 @tparam context context An opaque context object from @{makeUser} or @{makeContext}
 @tparam string key The key of the flag to evaluate.
 @tparam table fallback The value to return on error
-@treturn table The evaluation explanation
+@return @{EvaluationDetail}
 */
 static int
 LuaLDClientJSONVariationDetail(lua_State *const l)
