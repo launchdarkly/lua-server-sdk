@@ -1039,9 +1039,14 @@ makeConfig(lua_State *const l, const char *const sdk_key)
 {
     LDServerConfigBuilder builder = LDServerConfigBuilder_New(sdk_key);
 
-    // Recursively visit the hierarchical configs, modifying the builder
-    // as we go along.
-    traverse_config(l, builder, &top_level_config);
+
+    // Allow users to pass in a nil config, which is equivalent to passing an
+    // empty table (i.e. default configuration.)
+    if (lua_type(l, -1) != LUA_TNIL) {
+        // Recursively visit the hierarchical configs, modifying the builder
+        // as we go along.
+        traverse_config(l, builder, &top_level_config);
+    }
 
     LDServerConfigBuilder_HttpProperties_WrapperName(builder, "lua-server-sdk");
     LDServerConfigBuilder_HttpProperties_WrapperVersion(builder, SDKVersion);
@@ -1061,12 +1066,14 @@ makeConfig(lua_State *const l, const char *const sdk_key)
 Initialize a new client, and connect to LaunchDarkly.
 Applications should instantiate a single instance for the lifetime of their application.
 
+To initialize with default configuration, you may pass nil or an empty table as the third argument.
+
 @function clientInit
 @param string Environment SDK key
 @param int Initialization timeout in milliseconds. clientInit will
 block for this long before returning a non-fully initialized client. Pass 0 to return
 immediately without waiting (note that the client will continue initializing in the background.)
-@tparam table config list of configuration options
+@tparam table config optional configuration options, or nil/empty table for default configuration.
 @tparam[opt] boolean config.offline Sets whether this client is offline.
 An offline client will not make any network connections to LaunchDarkly or
 a data source like Redis, nor send any events, and will return application-defined
