@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly Lua Server-side SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.1.0](https://github.com/launchdarkly/lua-server-sdk/compare/v2.0.6...v2.1.0) (2024-03-11)
+
+
+### Features
+
+* allow nil to be passed for clientInit config ([#94](https://github.com/launchdarkly/lua-server-sdk/issues/94)) ([e7c0dfe](https://github.com/launchdarkly/lua-server-sdk/commit/e7c0dfed95a0b10ca67e9ccfe8cab63db9fe2d53))
+
 ## [2.0.6](https://github.com/launchdarkly/lua-server-sdk/compare/v2.0.5...v2.0.6) (2024-02-07)
 
 
