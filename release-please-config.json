@@ -9,7 +9,8 @@
         "README.md",
         "scripts/update-versions.sh",
         "scripts/compile.sh",
-        "examples/hello-haproxy/Dockerfile"
+        "examples/hello-haproxy/Dockerfile",
+        "examples/hello-nginx/Dockerfile"
       ]
     }
   }
