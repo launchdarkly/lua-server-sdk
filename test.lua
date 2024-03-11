@@ -38,6 +38,9 @@ function TestAll:testSetNoConfigFields()
     u.assertNotIsNil(l.clientInit("sdk-test", 0, {}))
 end
 
+function TestAll:testNilConfig()
+    u.assertNotIsNil(l.clientInit("sdk-test", 0, nil))
+end
 
 function TestAll:testSetAllConfigFields()
     local c = l.clientInit("sdk-test", 0, {
