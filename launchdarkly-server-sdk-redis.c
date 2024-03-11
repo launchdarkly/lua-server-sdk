@@ -1,5 +1,5 @@
 /***
-Server-side SDK for LaunchDarkly Redis store.
+Redis Data Source for LaunchDarkly Lua Server SDK.
 @module launchdarkly-server-sdk-redis
 */
 
