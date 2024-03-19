@@ -4,7 +4,7 @@ inputs:
     version:
         required: true
         description: "Version of the C++ SDK with Redis Source."
-        default: "launchdarkly-cpp-server-redis-source-v2.1.2"
+        default: "launchdarkly-cpp-server-redis-source-v2.1.3"
     path:
       description: "Where to download the SDK."
       default: "cpp-sdk"
