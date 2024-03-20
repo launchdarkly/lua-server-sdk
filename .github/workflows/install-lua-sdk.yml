@@ -29,7 +29,7 @@ on:
         description: "Version of the C++ Server-side SDK."
         required: false
         type: string
-        default: 'launchdarkly-cpp-server-redis-source-v2.1.0'
+        default: 'launchdarkly-cpp-server-redis-source-v2.1.3'
   workflow_call:
     inputs:
       package:
@@ -49,7 +49,7 @@ env:
   PACKAGE: ${{ inputs.package == null && 'launchdarkly-server-sdk' || inputs.package }}
   VERSION: ${{ inputs.version == null && '' || inputs.version }}
   LUA_VERSION: ${{ inputs.lua-version == null && '5.3' || inputs.lua-version }}
-  CPP_SDK_VERSION: ${{ inputs.cpp-sdk-version == null && 'launchdarkly-cpp-server-redis-source-v2.1.0' || inputs.cpp-sdk-version }}
+  CPP_SDK_VERSION: ${{ inputs.cpp-sdk-version == null && 'launchdarkly-cpp-server-redis-source-v2.1.3' || inputs.cpp-sdk-version }}
 jobs:
   install:
     runs-on: ubuntu-latest
