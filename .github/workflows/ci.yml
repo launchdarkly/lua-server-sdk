@@ -47,7 +47,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        name: ["hello-haproxy", "hello-nginx"]
+        name: ["hello-haproxy", "hello-nginx", "hello-debian"]
     env:
       LD_SDK_KEY: foo
     steps:

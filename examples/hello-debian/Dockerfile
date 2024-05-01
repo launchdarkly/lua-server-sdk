@@ -62,5 +62,5 @@ RUN cd /usr/lib/x86_64-linux-gnu && \
    ln -s libboost_json.so.1.81.0 libboost_json-mt-x64.so.1.81.0 && \
    ln -s libboost_url.so.1.81.0 libboost_url-mt-x64.so.1.81.0
 
-ENV LD_LIBRARY_PATH=../cpp-sdk-libs/lib:$LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH=../cpp-sdk-libs/lib
 ENTRYPOINT ["lua", "hello-debian/hello.lua"]
