@@ -81,7 +81,7 @@ jobs:
           docker build -t launchdarkly:${{ matrix.name }} -f ./examples/${{ matrix.name }}/Dockerfile .
       - name: Run ${{ matrix.name }} container in foreground
         run: |
-          docker run -it --env LD_SDK_KEY="$LD_SDK_KEY" launchdarkly:${{ matrix.name }} > logs.txt
+          docker run --env LD_SDK_KEY="$LD_SDK_KEY" launchdarkly:${{ matrix.name }} > logs.txt
       - name: Verify output
         run: |
           grep -F "is false for this user" logs.txt || (echo "Expected false evaluation!" && exit 1)
