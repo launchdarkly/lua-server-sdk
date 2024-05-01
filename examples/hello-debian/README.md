@@ -4,7 +4,8 @@ We've built a minimal dockerized example of using the Lua SDK within a Debian Bo
 
 ## Build instructions
 
-1. On the command line from the **root** of the repo, build the image from this directory with `docker build -t hello-debian -f ./examples/hello-debian/Dockerfile .`.
+1. On the command line from the **root** of the repo, build the Docker image:
+`docker build -t hello-debian -f ./examples/hello-debian/Dockerfile .`.
 2. Run the demo with
     ```bash
     docker run --rm --name hello-debian --env LD_SDK_KEY="my-sdk-key" --env LD_FLAG_KEY="my-boolean-flag" hello-debian
