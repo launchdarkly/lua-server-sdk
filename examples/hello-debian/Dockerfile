@@ -45,6 +45,5 @@ COPY ./examples/env-helper env-helper
 
 RUN luarocks make launchdarkly-server-sdk-${VERSION}-0.rockspec LD_DIR=./cpp-sdk-libs
 
-
 ENV LD_LIBRARY_PATH=../cpp-sdk-libs/lib
 ENTRYPOINT ["lua", "hello-debian/hello.lua"]
