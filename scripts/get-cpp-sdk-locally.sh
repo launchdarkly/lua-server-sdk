@@ -6,7 +6,7 @@
 # Locally, it's more convenient to built the C++ SDK from source - to be able to switch branches,
 # change built options, etc.
 
-# Usage: ./scripts/build-cpp-server.sh <tag>
+# Usage: ./scripts/get-cpp-sdk-locally.sh <tag>
 # If no tag is supplied, it uses 'main'.
 #
 # The SDK headers/libs are installed in ./cpp-sdks/build/INSTALL.

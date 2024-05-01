@@ -42,7 +42,7 @@ jobs:
           rockspec: ${{ matrix.package }}
 
 
-  examples:
+  web-server-examples:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -65,3 +65,23 @@ jobs:
       - name: Stop ${{ matrix.name }} container
         run: |
           docker stop ${{ matrix.name }}
+
+  plain-lua-examples:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        name: [ "hello-debian"]
+    env:
+      LD_SDK_KEY: foo
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build ${{ matrix.name }} image
+        run: |
+          docker build -t launchdarkly:${{ matrix.name }} -f ./examples/${{ matrix.name }}/Dockerfile .
+      - name: Run ${{ matrix.name }} container in foreground
+        run: |
+          docker run --env LD_SDK_KEY="$LD_SDK_KEY" launchdarkly:${{ matrix.name }} > logs.txt
+      - name: Verify output
+        run: |
+          grep -F "is false for this user" logs.txt || (echo "Expected false evaluation!" && exit 1)
