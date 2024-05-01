@@ -8,20 +8,7 @@ local MY_SDK_KEY = ""
 local MY_FLAG_KEY = "my-boolean-flag"
 
 
-local config = {
-    offline = false,
-    logging = {
-        basic = {
-            level = "debug"
-        },
-    },
-    events = {
-        enabled = false,
-    },
-    dataSystem = {
-        enabled = true,
-    },
-}
+local config = {}
 
 local sdk_key = get_from_env_or_default("LD_SDK_KEY", MY_SDK_KEY)
 local client = ld.clientInit(sdk_key, 1000, config)
