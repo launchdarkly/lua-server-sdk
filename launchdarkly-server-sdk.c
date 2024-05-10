@@ -1148,6 +1148,12 @@ LuaLDClientInit(lua_State *const l)
 
     const int timeout = luaL_checkinteger(l, 2);
 
+    if (timeout > 60) {
+        // Need to figure out what is the correct way to log a warn level message
+        luaL_error(l, "The LuaLDClientInit method was called with a timeout greater than 60 seconds. " +
+          "We recommend a timeout of less than 60 seconds.")
+    }
+
     LDServerConfig config = makeConfig(l, sdk_key);
 
     LDServerSDK client = LDServerSDK_New(config);
