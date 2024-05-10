@@ -7,7 +7,7 @@ ARG VERSION=2.1.0
 RUN apt-get update && apt-get install -y \
     git netbase curl libssl-dev apt-transport-https ca-certificates \
     software-properties-common \
-    cmake ninja-build
+    cmake ninja-build locales-all
 
 RUN add-apt-repository ppa:mhier/libboost-latest && \
      apt-get update && \
