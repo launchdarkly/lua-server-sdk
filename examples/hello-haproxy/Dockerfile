@@ -4,6 +4,8 @@ FROM ubuntu:22.04
 ARG VERSION=2.1.0
 # {{ x-release-please-end }}
 
+ARG CPP_SDK_VERSION=3.3.3
+
 RUN apt-get update && apt-get install -y \
     curl luarocks lua5.3 lua5.3-dev \
     haproxy apt-transport-https ca-certificates \
@@ -13,7 +15,7 @@ RUN add-apt-repository ppa:mhier/libboost-latest && \
      apt-get update && \
      apt-get install -y boost1.81
 
-RUN curl https://github.com/launchdarkly/cpp-sdks/releases/download/launchdarkly-cpp-server-v3.3.3/linux-gcc-x64-dynamic.zip -L -o /tmp/sdk.zip && \
+RUN curl https://github.com/launchdarkly/cpp-sdks/releases/download/launchdarkly-cpp-server-v${CPP_SDK_VERSION}/linux-gcc-x64-dynamic.zip -L -o /tmp/sdk.zip && \
     mkdir ./cpp-sdk && \
     unzip /tmp/sdk.zip -d ./cpp-sdk && \
     rm /tmp/sdk.zip

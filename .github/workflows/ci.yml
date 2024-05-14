@@ -52,9 +52,14 @@ jobs:
       LD_SDK_KEY: foo
     steps:
       - uses: actions/checkout@v4
+      - name: Get C++ Versions
+        id: cpp-versions
+        uses: ./.github/actions/cpp-versions
       - name: Build ${{ matrix.name }} image
         run: |
-          docker build -t launchdarkly:${{ matrix.name }} -f ./examples/${{ matrix.name }}/Dockerfile .
+          docker build \
+          --build-arg="CPP_SDK_VERSION=${{ steps.cpp-versions.outputs.sdk }}" \
+          -t launchdarkly:${{ matrix.name }} -f ./examples/${{ matrix.name }}/Dockerfile .
       - name: Run ${{ matrix.name }} container in background
         run: |
           docker run -dit --rm --name ${{ matrix.name }} -p 8123:80 --env LD_SDK_KEY="$LD_SDK_KEY" launchdarkly:${{ matrix.name }}
@@ -76,9 +81,14 @@ jobs:
       LD_SDK_KEY: foo
     steps:
       - uses: actions/checkout@v4
+      - name: Get C++ Versions
+        id: cpp-versions
+        uses: ./.github/actions/cpp-versions
       - name: Build ${{ matrix.name }} image
         run: |
-          docker build -t launchdarkly:${{ matrix.name }} -f ./examples/${{ matrix.name }}/Dockerfile .
+          docker build \
+          --build-arg="CPP_SDK_VERSION=${{ steps.cpp-versions.outputs.sdk }}" \
+          -t launchdarkly:${{ matrix.name }} -f ./examples/${{ matrix.name }}/Dockerfile .
       - name: Run ${{ matrix.name }} container in foreground
         run: |
           docker run --env LD_SDK_KEY="$LD_SDK_KEY" launchdarkly:${{ matrix.name }} > logs.txt

@@ -4,6 +4,8 @@ FROM debian:bookworm
 ARG VERSION=2.1.0
 # {{ x-release-please-end }}
 
+ARG CPP_SDK_VERSION=3.3.3
+
 # For unknown reasons, it appears that boost.json and boost.url aren't included in the
 # libboost-all package.
 
@@ -16,7 +18,7 @@ RUN apt-get update && apt-get install -y \
 
 
 RUN mkdir cpp-sdk-libs
-RUN git clone --branch launchdarkly-cpp-server-v3.3.3 https://github.com/launchdarkly/cpp-sdks.git && \
+RUN git clone --branch launchdarkly-cpp-server-v${CPP_SDK_VERSION} https://github.com/launchdarkly/cpp-sdks.git && \
     cd cpp-sdks && \
     mkdir build-dynamic && \
     cd build-dynamic && \
