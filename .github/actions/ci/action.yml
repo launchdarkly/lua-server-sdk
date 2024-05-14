@@ -5,10 +5,9 @@ inputs:
     description: 'Version of Lua to use for building and testing.'
     required: false
     default: '5.3'
-  cpp-sdk-version:
-    description: 'Version of the C++ Server-side SDK to use for building and testing.'
+  cpp-sdk-redis-version:
+    description: 'Version of the C++ Server-side SDK with Redis Source to use for building and testing.'
     required: false
-    default: 'launchdarkly-cpp-server-redis-source-v2.1.3'
   rockspec:
     description: 'The rockspec file for the server-side SDK.'
     required: true
@@ -16,6 +15,9 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Get C++ Versions
+      id: cpp-versions
+      uses: ./.github/actions/cpp-versions
     - name: Install Lua
       uses: leafo/gh-actions-lua@35bcb06abec04ec87df82e08caa84d545348536e
       with:
@@ -31,7 +33,7 @@ runs:
     - name: Install CPP SDK
       uses: ./.github/actions/install-cpp-sdk-redis
       with:
-          version: ${{ inputs.cpp-sdk-version }}
+          version: ${{ inputs.cpp-sdk-redis-version }}
           path: cpp-sdk
 
     - name: Build Package
