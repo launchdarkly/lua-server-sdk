@@ -1,0 +1,24 @@
+# The following chunk of yml pulls two C++ sdk version numbers out of a file and
+# makes them available to the other actions/workflows in a convenient fashion.
+# This allows us to easily bump the version numbers in one place, instead of multiple yml files.
+name: C++ Versions
+description: Foo
+outputs:
+  sdk:
+    description: 'The version of the C++ Server-side SDK.'
+    value: ${{ steps.cpp-versions.outputs.sdk }}
+  redis_source:
+    description: 'The version of the C++ Server-side SDK with Redis Source.'
+    value: ${{ steps.cpp-versions.outputs.redis_source }}
+runs:
+  using: composite
+  steps:
+      - name: Set C++ Versions
+        id: cpp-versions
+        shell: bash
+        run:  cat ./.github/variables/cpp-sdk-versions.env > $GITHUB_OUTPUT
+      - name: Display C++ Versions
+        shell: bash
+        run: |
+          echo "${{ format('C++ Server SDK v{0}', steps.cpp-versions.outputs.sdk) }}"
+          echo "${{ format('C++ Server SDK Redis Source v{0}', steps.cpp-versions.outputs.redis_source) }}"
