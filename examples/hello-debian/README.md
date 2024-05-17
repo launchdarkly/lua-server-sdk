@@ -14,4 +14,4 @@ We've built a minimal dockerized example of using the Lua SDK within a Debian Bo
 `LD_FLAG_KEY`, then the default flag key `my-boolean-flag` will be used.
 
 You should receive the message:
-> Feature flag is <true/false> for this user context
+> The (flag key) feature flag evaluates to (true/false).

@@ -13,4 +13,4 @@ We've built a minimal dockerized example of using the Lua SDK with [OpenResty NG
 4. Open `localhost:8123` in your browser. Toggle the flag on to see a change in the page (refresh the page.)
 
 You should receive the message:
-> Feature flag is <true/false> for this user context
+> The (flag key) feature flag evaluates to (true/false).

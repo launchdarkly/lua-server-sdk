@@ -66,10 +66,16 @@ jobs:
       - name: Evaluate feature flag
         run: |
           curl --retry 5 --retry-all-errors --retry-delay 1 -s -v http://localhost:8123 | tee response.txt
-          grep -F "is false for this user" response.txt || (echo "Expected false evaluation!" && exit 1)
       - name: Stop ${{ matrix.name }} container
         run: |
           docker stop ${{ matrix.name }}
+      - uses: launchdarkly/gh-actions/actions/verify-hello-app@verify-hello-app-v2.0.0
+        name: 'Verify ${{ matrix.name}} example output'
+        with:
+          use_server_key: true
+          role_arn: ${{ vars.AWS_ROLE_ARN }}
+          command: cat response.txt
+
 
   plain-lua-examples:
     runs-on: ubuntu-latest
@@ -92,6 +98,9 @@ jobs:
       - name: Run ${{ matrix.name }} container in foreground
         run: |
           docker run --env LD_SDK_KEY="$LD_SDK_KEY" launchdarkly:${{ matrix.name }} > logs.txt
-      - name: Verify output
-        run: |
-          grep -F "is false for this user" logs.txt || (echo "Expected false evaluation!" && exit 1)
+      - uses: launchdarkly/gh-actions/actions/verify-hello-app@verify-hello-app-v2.0.0
+        name: 'Verify ${{ matrix.name}} example output'
+        with:
+          use_server_key: true
+          role_arn: ${{ vars.AWS_ROLE_ARN }}
+          command: cat logs.txt

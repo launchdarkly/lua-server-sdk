@@ -22,4 +22,4 @@ local user = ld.makeContext({
 
 local flag_key = get_from_env_or_default("LD_FLAG_KEY", MY_FLAG_KEY)
 local value = client:boolVariation(user, flag_key, false)
-print("Feature flag ".. flag_key .." is "..tostring(value).." for this user context")
+print("The ".. flag_key .." feature flag evaluates to "..tostring(value)..".")

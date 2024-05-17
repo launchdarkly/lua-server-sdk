@@ -13,4 +13,4 @@ LD_SDK_KEY=my-sdk-key LD_FLAG_KEY=my-boolean-flag lua hello.lua
 ```
 
 The program should output:
-> Feature flag is <true/false> for this user context
+> The (flag key) feature flag evaluates to (true/false).
