@@ -11,6 +11,9 @@ inputs:
   rockspec:
     description: 'The rockspec file for the server-side SDK.'
     required: true
+  aws-arn:
+    description: 'The AWS role ARN to use for verifying the example output'
+    required: true
 
 runs:
   using: composite
@@ -54,16 +57,14 @@ runs:
         LD_LIBRARY_PATH: ${{ steps.install-boost.outputs.BOOST_ROOT }}/lib;./cpp-sdk/build-dynamic/release/lib
         LUA_INTERPRETER: ${{ contains(inputs.lua-version, 'jit') && 'luajit' || 'lua' }}
 
-    - name: Run hello-lua-server example
-      if: ${{ !contains(inputs.lua-version, 'jit') }}
-      shell: bash
-      run: |
-        cd ./examples/hello-lua-server
-        lua hello.lua | tee output.txt
-        grep -F "is false for this user" output.txt || (echo "Expected false evaluation!" && exit 1)
+    - uses: launchdarkly/gh-actions/actions/verify-hello-app@verify-hello-app-v2.0.0
+      name: 'Verify hello-lua-server example'
       env:
-        LD_SDK_KEY: "fake-sdk-key"
         # Needed because boost isn't installed in default system paths, which is
         # what the C++ Server-side SDK shared object expects.
         LD_LIBRARY_PATH: ${{ steps.install-boost.outputs.BOOST_ROOT }}/lib
         LUA_INTERPRETER: ${{ contains(inputs.lua-version, 'jit') && 'luajit' || 'lua' }}
+      with:
+        use_server_key: true
+        role_arn: ${{ inputs.aws-arn }}
+        command: cd ./examples/hello-lua-server && lua hello.lua

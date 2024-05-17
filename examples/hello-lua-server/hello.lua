@@ -10,7 +10,7 @@ local MY_FLAG_KEY = "my-boolean-flag"
 
 local config = {}
 
-local sdk_key = get_from_env_or_default("LD_SDK_KEY", MY_SDK_KEY)
+local sdk_key = get_from_env_or_default("LAUNCHDARKLY_SDK_KEY", MY_SDK_KEY)
 local client = ld.clientInit(sdk_key, 1000, config)
 
 local user = ld.makeContext({
@@ -20,6 +20,6 @@ local user = ld.makeContext({
     }
 })
 
-local flag_key = get_from_env_or_default("LD_FLAG_KEY", MY_FLAG_KEY)
+local flag_key = get_from_env_or_default("LAUNCHDARKLY_FLAG_KEY", MY_FLAG_KEY)
 local value = client:boolVariation(user, flag_key, false)
 print("The ".. flag_key .." feature flag evaluates to "..tostring(value)..".")

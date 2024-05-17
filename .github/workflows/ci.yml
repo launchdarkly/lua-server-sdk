@@ -48,8 +48,6 @@ jobs:
       fail-fast: false
       matrix:
         name: ["hello-haproxy", "hello-nginx"]
-    env:
-      LD_SDK_KEY: foo
     steps:
       - uses: actions/checkout@v4
       - name: Get C++ Versions
@@ -62,7 +60,7 @@ jobs:
           -t launchdarkly:${{ matrix.name }} -f ./examples/${{ matrix.name }}/Dockerfile .
       - name: Run ${{ matrix.name }} container in background
         run: |
-          docker run -dit --rm --name ${{ matrix.name }} -p 8123:80 --env LD_SDK_KEY="$LD_SDK_KEY" launchdarkly:${{ matrix.name }}
+          docker run -dit --rm --name ${{ matrix.name }} -p 8123:80 --env LAUNCHDARKLY_SDK_KEY="$LAUNCHDARKLY_SDK_KEY" launchdarkly:${{ matrix.name }}
       - name: Evaluate feature flag
         run: |
           curl --retry 5 --retry-all-errors --retry-delay 1 -s -v http://localhost:8123 | tee response.txt
@@ -83,8 +81,6 @@ jobs:
       fail-fast: false
       matrix:
         name: [ "hello-debian"]
-    env:
-      LD_SDK_KEY: foo
     steps:
       - uses: actions/checkout@v4
       - name: Get C++ Versions
@@ -97,7 +93,7 @@ jobs:
           -t launchdarkly:${{ matrix.name }} -f ./examples/${{ matrix.name }}/Dockerfile .
       - name: Run ${{ matrix.name }} container in foreground
         run: |
-          docker run --env LD_SDK_KEY="$LD_SDK_KEY" launchdarkly:${{ matrix.name }} > logs.txt
+          docker run --env LAUNCHDARKLY_SDK_KEY="$LAUNCHDARKLY_SDK_KEY" launchdarkly:${{ matrix.name }} > logs.txt
       - uses: launchdarkly/gh-actions/actions/verify-hello-app@verify-hello-app-v2.0.0
         name: 'Verify ${{ matrix.name}} example output'
         with:
