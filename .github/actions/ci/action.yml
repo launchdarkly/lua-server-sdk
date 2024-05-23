@@ -67,6 +67,4 @@ runs:
       with:
         use_server_key: true
         role_arn: ${{ inputs.aws-arn }}
-        command: |
-          cd ./examples/hello-lua-server
-          lua hello.lua
+        command: lua ./examples/hello-lua-server/hello.lua
