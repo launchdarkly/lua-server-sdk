@@ -27,7 +27,8 @@ jobs:
   linux-build:
     needs: rockspecs
     runs-on: ubuntu-latest
-
+    permissions:
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
@@ -44,6 +45,8 @@ jobs:
 
   web-server-examples:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
@@ -58,12 +61,7 @@ jobs:
           docker build \
           --build-arg="CPP_SDK_VERSION=${{ steps.cpp-versions.outputs.sdk }}" \
           -t launchdarkly:${{ matrix.name }} -f ./examples/${{ matrix.name }}/Dockerfile .
-      - name: Run ${{ matrix.name }} container in background
-        run: |
-          docker run -dit --rm --name ${{ matrix.name }} -p 8123:80 --env LAUNCHDARKLY_SDK_KEY="$LAUNCHDARKLY_SDK_KEY" launchdarkly:${{ matrix.name }}
-      - name: Evaluate feature flag
-        run: |
-          curl --retry 5 --retry-all-errors --retry-delay 1 -s -v http://localhost:8123 | tee response.txt
+
       - uses: launchdarkly/gh-actions/actions/verify-hello-app@verify-hello-app-v2.0.0
         name: 'Verify ${{ matrix.name}} example output'
         with:
@@ -80,6 +78,8 @@ jobs:
 
   plain-lua-examples:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
