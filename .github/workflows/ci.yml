@@ -64,15 +64,18 @@ jobs:
       - name: Evaluate feature flag
         run: |
           curl --retry 5 --retry-all-errors --retry-delay 1 -s -v http://localhost:8123 | tee response.txt
-      - name: Stop ${{ matrix.name }} container
-        run: |
-          docker stop ${{ matrix.name }}
       - uses: launchdarkly/gh-actions/actions/verify-hello-app@verify-hello-app-v2.0.0
         name: 'Verify ${{ matrix.name}} example output'
         with:
           use_server_key: true
           role_arn: ${{ vars.AWS_ROLE_ARN }}
-          command: cat response.txt
+          command: |
+            docker run -dit --rm --name ${{ matrix.name }} -p 8123:80 --env LAUNCHDARKLY_SDK_KEY="$LAUNCHDARKLY_SDK_KEY" launchdarkly:${{ matrix.name }}
+            curl --retry 5 --retry-all-errors --retry-delay 1 -s -v http://localhost:8123 | tee response.txt
+            cat response.txt
+      - name: Stop ${{ matrix.name }} container
+        run: |
+          docker stop ${{ matrix.name }}
 
 
   plain-lua-examples:
@@ -91,12 +94,11 @@ jobs:
           docker build \
           --build-arg="CPP_SDK_VERSION=${{ steps.cpp-versions.outputs.sdk }}" \
           -t launchdarkly:${{ matrix.name }} -f ./examples/${{ matrix.name }}/Dockerfile .
-      - name: Run ${{ matrix.name }} container in foreground
-        run: |
-          docker run --env LAUNCHDARKLY_SDK_KEY="$LAUNCHDARKLY_SDK_KEY" launchdarkly:${{ matrix.name }} > logs.txt
       - uses: launchdarkly/gh-actions/actions/verify-hello-app@verify-hello-app-v2.0.0
         name: 'Verify ${{ matrix.name}} example output'
         with:
           use_server_key: true
           role_arn: ${{ vars.AWS_ROLE_ARN }}
-          command: cat logs.txt
+          command: |
+            docker run --env LAUNCHDARKLY_SDK_KEY="$LAUNCHDARKLY_SDK_KEY" launchdarkly:${{ matrix.name }} > logs.txt
+            cat logs.txt
