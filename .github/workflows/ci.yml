@@ -42,7 +42,7 @@ jobs:
         with:
           lua-version: ${{ matrix.version }}
           rockspec: ${{ matrix.package }}
-          aws-arn: ${{ secrets.AWS_ROLE_ARN_EXAMPLES }}
+          aws-arn: ${{ vars.AWS_ROLE_ARN_EXAMPLES }}
 
 
   web-server-examples:
