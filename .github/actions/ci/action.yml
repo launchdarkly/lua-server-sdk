@@ -57,6 +57,12 @@ runs:
         LD_LIBRARY_PATH: ${{ steps.install-boost.outputs.BOOST_ROOT }}/lib;./cpp-sdk/build-dynamic/release/lib
         LUA_INTERPRETER: ${{ contains(inputs.lua-version, 'jit') && 'luajit' || 'lua' }}
 
+    - name: Make a temporary script to run lua
+      shell: bash
+      run: |
+        echo "#!/bin/bash" > run_lua.sh
+        echo "cd ./examples/hello-lua-server && lua hello.lua" >> run_lua.sh
+        chmod +x run_lua.sh
     - uses: launchdarkly/gh-actions/actions/verify-hello-app@verify-hello-app-v2.0.0
       if: ${{ !contains(inputs.lua-version, 'jit') }}
       name: 'Verify hello-lua-server example'
@@ -67,4 +73,4 @@ runs:
       with:
         use_server_key: true
         role_arn: ${{ inputs.aws-arn }}
-        command: cd ./examples/hello-lua-server
+        command: ./run_lua.sh
