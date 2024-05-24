@@ -64,8 +64,7 @@ runs:
         # Needed because boost isn't installed in default system paths, which is
         # what the C++ Server-side SDK shared object expects.
         LD_LIBRARY_PATH: ${{ steps.install-boost.outputs.BOOST_ROOT }}/lib
-        LUA_INTERPRETER: ${{ contains(inputs.lua-version, 'jit') && 'luajit' || 'lua' }}
       with:
         use_server_key: true
         role_arn: ${{ inputs.aws-arn }}
-        command: cd ./examples/hello-lua-server && lua hello.lua
+        command: cd ./examples/hello-lua-server
