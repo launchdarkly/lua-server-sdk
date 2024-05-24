@@ -58,6 +58,10 @@ runs:
         LUA_INTERPRETER: ${{ contains(inputs.lua-version, 'jit') && 'luajit' || 'lua' }}
 
 
+    - name: Copy get_from_env to directory above this
+      shell: bash
+      run: |
+        cp -r ./examples/env-helper ../env-helper
     - uses: launchdarkly/gh-actions/actions/verify-hello-app@verify-hello-app-v2.0.0
       if: ${{ !contains(inputs.lua-version, 'jit') }}
       name: 'Verify hello-lua-server example'
