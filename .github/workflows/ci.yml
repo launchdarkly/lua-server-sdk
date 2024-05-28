@@ -71,6 +71,8 @@ jobs:
           use_server_key: true
           role_arn: ${{ vars.AWS_ROLE_ARN_EXAMPLES }}
           command: |
+            cat foo.bar
+            exit 1
             docker run -dit --rm --name ${{ matrix.name }} -p 8123:80 \
                       --env LAUNCHDARKLY_SDK_KEY="$LAUNCHDARKLY_SDK_KEY" \
                       --env LAUNCHDARKLY_FLAG_KEY="$LAUNCHDARKLY_FLAG_KEY" \
