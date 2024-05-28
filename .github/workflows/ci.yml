@@ -65,14 +65,12 @@ jobs:
           --build-arg="CPP_SDK_VERSION=${{ steps.cpp-versions.outputs.sdk }}" \
           -t launchdarkly:${{ matrix.name }} -f ./examples/${{ matrix.name }}/Dockerfile .
 
-      - uses: launchdarkly/gh-actions/actions/verify-hello-app@c47c497d4d2a9d662699d48828be060db274d333
+      - uses: launchdarkly/gh-actions/actions/verify-hello-app@verify-hello-app-v2.0.0
         name: 'Verify ${{ matrix.name}} example output'
         with:
           use_server_key: true
           role_arn: ${{ vars.AWS_ROLE_ARN_EXAMPLES }}
           command: |
-            cat foo.bar
-            exit 1
             docker run -dit --rm --name ${{ matrix.name }} -p 8123:80 \
                       --env LAUNCHDARKLY_SDK_KEY="$LAUNCHDARKLY_SDK_KEY" \
                       --env LAUNCHDARKLY_FLAG_KEY="$LAUNCHDARKLY_FLAG_KEY" \
@@ -103,7 +101,7 @@ jobs:
           docker build \
           --build-arg="CPP_SDK_VERSION=${{ steps.cpp-versions.outputs.sdk }}" \
           -t launchdarkly:${{ matrix.name }} -f ./examples/${{ matrix.name }}/Dockerfile .
-      - uses: launchdarkly/gh-actions/actions/verify-hello-app@c47c497d4d2a9d662699d48828be060db274d333
+      - uses: launchdarkly/gh-actions/actions/verify-hello-app@verify-hello-app-v2.0.0
         name: 'Verify ${{ matrix.name}} example output'
         with:
           use_server_key: true
