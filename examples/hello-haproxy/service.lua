@@ -8,7 +8,7 @@ local get_from_env_or_default = require("get_from_env_or_default")
 local MY_SDK_KEY = ""
 
 -- Set MY_FLAG_KEY to the boolean-type feature flag key you want to evaluate.
-local MY_FLAG_KEY = "my-boolean-flag"
+local MY_FLAG_KEY = ""
 
 local config = {}
 local sdk_key = get_from_env_or_default("LAUNCHDARKLY_SDK_KEY", MY_SDK_KEY)
