@@ -8,13 +8,13 @@ local get_from_env_or_default = require("get_from_env_or_default")
 local MY_SDK_KEY = ""
 
 -- Set MY_FLAG_KEY to the boolean-type feature flag key you want to evaluate.
-local MY_FLAG_KEY = "my-boolean-flag"
+local MY_FLAG_KEY = ""
 
 local config = {}
-local sdk_key = get_from_env_or_default("LD_SDK_KEY", MY_SDK_KEY)
+local sdk_key = get_from_env_or_default("LAUNCHDARKLY_SDK_KEY", MY_SDK_KEY)
 local client = ld.clientInit(sdk_key, 1000, config)
 
-local flag_key = get_from_env_or_default("LD_FLAG_KEY", MY_FLAG_KEY)
+local flag_key = get_from_env_or_default("LAUNCHDARKLY_FLAG_KEY", MY_FLAG_KEY)
 
 core.register_service("launchdarkly", "http", function(applet)
     applet:start_response()
@@ -26,9 +26,6 @@ core.register_service("launchdarkly", "http", function(applet)
         }
     })
 
-    if client:boolVariation(user, flag_key, false) then
-        applet:send("<p>Feature flag " .. flag_key .. " is true for this user context</p>")
-    else
-        applet:send("<p>Feature flag " .. flag_key .. " is false for this user context</p>")
-    end
+    local flag_value = client:boolVariation(user, flag_key, false)
+    applet:send("<p>The " .. flag_key .. " feature flag evaluates to " .. tostring(flag_value) .. ".</p>")
 end)

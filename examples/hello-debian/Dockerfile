@@ -40,7 +40,7 @@ COPY launchdarkly-server-sdk.c .
 
 # The example expects to find the env-helper script up one directory, so preserve that structure
 # when copying. The purpose of env-helper is to allow the flag key & SDK keys to be injected via
-# environment variable (LD_SDK_KEY and LD_FLAG_KEY).
+# environment variable (LAUNCHDARKLY_SDK_KEY and LAUNCHDARKLY_FLAG_KEY).
 COPY ./examples/hello-debian/hello.lua hello-debian/
 COPY ./examples/env-helper env-helper
 

@@ -5,12 +5,12 @@ local get_from_env_or_default = dofile("../env-helper/get_from_env_or_default.lu
 local MY_SDK_KEY = ""
 
 -- Set MY_FLAG_KEY to the boolean-type feature flag key you want to evaluate.
-local MY_FLAG_KEY = "my-boolean-flag"
+local MY_FLAG_KEY = ""
 
 
 local config = {}
 
-local sdk_key = get_from_env_or_default("LD_SDK_KEY", MY_SDK_KEY)
+local sdk_key = get_from_env_or_default("LAUNCHDARKLY_SDK_KEY", MY_SDK_KEY)
 local client = ld.clientInit(sdk_key, 1000, config)
 
 local user = ld.makeContext({
@@ -20,6 +20,6 @@ local user = ld.makeContext({
     }
 })
 
-local flag_key = get_from_env_or_default("LD_FLAG_KEY", MY_FLAG_KEY)
+local flag_key = get_from_env_or_default("LAUNCHDARKLY_FLAG_KEY", MY_FLAG_KEY)
 local value = client:boolVariation(user, flag_key, false)
-print("Feature flag ".. flag_key .." is "..tostring(value).." for this user context")
+print("The ".. flag_key .." feature flag evaluates to "..tostring(value)..".")

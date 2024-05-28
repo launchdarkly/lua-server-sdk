@@ -7,10 +7,10 @@ Then, use the Lua interpreter to run `hello.lua`:
 lua hello.lua
 ```
 
-If you'd rather use environment variables to specify the SDK key or flag key, set `LD_SDK_KEY` or `LD_FLAG_KEY`.
+If you'd rather use environment variables to specify the SDK key or flag key, set `LAUNCHDARKLY_SDK_KEY` or `LAUNCHDARKLY_FLAG_KEY`.
 ```bash
-LD_SDK_KEY=my-sdk-key LD_FLAG_KEY=my-boolean-flag lua hello.lua
+LAUNCHDARKLY_SDK_KEY=my-sdk-key LAUNCHDARKLY_FLAG_KEY=my-boolean-flag lua hello.lua
 ```
 
 The program should output:
-> Feature flag is <true/false> for this user context
+> The (flag key) feature flag evaluates to (true/false).

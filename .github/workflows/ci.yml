@@ -27,7 +27,9 @@ jobs:
   linux-build:
     needs: rockspecs
     runs-on: ubuntu-latest
-
+    permissions:
+      id-token: write
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -40,16 +42,18 @@ jobs:
         with:
           lua-version: ${{ matrix.version }}
           rockspec: ${{ matrix.package }}
+          aws-arn: ${{ vars.AWS_ROLE_ARN_EXAMPLES }}
 
 
   web-server-examples:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     strategy:
       fail-fast: false
       matrix:
         name: ["hello-haproxy", "hello-nginx"]
-    env:
-      LD_SDK_KEY: foo
     steps:
       - uses: actions/checkout@v4
       - name: Get C++ Versions
@@ -60,25 +64,33 @@ jobs:
           docker build \
           --build-arg="CPP_SDK_VERSION=${{ steps.cpp-versions.outputs.sdk }}" \
           -t launchdarkly:${{ matrix.name }} -f ./examples/${{ matrix.name }}/Dockerfile .
-      - name: Run ${{ matrix.name }} container in background
-        run: |
-          docker run -dit --rm --name ${{ matrix.name }} -p 8123:80 --env LD_SDK_KEY="$LD_SDK_KEY" launchdarkly:${{ matrix.name }}
-      - name: Evaluate feature flag
-        run: |
-          curl --retry 5 --retry-all-errors --retry-delay 1 -s -v http://localhost:8123 | tee response.txt
-          grep -F "is false for this user" response.txt || (echo "Expected false evaluation!" && exit 1)
+
+      - uses: launchdarkly/gh-actions/actions/verify-hello-app@verify-hello-app-v2.0.0
+        name: 'Verify ${{ matrix.name}} example output'
+        with:
+          use_server_key: true
+          role_arn: ${{ vars.AWS_ROLE_ARN_EXAMPLES }}
+          command: |
+            docker run -dit --rm --name ${{ matrix.name }} -p 8123:80 \
+                      --env LAUNCHDARKLY_SDK_KEY="$LAUNCHDARKLY_SDK_KEY" \
+                      --env LAUNCHDARKLY_FLAG_KEY="$LAUNCHDARKLY_FLAG_KEY" \
+                      launchdarkly:${{ matrix.name }}
+                      curl --retry 5 --retry-all-errors --retry-delay 1 -s -v http://localhost:8123
+
       - name: Stop ${{ matrix.name }} container
         run: |
           docker stop ${{ matrix.name }}
 
+
   plain-lua-examples:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     strategy:
       fail-fast: false
       matrix:
         name: [ "hello-debian"]
-    env:
-      LD_SDK_KEY: foo
     steps:
       - uses: actions/checkout@v4
       - name: Get C++ Versions
@@ -89,9 +101,13 @@ jobs:
           docker build \
           --build-arg="CPP_SDK_VERSION=${{ steps.cpp-versions.outputs.sdk }}" \
           -t launchdarkly:${{ matrix.name }} -f ./examples/${{ matrix.name }}/Dockerfile .
-      - name: Run ${{ matrix.name }} container in foreground
-        run: |
-          docker run --env LD_SDK_KEY="$LD_SDK_KEY" launchdarkly:${{ matrix.name }} > logs.txt
-      - name: Verify output
-        run: |
-          grep -F "is false for this user" logs.txt || (echo "Expected false evaluation!" && exit 1)
+      - uses: launchdarkly/gh-actions/actions/verify-hello-app@verify-hello-app-v2.0.0
+        name: 'Verify ${{ matrix.name}} example output'
+        with:
+          use_server_key: true
+          role_arn: ${{ vars.AWS_ROLE_ARN_EXAMPLES }}
+          command: |
+            docker run \
+            --env LAUNCHDARKLY_SDK_KEY="$LAUNCHDARKLY_SDK_KEY"  \
+            --env LAUNCHDARKLY_FLAG_KEY="$LAUNCHDARKLY_FLAG_KEY" \
+            launchdarkly:${{ matrix.name }}
