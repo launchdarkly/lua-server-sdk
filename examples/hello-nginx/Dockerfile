@@ -4,7 +4,7 @@ FROM openresty/openresty:jammy
 ARG VERSION=2.1.0
 # {{ x-release-please-end }}
 
-ARG CPP_SDK_VERSION=3.3.3
+ARG CPP_SDK_VERSION=3.5.2
 
 RUN apt-get update && apt-get install -y \
     git netbase curl libssl-dev apt-transport-https ca-certificates \
