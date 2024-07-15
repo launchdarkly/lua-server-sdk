@@ -10,7 +10,8 @@
         "scripts/update-versions.sh",
         "scripts/compile.sh",
         "examples/hello-haproxy/Dockerfile",
-        "examples/hello-nginx/Dockerfile"
+        "examples/hello-nginx/Dockerfile",
+        "examples/hello-debian/Dockerfile"
       ]
     }
   }
