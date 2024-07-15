@@ -1,0 +1,1294 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>LaunchDarkly Lua Server SDK</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Tables">Tables</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/launchdarkly-server-sdk-redis.html">launchdarkly-server-sdk-redis</a></li>
+  <li><strong>launchdarkly-server-sdk</strong></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>launchdarkly-server-sdk</code></h1>
+<p>Server-side SDK for LaunchDarkly.</p>
+<p></p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#makeLogBackend">makeLogBackend (enabled, write)</a></td>
+	<td class="summary">Creates a new custom log backend.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#makeUser">makeUser (fields)</a></td>
+	<td class="summary">This function is deprecated and provided as a convenience.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#makeContext">makeContext (A, A[, A[, A[, An]]])</a></td>
+	<td class="summary">Create a new opaque context object.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#version">version ()</a></td>
+	<td class="summary">Return SDK version.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#clientInit">clientInit (string, int, config)</a></td>
+	<td class="summary">Initialize a new client, and connect to LaunchDarkly.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#valid">valid (context)</a></td>
+	<td class="summary">Returns true if the context is valid.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#errors">errors (context)</a></td>
+	<td class="summary">Returns an error string if the context is invalid.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#canonicalKey">canonicalKey (context)</a></td>
+	<td class="summary">Returns the canonical key of the context.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#getAttribute">getAttribute (context, kind, attribute_reference)</a></td>
+	<td class="summary">Returns the value of a context attribute.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#privateAttributes">privateAttributes (context, kind)</a></td>
+	<td class="summary">Returns the private attribute references associated with a particular
+context kind.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#boolVariation">boolVariation (context, key, fallback)</a></td>
+	<td class="summary">Evaluate a boolean flag</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#boolVariationDetail">boolVariationDetail (context, key, fallback)</a></td>
+	<td class="summary">Evaluate a boolean flag and return an explanation</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#intVariation">intVariation (context, key, fallback)</a></td>
+	<td class="summary">Evaluate an integer flag</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#intVariationDetail">intVariationDetail (context, key, fallback)</a></td>
+	<td class="summary">Evaluate an integer flag and return an explanation</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#doubleVariation">doubleVariation (context, key, fallback)</a></td>
+	<td class="summary">Evaluate a double flag</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#doubleVariationDetail">doubleVariationDetail (context, key, fallback)</a></td>
+	<td class="summary">Evaluate a double flag and return an explanation</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#stringVariation">stringVariation (context, key, fallback)</a></td>
+	<td class="summary">Evaluate a string flag</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#stringVariationDetail">stringVariationDetail (context, key, fallback)</a></td>
+	<td class="summary">Evaluate a string flag and return an explanation</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#jsonVariation">jsonVariation (context, key, fallback)</a></td>
+	<td class="summary">Evaluate a json flag</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#jsonVariationDetail">jsonVariationDetail (context, key, fallback)</a></td>
+	<td class="summary">Evaluate a json flag and return an explanation</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#flush">flush ()</a></td>
+	<td class="summary">Immediately flushes queued events.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#track">track (key, context[, data[, metric]])</a></td>
+	<td class="summary">Reports that a context has performed an event.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#isInitialized">isInitialized ()</a></td>
+	<td class="summary">Check if a client has been fully initialized.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#identify">identify (context)</a></td>
+	<td class="summary">Generates an identify event for a context.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#allFlags">allFlags (context)</a></td>
+	<td class="summary">Returns a map from feature flag keys to values for a given context.</td>
+	</tr>
+</table>
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#EvaluationDetail">EvaluationDetail</a></td>
+	<td class="summary">EvaluationDetail contains extra information related to evaluation of a flag.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "makeLogBackend"></a>
+    <strong>makeLogBackend (enabled, write)</strong>
+    </dt>
+    <dd>
+    Creates a new custom log backend.  The functions provided must be thread safe as the SDK
+ does not perform any locking.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">enabled</span>
+            <span class="types"><span class="type">function</span></span>
+         A function that returns true if the specified log level is enabled. The signature
+should be (level: string) -> boolean, where the known level strings are 'debug', 'info', 'warn', and 'error'.
+        </li>
+        <li><span class="parameter">write</span>
+            <span class="types"><span class="type">function</span></span>
+         A function that writes a log message at a specified level. The signature should be
+ (level: string, message: string) -> void.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">A</span></span>
+        new custom log backend, suitable for use in SDK `logging` configuration.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "makeUser"></a>
+    <strong>makeUser (fields)</strong>
+    </dt>
+    <dd>
+    This function is deprecated and provided as a convenience.  Please transition
+to using <a href="../modules/launchdarkly-server-sdk.html#makeContext">makeContext</a> instead.
+<p>Create a new opaque context object of kind 'user'. This method
+has changed from the previous Lua SDK v1.x `makeUser`, as users are no longer
+supported.
+<p>Specifically:
+1. 'secondary' attribute is no longer supported.
+2. 'privateAttributeNames' is now called 'privateAttributes' and supports
+attribute references (similar to JSON pointer syntax, e.g. `/foo/bar`).
+3. all fields under 'custom' become top-level context attributes, rather than
+being nested under an attribute named 'custom'.
+<p>For example, `{ custom = { foo = "bar" } }` would result in a context with attribute 'foo' equal to 'bar'.
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">fields</span> list of user fields.
+        <ul>
+        <li><span class="parameter">key</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         The user's key
+        </li>
+        <li><span class="parameter">anonymous</span>
+            <span class="types"><span class="type">boolean</span></span>
+         Mark the user as anonymous
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">ip</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         Set the user's IP
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">firstName</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         Set the user's first name
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">lastName</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         Set the user's last name
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">email</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         Set the user's email
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">name</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         Set the user's name
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">avatar</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         Set the user's avatar
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">country</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         Set the user's country
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">privateAttributes</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         A list of attributes to
+redact
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">custom</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         A table of additional context attributes.
+         (<em>optional</em>)
+        </li>
+        </li></ul>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        an opaque context object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "makeContext"></a>
+    <strong>makeContext (A, A[, A[, A[, An]]])</strong>
+    </dt>
+    <dd>
+    Create a new opaque context object.  This method can be used to create single
+or multi-kind contexts. The context's kind must always be specified, even if
+it is a user.
+<p>For example, to create a context with a single user kind:
+```
+local context = ld.makeContext({
+    user = {
+        key = "alice-123",
+        name = "alice",
+        attributes = {
+            age = 52,
+            contact = {
+                email = "alice@mail.com",
+                phone = "555-555-5555"
+            }
+        },
+        privateAttributes = { "age", "/contact/phone" }
+    }
+})
+```
+<p>A multi-kind context can be useful when targeting based on multiple kinds of data.
+For example, to associate a device context with a user:
+<p>```
+local context = ld.makeContext({
+    user = {
+        key = "alice-123",
+        name = "alice",
+        anonymous = true
+    },
+    device {
+        key = "device-123",
+        attributes = {
+           manufacturer = "bigcorp"
+        }
+    }
+})
+```
+<p>SDK methods will automatically check for context validity. You may check manually
+by calling <a href="../modules/launchdarkly-server-sdk.html#valid">valid</a> to detect errors earlier.
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">A</span>
+            <span class="types"><span class="type">[kind.attributes]</span></span>
+         table of arbitrary attributes to associate with the context.
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">A</span>
+            <span class="types"><span class="type">[kind.attributes]</span></span>
+         table of arbitrary attributes to associate with the context.
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">A</span>
+            <span class="types"><span class="type">[kind.attributes]</span></span>
+         table of arbitrary attributes to associate with the context.
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">A</span>
+            <span class="types"><span class="type">[kind.attributes]</span></span>
+         table of arbitrary attributes to associate with the context.
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">An</span>
+            <span class="types"><span class="type">[kind.privateAttributes]</span></span>
+         array of attribute references, indicating which
+attributes should be marked private. Attribute references may be simple attribute names
+(like 'age'), or may use a JSON-pointer-like syntax (like '/contact/phone').
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">A</span></span>
+        fresh context.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "version"></a>
+    <strong>version ()</strong>
+    </dt>
+    <dd>
+    Return SDK version.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        SDK version string.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "clientInit"></a>
+    <strong>clientInit (string, int, config)</strong>
+    </dt>
+    <dd>
+    Initialize a new client, and connect to LaunchDarkly.
+Applications should instantiate a single instance for the lifetime of their application.
+<p>To initialize with default configuration, you may pass nil or an empty table as the third argument.
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">string</span>
+         Environment SDK key
+        </li>
+        <li><span class="parameter">int</span>
+         Initialization timeout in milliseconds. clientInit will
+block for this long before returning a non-fully initialized client. Pass 0 to return
+immediately without waiting (note that the client will continue initializing in the background.)
+        </li>
+        <li><span class="parameter">config</span> optional configuration options, or nil/empty table for default configuration.
+        <ul>
+        <li><span class="parameter">offline</span>
+            <span class="types"><span class="type">boolean</span></span>
+         Sets whether this client is offline.
+An offline client will not make any network connections to LaunchDarkly or
+a data source like Redis, nor send any events, and will return application-defined
+default values for all feature flags.
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">logging</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         Options related to the SDK's logging facilities. The `basic` and `custom` configs
+are mutually exclusive. If you only need to change logging verbosity or the log tag, use `basic`. If you need to
+replace the log verbosity logic & printing entirely, use `custom`.
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">logging.basic</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         Modify the SDK's default logger.
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">logging.basic.tag</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         A tag to include in log messages, for example 'launchdarkly'.
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">logging.basic.level</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         The minimum level of log messages to include. Known options include
+'debug', 'info', 'warn', or 'error'.
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">logging.custom</span>
+            <span class="types"><span class="type">userdata</span></span>
+         A custom log backend, created with <a href="../modules/launchdarkly-server-sdk.html#makeLogBackend">makeLogBackend</a>.
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">serviceEndpoints</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         If you set one custom service endpoint URL,
+you must set all of them. You probably don't need to set this unless instructed by
+LaunchDarkly.
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">serviceEndpoints.streamingBaseURL</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         Set the streaming URL
+for connecting to LaunchDarkly.
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">serviceEndpoints.eventsBaseURL</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         Set the events URL for
+connecting to LaunchDarkly.
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">serviceEndpoints.pollingBaseURL</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         Set the polling URL for
+connecting to LaunchDarkly.
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">events</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         Options related to event generation and
+delivery.
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">events.enabled</span>
+            <span class="types"><span class="type">bool</span></span>
+         Sets whether to send analytics events
+back to LaunchDarkly. By default, the client will send events. This differs
+from top-level config option 'offline' in that it only affects sending events,
+not receiving data.
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">events.capacity</span>
+            <span class="types"><span class="type">int</span></span>
+         The capacity of the events buffer.
+The client buffers up to this many events in memory before flushing. If the
+capacity is exceeded before the buffer is flushed, events will be discarded.
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">events.flushIntervalMilliseconds</span>
+            <span class="types"><span class="type">int</span></span>
+         The time between flushes of the event
+buffer. Decreasing the flush interval means that the event buffer is less
+likely to reach capacity.
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">events.allAttributesPrivate</span>
+            <span class="types"><span class="type">boolean</span></span>
+         Sets whether or not all context
+attributes (other than the key) should be hidden from LaunchDarkly. If this
+is true, all context attribute values will be private, not just the attributes
+specified via events.privateAttributes.
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">events.contextKeysCapacity</span>
+            <span class="types"><span class="type">int</span></span>
+         The number of context keys that the
+event processor can remember at an one time, so that duplicate context details
+will not be sent in analytics.
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">events.privateAttributes</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         Marks a set of context attribute
+as private. Any contexts sent to LaunchDarkly with this configuration active
+will have attributes refered to removed.
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">appInfo</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         Specify metadata related to your application.
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">appInfo.identifier</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         An identifier for the application.
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">appInfo.version</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         The version of the application.
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">dataSystem</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         Change configuration of the default streaming
+data source, switch to a polling source, or specify a read-only database source.
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">dataSystem.enabled</span>
+            <span class="types"><span class="type">bool</span></span>
+         Set to false to disable receiving any data
+from any LaunchDarkly data source (streaming or polling) or a database source (like Redis.)
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">dataSystem.backgroundSync</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         Change streaming or polling
+configuration. The SDK uses streaming by default. Note that streaming and polling are mutually exclusive.
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">dataSystem.backgroundSync.streaming.initialReconnectDelayMilliseconds</span>
+            <span class="types"><span class="type">int</span></span>
+
+The time to wait before the first reconnection attempt, if the streaming connection is dropped.
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">dataSystem.backgroundSync.polling.intervalSeconds</span>
+            <span class="types"><span class="type">int</span></span>
+         The time between individual
+polling requests.
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">dataSystem.lazyLoad.cacheRefreshMilliseconds</span>
+            <span class="types"><span class="type">int</span></span>
+         How long a data item (flag/segment)
+remains cached in memory before requiring a refresh from the source.
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">dataSystem.lazyLoad.source</span>
+            <span class="types"><span class="type">userdata</span></span>
+         A custom data source. Currently
+only Redis is supported.
+         (<em>optional</em>)
+        </li>
+        </li></ul>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        A fresh client.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "valid"></a>
+    <strong>valid (context)</strong>
+    </dt>
+    <dd>
+    Returns true if the context is valid.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">context</span>
+            <span class="types"><span class="type">context</span></span>
+         An opaque context object from <a href="../modules/launchdarkly-server-sdk.html#makeUser">makeUser</a> or <a href="../modules/launchdarkly-server-sdk.html#makeContext">makeContext</a>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">True</span></span>
+        if valid, otherwise false.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "errors"></a>
+    <strong>errors (context)</strong>
+    </dt>
+    <dd>
+    Returns an error string if the context is invalid.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">context</span>
+            <span class="types"><span class="type">context</span></span>
+         An opaque context object from <a href="../modules/launchdarkly-server-sdk.html#makeUser">makeUser</a> or <a href="../modules/launchdarkly-server-sdk.html#makeContext">makeContext</a>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">Error</span></span>
+        string if valid, otherwise nil.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "canonicalKey"></a>
+    <strong>canonicalKey (context)</strong>
+    </dt>
+    <dd>
+    Returns the canonical key of the context.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">context</span>
+            <span class="types"><span class="type">context</span></span>
+         An opaque context object from <a href="../modules/launchdarkly-server-sdk.html#makeUser">makeUser</a> or <a href="../modules/launchdarkly-server-sdk.html#makeContext">makeContext</a>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">Canonical</span></span>
+        key of the context, or nil if the context isn't valid.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "getAttribute"></a>
+    <strong>getAttribute (context, kind, attribute_reference)</strong>
+    </dt>
+    <dd>
+    Returns the value of a context attribute.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">context</span>
+            <span class="types"><span class="type">context</span></span>
+         An opaque context object from <a href="../modules/launchdarkly-server-sdk.html#makeUser">makeUser</a> or <a href="../modules/launchdarkly-server-sdk.html#makeContext">makeContext</a>
+        </li>
+        <li><span class="parameter">kind</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         The kind of the context.
+        </li>
+        <li><span class="parameter">attribute_reference</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         An attribute reference naming the attribute to get.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">Lua</span></span>
+        value of the attribute, or nil if the attribute isn't present in the context.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "privateAttributes"></a>
+    <strong>privateAttributes (context, kind)</strong>
+    </dt>
+    <dd>
+    Returns the private attribute references associated with a particular
+context kind.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">context</span>
+            <span class="types"><span class="type">context</span></span>
+         An opaque context object from <a href="../modules/launchdarkly-server-sdk.html#makeUser">makeUser</a> or <a href="../modules/launchdarkly-server-sdk.html#makeContext">makeContext</a>
+        </li>
+        <li><span class="parameter">kind</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         The kind of the context.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">Array</span></span>
+        of private attribute references, or nil if the kind isn't present in
+the context.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "boolVariation"></a>
+    <strong>boolVariation (context, key, fallback)</strong>
+    </dt>
+    <dd>
+    Evaluate a boolean flag
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">context</span>
+            <span class="types"><span class="type">context</span></span>
+         An opaque context object from <a href="../modules/launchdarkly-server-sdk.html#makeUser">makeUser</a> or <a href="../modules/launchdarkly-server-sdk.html#makeContext">makeContext</a>
+        </li>
+        <li><span class="parameter">key</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         The key of the flag to evaluate.
+        </li>
+        <li><span class="parameter">fallback</span>
+            <span class="types"><span class="type">boolean</span></span>
+         The value to return on error
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">boolean</span></span>
+        The evaluation result, or the fallback value
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "boolVariationDetail"></a>
+    <strong>boolVariationDetail (context, key, fallback)</strong>
+    </dt>
+    <dd>
+    Evaluate a boolean flag and return an explanation
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">context</span>
+            <span class="types"><span class="type">context</span></span>
+         An opaque context object from <a href="../modules/launchdarkly-server-sdk.html#makeUser">makeUser</a> or <a href="../modules/launchdarkly-server-sdk.html#makeContext">makeContext</a>
+        </li>
+        <li><span class="parameter">key</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         The key of the flag to evaluate.
+        </li>
+        <li><span class="parameter">fallback</span>
+            <span class="types"><span class="type">boolean</span></span>
+         The value to return on error
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        <a href="../modules/launchdarkly-server-sdk.html#EvaluationDetail">EvaluationDetail</a>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "intVariation"></a>
+    <strong>intVariation (context, key, fallback)</strong>
+    </dt>
+    <dd>
+    Evaluate an integer flag
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">context</span>
+            <span class="types"><span class="type">context</span></span>
+         An opaque context object from <a href="../modules/launchdarkly-server-sdk.html#makeUser">makeUser</a> or <a href="../modules/launchdarkly-server-sdk.html#makeContext">makeContext</a>
+        </li>
+        <li><span class="parameter">key</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         The key of the flag to evaluate.
+        </li>
+        <li><span class="parameter">fallback</span>
+            <span class="types"><span class="type">int</span></span>
+         The value to return on error
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">int</span></span>
+        The evaluation result, or the fallback value
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "intVariationDetail"></a>
+    <strong>intVariationDetail (context, key, fallback)</strong>
+    </dt>
+    <dd>
+    Evaluate an integer flag and return an explanation
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">context</span>
+            <span class="types"><span class="type">context</span></span>
+         An opaque context object from <a href="../modules/launchdarkly-server-sdk.html#makeUser">makeUser</a> or <a href="../modules/launchdarkly-server-sdk.html#makeContext">makeContext</a>
+        </li>
+        <li><span class="parameter">key</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         The key of the flag to evaluate.
+        </li>
+        <li><span class="parameter">fallback</span>
+            <span class="types"><span class="type">int</span></span>
+         The value to return on error
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        <a href="../modules/launchdarkly-server-sdk.html#EvaluationDetail">EvaluationDetail</a>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "doubleVariation"></a>
+    <strong>doubleVariation (context, key, fallback)</strong>
+    </dt>
+    <dd>
+    Evaluate a double flag
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">context</span>
+            <span class="types"><span class="type">context</span></span>
+         An opaque context object from <a href="../modules/launchdarkly-server-sdk.html#makeUser">makeUser</a> or <a href="../modules/launchdarkly-server-sdk.html#makeContext">makeContext</a>
+        </li>
+        <li><span class="parameter">key</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         The key of the flag to evaluate.
+        </li>
+        <li><span class="parameter">fallback</span>
+            <span class="types"><span class="type">number</span></span>
+         The value to return on error
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">double</span></span>
+        The evaluation result, or the fallback value
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "doubleVariationDetail"></a>
+    <strong>doubleVariationDetail (context, key, fallback)</strong>
+    </dt>
+    <dd>
+    Evaluate a double flag and return an explanation
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">context</span>
+            <span class="types"><span class="type">context</span></span>
+         An opaque context object from <a href="../modules/launchdarkly-server-sdk.html#makeUser">makeUser</a> or <a href="../modules/launchdarkly-server-sdk.html#makeContext">makeContext</a>
+        </li>
+        <li><span class="parameter">key</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         The key of the flag to evaluate.
+        </li>
+        <li><span class="parameter">fallback</span>
+            <span class="types"><span class="type">number</span></span>
+         The value to return on error
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        <a href="../modules/launchdarkly-server-sdk.html#EvaluationDetail">EvaluationDetail</a>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "stringVariation"></a>
+    <strong>stringVariation (context, key, fallback)</strong>
+    </dt>
+    <dd>
+    Evaluate a string flag
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">context</span>
+            <span class="types"><span class="type">context</span></span>
+         An opaque context object from <a href="../modules/launchdarkly-server-sdk.html#makeUser">makeUser</a> or <a href="../modules/launchdarkly-server-sdk.html#makeContext">makeContext</a>
+        </li>
+        <li><span class="parameter">key</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         The key of the flag to evaluate.
+        </li>
+        <li><span class="parameter">fallback</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         The value to return on error
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+        The evaluation result, or the fallback value
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "stringVariationDetail"></a>
+    <strong>stringVariationDetail (context, key, fallback)</strong>
+    </dt>
+    <dd>
+    Evaluate a string flag and return an explanation
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">context</span>
+            <span class="types"><span class="type">context</span></span>
+         An opaque context object from <a href="../modules/launchdarkly-server-sdk.html#makeUser">makeUser</a> or <a href="../modules/launchdarkly-server-sdk.html#makeContext">makeContext</a>
+        </li>
+        <li><span class="parameter">key</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         The key of the flag to evaluate.
+        </li>
+        <li><span class="parameter">fallback</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         The value to return on error
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        <a href="../modules/launchdarkly-server-sdk.html#EvaluationDetail">EvaluationDetail</a>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "jsonVariation"></a>
+    <strong>jsonVariation (context, key, fallback)</strong>
+    </dt>
+    <dd>
+    Evaluate a json flag
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">context</span>
+            <span class="types"><span class="type">context</span></span>
+         An opaque context object from <a href="../modules/launchdarkly-server-sdk.html#makeUser">makeUser</a> or <a href="../modules/launchdarkly-server-sdk.html#makeContext">makeContext</a>
+        </li>
+        <li><span class="parameter">key</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         The key of the flag to evaluate.
+        </li>
+        <li><span class="parameter">fallback</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         The value to return on error
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+        The evaluation result, or the fallback value
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "jsonVariationDetail"></a>
+    <strong>jsonVariationDetail (context, key, fallback)</strong>
+    </dt>
+    <dd>
+    Evaluate a json flag and return an explanation
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">context</span>
+            <span class="types"><span class="type">context</span></span>
+         An opaque context object from <a href="../modules/launchdarkly-server-sdk.html#makeUser">makeUser</a> or <a href="../modules/launchdarkly-server-sdk.html#makeContext">makeContext</a>
+        </li>
+        <li><span class="parameter">key</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         The key of the flag to evaluate.
+        </li>
+        <li><span class="parameter">fallback</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         The value to return on error
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        <a href="../modules/launchdarkly-server-sdk.html#EvaluationDetail">EvaluationDetail</a>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "flush"></a>
+    <strong>flush ()</strong>
+    </dt>
+    <dd>
+    Immediately flushes queued events.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">nil</span></span>
+
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "track"></a>
+    <strong>track (key, context[, data[, metric]])</strong>
+    </dt>
+    <dd>
+    Reports that a context has performed an event.  Custom data, and a metric
+can be attached to the event as JSON.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">key</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         The name of the event
+        </li>
+        <li><span class="parameter">context</span>
+            <span class="types"><span class="type">context</span></span>
+         An opaque context object from <a href="../modules/launchdarkly-server-sdk.html#makeUser">makeUser</a> or <a href="../modules/launchdarkly-server-sdk.html#makeContext">makeContext</a>
+        </li>
+        <li><span class="parameter">data</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         A value to be associated with an event
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">metric</span>
+            <span class="types"><span class="type">number</span></span>
+         A value to be associated with an event
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">nil</span></span>
+
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "isInitialized"></a>
+    <strong>isInitialized ()</strong>
+    </dt>
+    <dd>
+    Check if a client has been fully initialized.  This may be useful if the
+initialization timeout was reached.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">boolean</span></span>
+        true if fully initialized
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "identify"></a>
+    <strong>identify (context)</strong>
+    </dt>
+    <dd>
+    Generates an identify event for a context.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">context</span>
+            <span class="types"><span class="type">context</span></span>
+         An opaque context object from <a href="../modules/launchdarkly-server-sdk.html#makeUser">makeUser</a> or <a href="../modules/launchdarkly-server-sdk.html#makeContext">makeContext</a>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">nil</span></span>
+
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "allFlags"></a>
+    <strong>allFlags (context)</strong>
+    </dt>
+    <dd>
+    Returns a map from feature flag keys to values for a given context.
+This does not send analytics events back to LaunchDarkly.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">context</span>
+            <span class="types"><span class="type">context</span></span>
+         An opaque context object from <a href="../modules/launchdarkly-server-sdk.html#makeUser">makeUser</a> or <a href="../modules/launchdarkly-server-sdk.html#makeContext">makeContext</a>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+
+    </ol>
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Tables"></a>Tables</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "EvaluationDetail"></a>
+    <strong>EvaluationDetail</strong>
+    </dt>
+    <dd>
+    EvaluationDetail contains extra information related to evaluation of a flag.
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">kind</span>
+         string, one of: "OFF","FALLTHROUGH", "TARGET_MATCH", "RULE_MATCH",
+"PREREQUISITE_FAILED", "ERROR", "UNKNOWN".
+        </li>
+        <li><span class="parameter">errorKind</span>
+         string, only present if 'kind' is "ERROR"; one of: "CLIENT_NOT_READY",
+"FLAG_NOT_FOUND", "USER_NOT_SPECIFIED", "MALFORMED_FLAG", "WRONG_TYPE",
+"MALFORMED_FLAG", "EXCEPTION", "UNKNOWN".
+        </li>
+        <li><span class="parameter">inExperiment</span>
+         bool, whether the flag was part of an experiment.
+        </li>
+        <li><span class="parameter">variationIndex</span>
+         int, only present if the evaluation was successful. The zero-based index of the variation.
+        </li>
+        <li><span class="parameter">value</span>
+         LDJSON, the value of the flag.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2024-07-15 21:47:07 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>
