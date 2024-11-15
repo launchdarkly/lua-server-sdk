@@ -61,7 +61,7 @@ runs:
       shell: bash
       run: |
         cp -r ./examples/env-helper ../env-helper
-    - uses: launchdarkly/gh-actions/actions/verify-hello-app@verify-hello-app-v2.0.0
+    - uses: launchdarkly/gh-actions/actions/verify-hello-app@verify-hello-app-v2.0.1
       if: ${{ !contains(inputs.lua-version, 'jit') }}
       name: 'Verify hello-lua-server example'
       env:
