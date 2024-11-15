@@ -75,7 +75,7 @@ jobs:
                       --env LAUNCHDARKLY_SDK_KEY="$LAUNCHDARKLY_SDK_KEY" \
                       --env LAUNCHDARKLY_FLAG_KEY="$LAUNCHDARKLY_FLAG_KEY" \
                       launchdarkly:${{ matrix.name }}
-                      curl --retry 5 --retry-all-errors --retry-delay 1 -s -v http://localhost:8123
+                      curl --retry 5 --retry-all-errors --retry-delay 1 -s http://localhost:8123
 
       - name: Stop ${{ matrix.name }} container
         run: |
