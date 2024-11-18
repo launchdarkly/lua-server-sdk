@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly Lua Server-side SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.1.2](https://github.com/launchdarkly/lua-server-sdk/compare/v2.1.1...v2.1.2) (2024-11-18)
+
+
+### Bug Fixes
+
+* **deps:** bump C++ server dep for holdouts fix ([#109](https://github.com/launchdarkly/lua-server-sdk/issues/109)) ([53a7ef1](https://github.com/launchdarkly/lua-server-sdk/commit/53a7ef19fea3fcea6209f18fdde42d699b464cdc))
+
 ## [2.1.1](https://github.com/launchdarkly/lua-server-sdk/compare/v2.1.0...v2.1.1) (2024-07-15)
 
 
