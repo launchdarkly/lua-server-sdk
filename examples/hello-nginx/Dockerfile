@@ -25,7 +25,7 @@ RUN git clone --branch launchdarkly-cpp-server-v${CPP_SDK_VERSION} https://githu
         -DLD_BUILD_EXAMPLES=OFF \
         -DBUILD_TESTING=OFF \
         -DLD_BUILD_SHARED_LIBS=ON \
-        -DLD_DYNAMIC_LINK_OPENSSL=ON .. && \
+        -DLD_DYNAMIC_LINK_OPENSSL=OFF .. && \
     cmake --build . --target launchdarkly-cpp-server && \
     cmake --install . --prefix=../../cpp-sdk-libs
 
@@ -39,22 +39,3 @@ COPY ./examples/env-helper/get_from_env_or_default.lua /usr/local/openresty/ngin
 
 RUN luarocks make launchdarkly-server-sdk-"${VERSION}"-0.rockspec LD_DIR=./cpp-sdk-libs && \
     cp launchdarkly_server_sdk.so /usr/local/openresty/lualib/
-
-# The strategy for this Docker example is to download the C++ SDK release artifacts and use those instead of compiling
-# from source. This is for example/CI purposes only; generally it's better to build from source to ensure all libraries
-# are compatible.
-#
-# Since we require a newer version of boost than is available in Ubuntu 22.04, we grab it from a PPA (mhier/libboost-latest).
-#
-# The SDK dynamic libs expect the boost libs to follow a specific naming convention, which isn't what
-# the libraries from the PPA follow ('-mt' suffix is added to indicate the libraries are built with multithreading support enabled.)
-#
-# It's not 100% clear if these libraries are multithread enabled (build logs in the PPA seem to indicate it),
-# but even so, the C++ SDK is single-threaded.
-#
-# To workaround, add symlinks with the expected names.
-RUN cd /usr/lib/x86_64-linux-gnu && \
-    ln -s libboost_json.so.1.81.0 libboost_json-mt-x64.so.1.81.0 && \
-    ln -s libboost_url.so.1.81.0 libboost_url-mt-x64.so.1.81.0
-
-RUN echo "HELLO WORLD"
