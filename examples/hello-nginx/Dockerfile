@@ -56,3 +56,5 @@ RUN luarocks make launchdarkly-server-sdk-"${VERSION}"-0.rockspec LD_DIR=./cpp-s
 RUN cd /usr/lib/x86_64-linux-gnu && \
     ln -s libboost_json.so.1.81.0 libboost_json-mt-x64.so.1.81.0 && \
     ln -s libboost_url.so.1.81.0 libboost_url-mt-x64.so.1.81.0
+
+RUN echo "HELLO WORLD"
