@@ -23,7 +23,7 @@ git_username=$3
 git_email=$4
 
 if [ "$input_version" == "auto" ]; then
-    input_version="2.1.1" # { x-release-please-version }
+    input_version="2.1.2" # { x-release-please-version }
 fi
 
 autocommit=''
