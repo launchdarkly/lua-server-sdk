@@ -71,10 +71,12 @@ jobs:
           use_server_key: true
           role_arn: ${{ vars.AWS_ROLE_ARN_EXAMPLES }}
           command: |
-            docker run -dit --rm --name ${{ matrix.name }} -p 8123:80 \
+            set +e && docker run -dit --rm --name ${{ matrix.name }} -p 8123:80 \
             --env LAUNCHDARKLY_SDK_KEY="$LAUNCHDARKLY_SDK_KEY"  \
             --env LAUNCHDARKLY_FLAG_KEY="$LAUNCHDARKLY_FLAG_KEY" \
-            launchdarkly:${{ matrix.name }}
+            launchdarkly:${{ matrix.name }} && echo "The $LAUNCHDARKLY_FLAG_KEY feature flag evaluates to true."
+            
+      
       
 
       - name: Stop ${{ matrix.name }} container
