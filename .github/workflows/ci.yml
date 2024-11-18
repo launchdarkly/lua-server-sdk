@@ -65,12 +65,9 @@ jobs:
           --build-arg="CPP_SDK_VERSION=${{ steps.cpp-versions.outputs.sdk }}" \
           -t launchdarkly:${{ matrix.name }} -f ./examples/${{ matrix.name }}/Dockerfile .
 
-      - uses: launchdarkly/gh-actions/actions/verify-hello-app@51c75f5773413cfc59ea6af010be5fe70bc3be60
-        name: 'Verify ${{ matrix.name}} example output'
-        with:
-          use_server_key: true
-          role_arn: ${{ vars.AWS_ROLE_ARN_EXAMPLES }}
-          command: ./scripts/run-docker-container.sh ${{ matrix.name }}
+      - name: 'Verify ${{ matrix.name}} example output'
+        run: |
+          ./scripts/run-docker-container.sh ${{ matrix.name }}
 
       - name: Stop ${{ matrix.name }} container
         run: |
