@@ -1,4 +1,4 @@
-FROM openresty/openresty:jammy
+FROM openresty/openresty:1.21.4.1-0-jammy
 
 # {{ x-release-please-start-version }}
 ARG VERSION=2.1.1
@@ -25,7 +25,7 @@ RUN git clone --branch launchdarkly-cpp-server-v${CPP_SDK_VERSION} https://githu
         -DLD_BUILD_EXAMPLES=OFF \
         -DBUILD_TESTING=OFF \
         -DLD_BUILD_SHARED_LIBS=ON \
-        -DLD_DYNAMIC_LINK_OPENSSL=OFF .. && \
+        -DLD_DYNAMIC_LINK_OPENSSL=ON .. && \
     cmake --build . --target launchdarkly-cpp-server && \
     cmake --install . --prefix=../../cpp-sdk-libs
 
