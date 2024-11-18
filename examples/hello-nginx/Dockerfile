@@ -1,10 +1,13 @@
-FROM openresty/openresty:jammy
+# We are pinning to this version of OpenResty as it is compatible with the C++ SDK's usage of OpenSSL.
+# It is unclear why, but the latest version of OpenResty doesn't seem to be compatible: the SDK
+# emits errors of the form 'failed to do XYZ (STORE routines) [asio.ssl:369098857]'
+FROM openresty/openresty:1.21.4.1-0-jammy
 
 # {{ x-release-please-start-version }}
 ARG VERSION=2.1.1
 # {{ x-release-please-end }}
 
-ARG CPP_SDK_VERSION=3.5.2
+ARG CPP_SDK_VERSION=3.8.0
 
 RUN apt-get update && apt-get install -y \
     git netbase curl libssl-dev apt-transport-https ca-certificates \
@@ -39,20 +42,3 @@ COPY ./examples/env-helper/get_from_env_or_default.lua /usr/local/openresty/ngin
 
 RUN luarocks make launchdarkly-server-sdk-"${VERSION}"-0.rockspec LD_DIR=./cpp-sdk-libs && \
     cp launchdarkly_server_sdk.so /usr/local/openresty/lualib/
-
-# The strategy for this Docker example is to download the C++ SDK release artifacts and use those instead of compiling
-# from source. This is for example/CI purposes only; generally it's better to build from source to ensure all libraries
-# are compatible.
-#
-# Since we require a newer version of boost than is available in Ubuntu 22.04, we grab it from a PPA (mhier/libboost-latest).
-#
-# The SDK dynamic libs expect the boost libs to follow a specific naming convention, which isn't what
-# the libraries from the PPA follow ('-mt' suffix is added to indicate the libraries are built with multithreading support enabled.)
-#
-# It's not 100% clear if these libraries are multithread enabled (build logs in the PPA seem to indicate it),
-# but even so, the C++ SDK is single-threaded.
-#
-# To workaround, add symlinks with the expected names.
-RUN cd /usr/lib/x86_64-linux-gnu && \
-    ln -s libboost_json.so.1.81.0 libboost_json-mt-x64.so.1.81.0 && \
-    ln -s libboost_url.so.1.81.0 libboost_url-mt-x64.so.1.81.0

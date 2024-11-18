@@ -65,7 +65,7 @@ jobs:
           --build-arg="CPP_SDK_VERSION=${{ steps.cpp-versions.outputs.sdk }}" \
           -t launchdarkly:${{ matrix.name }} -f ./examples/${{ matrix.name }}/Dockerfile .
 
-      - uses: launchdarkly/gh-actions/actions/verify-hello-app@verify-hello-app-v2.0.0
+      - uses: launchdarkly/gh-actions/actions/verify-hello-app@verify-hello-app-v2.0.1
         name: 'Verify ${{ matrix.name}} example output'
         with:
           use_server_key: true
@@ -101,7 +101,7 @@ jobs:
           docker build \
           --build-arg="CPP_SDK_VERSION=${{ steps.cpp-versions.outputs.sdk }}" \
           -t launchdarkly:${{ matrix.name }} -f ./examples/${{ matrix.name }}/Dockerfile .
-      - uses: launchdarkly/gh-actions/actions/verify-hello-app@verify-hello-app-v2.0.0
+      - uses: launchdarkly/gh-actions/actions/verify-hello-app@verify-hello-app-v2.0.1
         name: 'Verify ${{ matrix.name}} example output'
         with:
           use_server_key: true

@@ -22,11 +22,11 @@ runs:
       id: cpp-versions
       uses: ./.github/actions/cpp-versions
     - name: Install Lua
-      uses: leafo/gh-actions-lua@35bcb06abec04ec87df82e08caa84d545348536e
+      uses: luarocks/gh-actions-lua@c1e8c4a5fa64ac5f6467ea35d8b59fb5a167232e
       with:
         luaVersion: ${{ inputs.lua-version }}
     - name: Install LuaRocks
-      uses: leafo/gh-actions-luarocks@e65774a6386cb4f24e293dca7fc4ff89165b64c5
+      uses: luarocks/gh-actions-luarocks@8acd6db166a0162c375fa8647a0350fbec46940e
     - name: Install Boost
       id: install-boost
       uses: MarkusJx/install-boost@v2.4.4
@@ -61,7 +61,7 @@ runs:
       shell: bash
       run: |
         cp -r ./examples/env-helper ../env-helper
-    - uses: launchdarkly/gh-actions/actions/verify-hello-app@verify-hello-app-v2.0.0
+    - uses: launchdarkly/gh-actions/actions/verify-hello-app@verify-hello-app-v2.0.1
       if: ${{ !contains(inputs.lua-version, 'jit') }}
       name: 'Verify hello-lua-server example'
       env:
