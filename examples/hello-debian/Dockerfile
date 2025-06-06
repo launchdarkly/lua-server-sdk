@@ -1,7 +1,7 @@
 FROM debian:bookworm
 
 # {{ x-release-please-start-version }}
-ARG VERSION=2.1.2
+ARG VERSION=2.1.3
 # {{ x-release-please-end }}
 
 ARG CPP_SDK_VERSION=3.9.0
