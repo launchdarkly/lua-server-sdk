@@ -61,6 +61,8 @@ jobs:
 
       - name: Install LuaRocks
         uses: leafo/gh-actions-luarocks@e65774a6386cb4f24e293dca7fc4ff89165b64c5
+        with:
+          luarocksVersion: "3.12.0"
 
       - name: Install Boost
         id: install-boost

@@ -27,6 +27,8 @@ runs:
         luaVersion: ${{ inputs.lua-version }}
     - name: Install LuaRocks
       uses: luarocks/gh-actions-luarocks@8acd6db166a0162c375fa8647a0350fbec46940e
+      with:
+        luarocksVersion: "3.12.0"
     - name: Install Boost
       id: install-boost
       uses: MarkusJx/install-boost@v2.4.4
