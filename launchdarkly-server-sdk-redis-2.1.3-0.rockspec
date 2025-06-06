@@ -2,7 +2,7 @@ package = "launchdarkly-server-sdk-redis"
 
 rockspec_format = "3.0"
 
-version = "2.1.2-0"
+version = "2.1.3-0"
 
 description = {
    summary = "Redis integration for LaunchDarkly Lua Server-side SDK.",
@@ -19,7 +19,7 @@ description = {
 
 source = {
    url = "git+https://github.com/launchdarkly/lua-server-sdk.git",
-   tag = "v2.1.2"
+   tag = "v2.1.3"
 }
 
 dependencies = {
