@@ -10,9 +10,11 @@
       "wrapperNames": ["lua-server-sdk"],
       "features": {
         "allFlags": { "introduced": "1.0" },
+        "appMetadata": { "introduced": "1.0" },
         "contexts": { "introduced": "2.0" },
         "experimentation": { "introduced": "1.0" },
         "inlineContextCustomEvents": { "introduced": "2.1.3" },
+        "offlineMode": { "introduced": "1.0" },
         "privateAttrs": { "introduced": "1.0" },
         "relayProxyDaemon": { "introduced": "1.0" },
         "relayProxyProxy": { "introduced": "1.0" },
