@@ -10,7 +10,7 @@
       "wrapperNames": ["lua-server-sdk"],
       "features": {
         "allFlags": { "introduced": "1.0" },
-        "appMetadata": { "introduced": "1.0" },
+        "appMetadata": { "introduced": "2.0" },
         "contexts": { "introduced": "2.0" },
         "experimentation": { "introduced": "1.0" },
         "inlineContextCustomEvents": { "introduced": "2.1.3" },
