@@ -55,18 +55,18 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install Lua
-        uses: leafo/gh-actions-lua@35bcb06abec04ec87df82e08caa84d545348536e
+        uses: leafo/gh-actions-lua@35bcb06abec04ec87df82e08caa84d545348536e # 35bcb06abec04ec87df82e08caa84d545348536e
         with:
           luaVersion: ${{ env.LUA_VERSION }}
 
       - name: Install LuaRocks
-        uses: leafo/gh-actions-luarocks@e65774a6386cb4f24e293dca7fc4ff89165b64c5
+        uses: leafo/gh-actions-luarocks@e65774a6386cb4f24e293dca7fc4ff89165b64c5 # e65774a6386cb4f24e293dca7fc4ff89165b64c5
         with:
           luarocksVersion: "3.12.0"
 
       - name: Install Boost
         id: install-boost
-        uses: MarkusJx/install-boost@v2.4.4
+        uses: MarkusJx/install-boost@3039450bb3dd2e8630d1cf10ec39cb1da3054bbd # v2.4.4
         with:
           boost_version: 1.81.0
           platform_version: "22.04"
