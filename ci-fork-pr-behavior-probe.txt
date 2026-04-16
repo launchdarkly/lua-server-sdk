@@ -1,0 +1,3 @@
+Harmless CI behavior probe for fork pull request workflow validation.
+
+This file intentionally does not read, print, or request any secrets.
