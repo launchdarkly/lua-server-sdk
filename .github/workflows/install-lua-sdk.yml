@@ -23,7 +23,7 @@ on:
           - '5.1'
           - '5.2'
           - '5.3'
-          - 'luajit-2.0.5'
+          - 'luajit-2.1'
         default: '5.3'
       cpp-sdk-version:
         description: "Version of the C++ Server-side SDK."

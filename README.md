@@ -15,7 +15,7 @@ LaunchDarkly overview
 Supported Lua versions
 -----------
 
-This version of the LaunchDarkly SDK is known to be compatible with the Lua 5.1-5.3 interpreter, and LuaJIT 2.0.5.
+This version of the LaunchDarkly SDK is known to be compatible with the Lua 5.1-5.3 interpreter, and LuaJIT 2.1.
 
 Supported C++ server-side SDK versions
 -----------
@@ -26,8 +26,8 @@ If Redis support is desired, then it optionally depends on the C++ server-side S
 
 | Dependency                     | Minimum Version                                                                                              | Notes                                      |
 |--------------------------------|--------------------------------------------------------------------------------------------------------------|--------------------------------------------|
-| C++ Server-Side SDK            | [3.13.0](https://github.com/launchdarkly/cpp-sdks/releases/tag/launchdarkly-cpp-server-v3.13.0)               | Required dependency.                       |
-| C++ Server-Side SDK with Redis | [2.4.0](https://github.com/launchdarkly/cpp-sdks/releases/tag/launchdarkly-cpp-server-redis-source-v2.4.0)    | Optional, if using Redis as a data source. |
+| C++ Server-Side SDK            | [3.13.0](https://github.com/launchdarkly/cpp-sdks/releases/tag/launchdarkly-cpp-server-v3.13.0)              | Required dependency.                       |
+| C++ Server-Side SDK with Redis | [2.4.0](https://github.com/launchdarkly/cpp-sdks/releases/tag/launchdarkly-cpp-server-redis-source-v2.4.0)   | Optional, if using Redis as a data source. |
 
 
 3rd Party Dependencies
