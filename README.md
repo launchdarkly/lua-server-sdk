@@ -15,7 +15,7 @@ LaunchDarkly overview
 Supported Lua versions
 -----------
 
-This version of the LaunchDarkly SDK is known to be compatible with the Lua 5.1-5.3 interpreter, and LuaJIT 2.0.5.
+This version of the LaunchDarkly SDK is known to be compatible with the Lua 5.1-5.3 interpreter, and LuaJIT 2.1.
 
 Supported C++ server-side SDK versions
 -----------
