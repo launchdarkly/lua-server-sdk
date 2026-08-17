@@ -28,7 +28,7 @@ runs:
     - name: Install LuaRocks
       uses: luarocks/gh-actions-luarocks@8acd6db166a0162c375fa8647a0350fbec46940e # 8acd6db166a0162c375fa8647a0350fbec46940e
       with:
-        luarocksVersion: "3.12.0"
+        luarocksVersion: "3.13.0"
     - name: Install Boost
       id: install-boost
       uses: MarkusJx/install-boost@3039450bb3dd2e8630d1cf10ec39cb1da3054bbd # v2.4.4
