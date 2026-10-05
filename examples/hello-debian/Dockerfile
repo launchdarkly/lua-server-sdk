@@ -4,7 +4,7 @@ FROM debian:bookworm
 ARG VERSION=2.2.0
 # {{ x-release-please-end }}
 
-ARG CPP_SDK_VERSION=3.13.1
+ARG CPP_SDK_VERSION=3.14.0
 
 # For unknown reasons, it appears that boost.json and boost.url aren't included in the
 # libboost-all package.
