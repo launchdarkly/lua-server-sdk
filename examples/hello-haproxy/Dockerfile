@@ -4,7 +4,7 @@ FROM ubuntu:22.04
 ARG VERSION=2.2.0
 # {{ x-release-please-end }}
 
-ARG CPP_SDK_VERSION=3.13.1
+ARG CPP_SDK_VERSION=3.14.0
 
 RUN apt-get update && apt-get install -y \
     curl luarocks lua5.3 lua5.3-dev \

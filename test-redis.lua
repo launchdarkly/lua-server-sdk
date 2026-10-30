@@ -49,7 +49,7 @@ function TestAll:testVariationDetailWithRedisSource()
         value  = true,
         reason = {
             kind      = "ERROR",
-            errorKind = "CLIENT_NOT_READY",
+            errorKind = "FLAG_NOT_FOUND",
             inExperiment = false
         }
     }
