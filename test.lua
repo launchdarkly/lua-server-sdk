@@ -276,6 +276,21 @@ function TestAll:testIdentify()
     makeTestClient():identify(context)
 end
 
+function TestAll:testTrack()
+    local c = makeTestClient()
+    c:track("event", context)
+    c:track("event", context, { a = "b" })
+    c:track("event", context, { a = "b" }, 42)
+    c:track("event", context, { a = "b" }, nil)
+end
+
+function TestAll:testTrackWithNilData()
+    local c = makeTestClient()
+    c:track("event", context, nil)
+    c:track("event", context, nil, 42)
+    c:track("event", context, nil, nil)
+end
+
 
 function TestAll:testAllFlags()
     u.assertEquals(makeTestClient():allFlags(user), {})
