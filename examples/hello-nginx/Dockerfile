@@ -1,7 +1,4 @@
-# We are pinning to this version of OpenResty as it is compatible with the C++ SDK's usage of OpenSSL.
-# It is unclear why, but the latest version of OpenResty doesn't seem to be compatible: the SDK
-# emits errors of the form 'failed to do XYZ (STORE routines) [asio.ssl:369098857]'
-FROM openresty/openresty:1.21.4.1-0-jammy
+FROM openresty/openresty:1.31.8.1-0-jammy
 
 # {{ x-release-please-start-version }}
 ARG VERSION=2.2.0
@@ -13,6 +10,11 @@ RUN apt-get update && apt-get install -y \
     git netbase curl libssl-dev apt-transport-https ca-certificates \
     software-properties-common \
     cmake ninja-build locales-all
+
+# OpenResty bundles its own OpenSSL, and the SDK uses that OpenSSL at runtime.
+# The bundled OpenSSL looks for CA certificates in a directory that the image does not have.
+# This variable points it at the system CA bundle. nginx.conf passes it to the worker processes.
+ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 
 RUN add-apt-repository ppa:mhier/libboost-latest && \
      apt-get update && \
