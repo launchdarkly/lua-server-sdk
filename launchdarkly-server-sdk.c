@@ -1797,7 +1797,7 @@ can be attached to the event as JSON.
 @tparam string key The name of the event
 @tparam context context An opaque context object from @{makeUser} or @{makeContext}
 @tparam[opt] table data A value to be associated with an event
-@tparam[optchain] number metric A value to be associated with an event
+@tparam[opt] number metric A value to be associated with an event. To send a metric without data, pass nil as data.
 @treturn nil
 */
 static int
@@ -1813,19 +1813,20 @@ LuaLDClientTrack(lua_State *const l)
 
     LDContext *context = (LDContext *) luaL_checkudata(l, 3, "LaunchDarklyContext");
 
-    LDValue value;
-    if (lua_isnil(l, 4)) {
-        value = NULL;
-    } else {
-        value = LuaValueToJSON(l, 4);
-    }
+    const bool has_data = !lua_isnoneornil(l, 4);
+    const bool has_metric = lua_gettop(l) == 5 && lua_isnumber(l, 5);
 
-    if (lua_gettop(l) == 5 && lua_isnumber(l, 5)) {
+    if (has_metric) {
         const double metric = luaL_checknumber(l, 5);
 
+        // The C++ SDK requires a data value with a metric. Use JSON null if the caller gives no data.
+        LDValue value = has_data ? LuaValueToJSON(l, 4) : LDValue_NewNull();
+
         LDServerSDK_TrackMetric(*client, *context, key, metric, value);
+    } else if (has_data) {
+        LDServerSDK_TrackData(*client, *context, key, LuaValueToJSON(l, 4));
     } else {
-        LDServerSDK_TrackData(*client, *context, key, value);
+        LDServerSDK_TrackEvent(*client, *context, key);
     }
 
     return 0;
