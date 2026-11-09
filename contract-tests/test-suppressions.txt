@@ -50,6 +50,29 @@ evaluation/parameterized/clause negation and value iteration/match if expression
 evaluation/parameterized/clause negation and value iteration/match if expression matches any of multiple context values with any of multiple clause values/match if expression matches any of multiple context values with any of multiple clause values/evaluate flag with detail
 evaluation/parameterized/clause negation and value iteration/match if expression matches any of multiple context values with single clause value/match if expression matches any of multiple context values with single clause value/evaluate flag with detail
 evaluation/parameterized/clause negation and value iteration/negated, match if expression does not match single clause value/negated, match if expression does not match single clause value/evaluate flag with detail
+evaluation/parameterized/keys are compared as exact strings/flag with numeric key can be evaluated directly/flag with numeric key can be evaluated directly/evaluate flag with detail
+evaluation/parameterized/keys are compared as exact strings/prerequisite keys that denote the same number are distinct flags/prerequisite keys that denote the same number are distinct flags/evaluate flag with detail
+evaluation/parameterized/keys are compared as exact strings/segment excluded list does not exclude key with leading zeros/segment excluded list does not exclude key with leading zeros/evaluate flag with detail
+evaluation/parameterized/keys are compared as exact strings/segment excludedContexts does not exclude key with decimal point/segment excludedContexts does not exclude key with decimal point/evaluate flag with detail
+evaluation/parameterized/keys are compared as exact strings/segment included list matches identical key/segment included list matches identical key/evaluate flag with detail
+evaluation/parameterized/keys are compared as exact strings/segment includedContexts matches identical key/segment includedContexts matches identical key/evaluate flag with detail
+evaluation/parameterized/keys are compared as exact strings/segment keys that denote the same number are distinct segments/segment keys that denote the same number are distinct segments/evaluate flag with detail
+evaluation/parameterized/keys like built-in object members - absent/prerequisite __class__ is not met/prerequisite __class__ is not met/evaluate flag with detail
+evaluation/parameterized/keys like built-in object members - absent/prerequisite __index is not met/prerequisite __index is not met/evaluate flag with detail
+evaluation/parameterized/keys like built-in object members - absent/prerequisite __proto__ is not met/prerequisite __proto__ is not met/evaluate flag with detail
+evaluation/parameterized/keys like built-in object members - absent/prerequisite constructor is not met/prerequisite constructor is not met/evaluate flag with detail
+evaluation/parameterized/keys like built-in object members - absent/prerequisite hasOwnProperty is not met/prerequisite hasOwnProperty is not met/evaluate flag with detail
+evaluation/parameterized/keys like built-in object members - absent/prerequisite prototype is not met/prerequisite prototype is not met/evaluate flag with detail
+evaluation/parameterized/keys like built-in object members - absent/prerequisite toString is not met/prerequisite toString is not met/evaluate flag with detail
+evaluation/parameterized/keys like built-in object members - absent/prerequisite valueOf is not met/prerequisite valueOf is not met/evaluate flag with detail
+evaluation/parameterized/keys like built-in object members - present/segment __class__ matches an included key/segment __class__ matches an included key/evaluate flag with detail
+evaluation/parameterized/keys like built-in object members - present/segment __index matches an included key/segment __index matches an included key/evaluate flag with detail
+evaluation/parameterized/keys like built-in object members - present/segment __proto__ matches an included key/segment __proto__ matches an included key/evaluate flag with detail
+evaluation/parameterized/keys like built-in object members - present/segment constructor matches an included key/segment constructor matches an included key/evaluate flag with detail
+evaluation/parameterized/keys like built-in object members - present/segment hasOwnProperty matches an included key/segment hasOwnProperty matches an included key/evaluate flag with detail
+evaluation/parameterized/keys like built-in object members - present/segment prototype matches an included key/segment prototype matches an included key/evaluate flag with detail
+evaluation/parameterized/keys like built-in object members - present/segment toString matches an included key/segment toString matches an included key/evaluate flag with detail
+evaluation/parameterized/keys like built-in object members - present/segment valueOf matches an included key/segment valueOf matches an included key/evaluate flag with detail
 evaluation/parameterized/numbers in exponent notation/large number equals itself/large number equals itself/evaluate flag with detail
 evaluation/parameterized/numbers in exponent notation/large number is greater than ordinary number/large number is greater than ordinary number/evaluate flag with detail
 evaluation/parameterized/numbers in exponent notation/large number is greater than smaller large number/large number is greater than smaller large number/evaluate flag with detail
@@ -134,6 +157,9 @@ evaluation/parameterized/operators - equality (int)/user with single value match
 evaluation/parameterized/operators - equality (string)/user matches clause with single value/user matches clause with single value/evaluate flag with detail
 evaluation/parameterized/operators - equality (string)/user with multiple values matches clause with single value/user with multiple values matches clause with single value/evaluate flag with detail
 evaluation/parameterized/operators - equality (string)/user with single value matches clause with multiple values/user with single value matches clause with multiple values/evaluate flag with detail
+evaluation/parameterized/operators - equality does not coerce strings and numbers/number 1000 matches number 1000/number 1000 matches number 1000/evaluate flag with detail
+evaluation/parameterized/operators - equality does not coerce strings and numbers/string 007 matches string 007/string 007 matches string 007/evaluate flag with detail
+evaluation/parameterized/operators - equality does not coerce strings and numbers/string 1e3 matches string 1e3 in a list/string 1e3 matches string 1e3 in a list/evaluate flag with detail
 evaluation/parameterized/operators - equality does not conflate booleans and numbers/boolean false matches boolean clause value false/boolean false matches boolean clause value false/evaluate flag with detail
 evaluation/parameterized/operators - equality does not conflate booleans and numbers/boolean true matches boolean clause value true/boolean true matches boolean clause value true/evaluate flag with detail
 evaluation/parameterized/operators - equality does not conflate booleans and numbers/integer 0 matches integer clause value 0/integer 0 matches integer clause value 0/evaluate flag with detail
