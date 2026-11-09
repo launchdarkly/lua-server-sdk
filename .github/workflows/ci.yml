@@ -111,3 +111,26 @@ jobs:
             --env LAUNCHDARKLY_SDK_KEY="$LAUNCHDARKLY_SDK_KEY"  \
             --env LAUNCHDARKLY_FLAG_KEY="$LAUNCHDARKLY_FLAG_KEY" \
             launchdarkly:${{ matrix.name }}
+
+  contract-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get C++ Versions
+        id: cpp-versions
+        uses: ./.github/actions/cpp-versions
+      - name: Build contract test service image
+        run: |
+          docker build \
+          --build-arg="CPP_SDK_VERSION=${{ steps.cpp-versions.outputs.sdk }}" \
+          -t lua-contract-tests -f ./contract-tests/Dockerfile .
+      - name: Launch contract test service
+        run: docker run -d --name lua-contract-tests --network host lua-contract-tests
+      - uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests-v1
+        with:
+          test_service_port: 8000
+          token: ${{ secrets.GITHUB_TOKEN }}
+          extra_params: -skip-from=./contract-tests/test-suppressions.txt -status-timeout=30
+      - name: Show contract test service logs
+        if: always()
+        run: docker logs lua-contract-tests
