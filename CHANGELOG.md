@@ -2,6 +2,14 @@
 
 All notable changes to the LaunchDarkly Lua Server-side SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.2.1](https://github.com/launchdarkly/lua-server-sdk/compare/v2.2.0...v2.2.1) (2026-11-12)
+
+
+### Bug Fixes
+
+* Prevent a crash when track is called with nil data ([#130](https://github.com/launchdarkly/lua-server-sdk/issues/130)) ([fa3e0d8](https://github.com/launchdarkly/lua-server-sdk/commit/fa3e0d8c0329e7f158a80afc3d9ca25ccebedb50))
+* Require C++ server SDK 3.15.0 so that track sends metric values correctly ([#132](https://github.com/launchdarkly/lua-server-sdk/issues/132)) ([7bbc9cc](https://github.com/launchdarkly/lua-server-sdk/commit/7bbc9cce57d49108455b7f772e22955f3ff8911a))
+
 ## [2.2.0](https://github.com/launchdarkly/lua-server-sdk/compare/v2.1.3...v2.2.0) (2026-08-10)
 
 
