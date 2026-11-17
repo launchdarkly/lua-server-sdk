@@ -12,7 +12,7 @@ jobs:
     outputs:
       info: ${{ steps.pkg-info.outputs.info }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Fetch release please manifest
         id: manifest
         run: |

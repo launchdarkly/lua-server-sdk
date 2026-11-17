@@ -22,11 +22,11 @@ runs:
       id: cpp-versions
       uses: ./.github/actions/cpp-versions
     - name: Install Lua
-      uses: luarocks/gh-actions-lua@c1e8c4a5fa64ac5f6467ea35d8b59fb5a167232e # c1e8c4a5fa64ac5f6467ea35d8b59fb5a167232e
+      uses: luarocks/gh-actions-lua@56eba09993704b908cc3c7c2753e630d18cb9696 # v14
       with:
         luaVersion: ${{ inputs.lua-version }}
     - name: Install LuaRocks
-      uses: luarocks/gh-actions-luarocks@8acd6db166a0162c375fa8647a0350fbec46940e # 8acd6db166a0162c375fa8647a0350fbec46940e
+      uses: luarocks/gh-actions-luarocks@95d2308a0aff36ad31ebadca493ed14853399842 # v7
       with:
         luarocksVersion: "3.13.0"
     - name: Install Boost

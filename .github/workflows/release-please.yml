@@ -35,7 +35,7 @@ jobs:
     permissions:
       contents: write # Needed to push rockspec updates to the release PR branch
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Update launchdarkly-server-sdk rockspec
         uses: ./.github/actions/update-versions
         with:
@@ -55,7 +55,7 @@ jobs:
     if: ${{ needs.release-please.outputs.release_created == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Build documentation
         uses: ./.github/actions/build-docs
 
@@ -72,7 +72,7 @@ jobs:
     if: ${{ needs.release-please.outputs.release_created == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.0.2
         name: 'Get LuaRocks token'
         with:
@@ -94,7 +94,7 @@ jobs:
     needs: [ publish-server, rockspec-info ]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.0.2
         name: 'Get LuaRocks token'
         with:

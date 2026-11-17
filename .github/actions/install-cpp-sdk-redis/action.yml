@@ -15,7 +15,7 @@ runs:
       id: cpp-versions
       uses: ./.github/actions/cpp-versions
     - name: Download C++ Server-side SDK with Redis Source
-      uses: robinraju/release-downloader@efa4cd07bd0195e6cc65e9e30c251b49ce4d3e51
+      uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f # v1.13
       id: download-cpp-sdk
       with:
           repository: "launchdarkly/cpp-sdks"
