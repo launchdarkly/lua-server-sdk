@@ -52,15 +52,15 @@ jobs:
   install:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install Lua
-        uses: leafo/gh-actions-lua@35bcb06abec04ec87df82e08caa84d545348536e # 35bcb06abec04ec87df82e08caa84d545348536e
+        uses: leafo/gh-actions-lua@32909a2dea0a48c433aec79e7fcd31b4cd55800f # v13.1.0
         with:
           luaVersion: ${{ env.LUA_VERSION }}
 
       - name: Install LuaRocks
-        uses: leafo/gh-actions-luarocks@e65774a6386cb4f24e293dca7fc4ff89165b64c5 # e65774a6386cb4f24e293dca7fc4ff89165b64c5
+        uses: leafo/gh-actions-luarocks@1c4a92caecc8f6850f673cbadfd57b3e555417ce # v6.1.1
         with:
           luarocksVersion: "3.13.0"
 

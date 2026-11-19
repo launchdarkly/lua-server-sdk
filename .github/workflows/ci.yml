@@ -37,7 +37,7 @@ jobs:
         package: ${{ fromJSON(needs.rockspecs.outputs.matrix) }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/ci
         with:
           lua-version: ${{ matrix.version }}
@@ -55,7 +55,7 @@ jobs:
       matrix:
         name: ["hello-haproxy", "hello-nginx"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Get C++ Versions
         id: cpp-versions
         uses: ./.github/actions/cpp-versions
@@ -65,7 +65,7 @@ jobs:
           --build-arg="CPP_SDK_VERSION=${{ steps.cpp-versions.outputs.sdk }}" \
           -t launchdarkly:${{ matrix.name }} -f ./examples/${{ matrix.name }}/Dockerfile .
 
-      - uses: launchdarkly/gh-actions/actions/verify-hello-app@verify-hello-app-v2.0.1
+      - uses: launchdarkly/gh-actions/actions/verify-hello-app@verify-hello-app-v2.0.2
         name: 'Verify ${{ matrix.name}} example output'
         with:
           use_server_key: true
@@ -92,7 +92,7 @@ jobs:
       matrix:
         name: [ "hello-debian"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Get C++ Versions
         id: cpp-versions
         uses: ./.github/actions/cpp-versions
@@ -101,7 +101,7 @@ jobs:
           docker build \
           --build-arg="CPP_SDK_VERSION=${{ steps.cpp-versions.outputs.sdk }}" \
           -t launchdarkly:${{ matrix.name }} -f ./examples/${{ matrix.name }}/Dockerfile .
-      - uses: launchdarkly/gh-actions/actions/verify-hello-app@verify-hello-app-v2.0.1
+      - uses: launchdarkly/gh-actions/actions/verify-hello-app@verify-hello-app-v2.0.2
         name: 'Verify ${{ matrix.name}} example output'
         with:
           use_server_key: true
@@ -115,7 +115,7 @@ jobs:
   contract-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Get C++ Versions
         id: cpp-versions
         uses: ./.github/actions/cpp-versions
