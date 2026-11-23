@@ -73,7 +73,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.0.2
+      - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets/v1
         name: 'Get LuaRocks token'
         with:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -95,7 +95,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.0.2
+      - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets/v1
         name: 'Get LuaRocks token'
         with:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}

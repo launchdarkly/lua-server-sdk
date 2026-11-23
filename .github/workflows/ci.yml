@@ -65,7 +65,7 @@ jobs:
           --build-arg="CPP_SDK_VERSION=${{ steps.cpp-versions.outputs.sdk }}" \
           -t launchdarkly:${{ matrix.name }} -f ./examples/${{ matrix.name }}/Dockerfile .
 
-      - uses: launchdarkly/gh-actions/actions/verify-hello-app@verify-hello-app-v2.0.2
+      - uses: launchdarkly/gh-actions/actions/verify-hello-app@verify-hello-app/v2
         name: 'Verify ${{ matrix.name}} example output'
         with:
           use_server_key: true
@@ -101,7 +101,7 @@ jobs:
           docker build \
           --build-arg="CPP_SDK_VERSION=${{ steps.cpp-versions.outputs.sdk }}" \
           -t launchdarkly:${{ matrix.name }} -f ./examples/${{ matrix.name }}/Dockerfile .
-      - uses: launchdarkly/gh-actions/actions/verify-hello-app@verify-hello-app-v2.0.2
+      - uses: launchdarkly/gh-actions/actions/verify-hello-app@verify-hello-app/v2
         name: 'Verify ${{ matrix.name}} example output'
         with:
           use_server_key: true
@@ -126,7 +126,7 @@ jobs:
           -t lua-contract-tests -f ./contract-tests/Dockerfile .
       - name: Launch contract test service
         run: docker run -d --name lua-contract-tests --network host lua-contract-tests
-      - uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests-v1
+      - uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests/v1
         with:
           test_service_port: 8000
           token: ${{ secrets.GITHUB_TOKEN }}
